@@ -62,6 +62,13 @@ def main():
     args = parser.parse_args()
     with open(args.run_config) as source:
         cluster = Cluster(json.load(source))
+    for namespace in ["monitoring", "databases", "argocd"]:
+        result = subprocess.run(cluster.prefix + ["-n", namespace, "auth", "can-i", "list", "secrets",
+                                "--as=system:serviceaccount:monitoring:monitoring-grafana"],
+                                capture_output=True, text=True, timeout=30, env=cluster.environment)
+        allowed = namespace == "monitoring"
+        assert result.returncode == (0 if allowed else 1) and result.stdout.strip() == ("yes" if allowed else "no"), "Grafana RBAC boundary check failed"
+    print(json.dumps({"grafana_namespace_rbac_verified": True}), flush=True)
     with contextlib.ExitStack() as stack:
         prom = stack.enter_context(forward(cluster, "monitoring-kube-prometheus-prometheus", 9090))
         alert = stack.enter_context(forward(cluster, "monitoring-kube-prometheus-alertmanager", 9093))
