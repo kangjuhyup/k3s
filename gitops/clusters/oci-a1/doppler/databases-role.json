@@ -28,7 +28,9 @@
         "auth-db-credentials",
         "auth-db-private",
         "auth-redis-credentials",
-        "shared-redis-private"
+        "shared-redis-master-tls",
+        "shared-redis-private",
+        "shared-redis-replica-tls"
       ],
       "resources": [
         "secrets"

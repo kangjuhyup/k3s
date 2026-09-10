@@ -8,6 +8,8 @@
     "auth-postgres-sync.json",
     "auth-postgres-identity-sync.json",
     "auth-redis-sync.json",
-    "shared-redis-sync.json"
+    "shared-redis-sync.json",
+    "shared-redis-master-tls-sync.json",
+    "shared-redis-replica-tls-sync.json"
   ]
 }

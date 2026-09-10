@@ -32,5 +32,17 @@
              "REDIS_REPLICATION_USERNAME": "replication-username", "REDIS_REPLICATION_PASSWORD": "replication-password",
              "REDIS_PROBE_USERNAME": "probe-username", "REDIS_PROBE_PASSWORD": "probe-password",
              "REDIS_HOST": "master-host", "REDIS_PORT": "port"}
+  }, {
+    "name": "shared-redis-master-tls", "project": "infrastructure", "config": "prd",
+    "token_secret": "doppler-auth-infrastructure-prd", "token_env": "DOPPLER_INFRASTRUCTURE_PRD_TOKEN",
+    "target_namespace": "databases", "target_secret": "shared-redis-master-tls",
+    "type": "Opaque", "resync_seconds": 120,
+    "keys": {"REDIS_MASTER_TLS_CERT": "tls.crt", "REDIS_MASTER_TLS_KEY": "tls.key", "REDIS_TLS_CA_CERT": "ca.crt"}
+  }, {
+    "name": "shared-redis-replica-tls", "project": "infrastructure", "config": "prd",
+    "token_secret": "doppler-auth-infrastructure-prd", "token_env": "DOPPLER_INFRASTRUCTURE_PRD_TOKEN",
+    "target_namespace": "databases", "target_secret": "shared-redis-replica-tls",
+    "type": "Opaque", "resync_seconds": 120,
+    "keys": {"REDIS_REPLICA_TLS_CERT": "tls.crt", "REDIS_REPLICA_TLS_KEY": "tls.key", "REDIS_TLS_CA_CERT": "ca.crt"}
   }]
 }
