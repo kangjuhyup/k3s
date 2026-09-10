@@ -39,11 +39,12 @@ unset name secret prefix host port
 exec redis-server /runtime/redis.conf
 '''
 HEALTH = r'''set -eu
-export REDISCLI_AUTH="$(cat /runtime/probe-password)"
-result=$(redis-cli --no-auth-warning --user "$(cat /runtime/probe-username)" --raw ping)
-[ "$result" = PONG ]
+probe() {
+  { printf 'AUTH %s %s\n' "$(cat /runtime/probe-username)" "$(cat /runtime/probe-password)"; printf '%s\n' "$1"; } | redis-cli --raw
+}
+probe 'INFO server' | grep -q '^redis_version:'
 if [ "${1:-}" = ready ] && [ "$REDIS_ROLE" = replica ]; then
-  redis-cli --no-auth-warning --user "$(cat /runtime/probe-username)" --raw info replication | grep -q '^master_link_status:up'
+  probe 'INFO replication' | grep -q '^master_link_status:up'
 fi
 '''
 CONFIG = '''bind 0.0.0.0

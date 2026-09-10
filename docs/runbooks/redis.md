@@ -17,6 +17,6 @@ Argo CD로 master 1개와 read-only replica 1개를 관리한다. 각 Pod는 메
 
 Secret/ConfigMap 변경만으로 실행 중 ACL·설정이 갱신되지 않는다. 계정 추가·교체는 Pod template의 Git 변경으로 재배포하며 master의 쓰기 중단을 고려한다. 자동 reload나 직접 ACL/CONFIG 변경으로 우회하지 않는다. 신규 config 인증은 기존 `bootstrap-doppler-auth.yml`에 `doppler_token_env`를 명시해 해당 인증 Secret만 create한다. 기존 토큰은 덮어쓰지 않는다.
 
-검증: Argo CD revision·Synced/Healthy, 두 Pod Ready/PVC Bound, 역할·복제 연결, 앱 SET/GET·replica 반영, 무인증·다른 접두사·관리 명령 거부. 백업 복원·노드 장애·최대 부하 검증과 구분한다.
+검증: `scripts/redis_verify.py --run-config <보호된-run-config-경로>`는 명시한 kubeconfig/context로 일시적 로컬 port-forward를 열어 인증·ACL·복제를 검사하고 종료한다. 랜덤 키를 60초 TTL로 생성하고 검증 후 해당 키만 삭제한다. Argo CD revision·Synced/Healthy, 두 Pod Ready/PVC Bound도 별도로 확인한다. 백업 복원·노드 장애·최대 부하 검증과 구분한다.
 
 근거: [Redis ACL](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/), [복제와 replica 메모리](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/), [8.2 보안 릴리스](https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.2-release-notes/).

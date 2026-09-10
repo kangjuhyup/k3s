@@ -35,3 +35,6 @@ class RedisTests(unittest.TestCase):
         self.assertIn("replica-ignore-maxmemory yes", self.module.CONFIG)
         self.assertIn("appendonly yes", self.module.CONFIG)
         self.assertIn("maxmemory-policy noeviction", self.module.CONFIG)
+        self.assertNotIn("--user", self.module.HEALTH)
+        self.assertIn("AUTH %s %s", self.module.HEALTH)
+        self.assertIn("INFO server", self.module.HEALTH)

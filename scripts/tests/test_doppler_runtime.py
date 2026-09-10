@@ -128,3 +128,14 @@ class DopplerRuntimeTests(unittest.TestCase):
         self.assertEqual(len(self.cluster.writes), 1)
         with self.assertRaises(ValueError):
             self.module.bootstrap_tokens(self.cluster, bootstrap(), config, self.environment, "UNKNOWN_TOKEN")
+
+    def test_incremental_auth_health_exception_still_requires_exact_successful_revision(self):
+        expected = {"metadata": {"name": "doppler"}, "spec": {"project": "platform-doppler"}}
+        actual = {**copy.deepcopy(expected), "status": {"sync": {"status": "Synced", "revision": "synthetic"},
+            "health": {"status": "Degraded"}, "operationState": {"phase": "Succeeded"}}}
+        self.cluster.objects[("application", "argocd", "doppler")] = actual
+        with self.assertRaises(ValueError):
+            self.module.application_ready(self.cluster, expected, "synthetic")
+        self.module.application_ready(self.cluster, expected, "synthetic", require_healthy=False)
+        with self.assertRaises(ValueError):
+            self.module.application_ready(self.cluster, expected, "wrong", require_healthy=False)

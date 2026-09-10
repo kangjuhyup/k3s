@@ -1,0 +1,37 @@
+{
+  "apiVersion": "argoproj.io/v1alpha1",
+  "kind": "AppProject",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "-10"
+    },
+    "name": "platform-redis",
+    "namespace": "argocd"
+  },
+  "spec": {
+    "clusterResourceWhitelist": [],
+    "destinations": [
+      {
+        "namespace": "databases",
+        "server": "https://kubernetes.default.svc"
+      }
+    ],
+    "namespaceResourceWhitelist": [
+      {
+        "group": "",
+        "kind": "ConfigMap"
+      },
+      {
+        "group": "",
+        "kind": "Service"
+      },
+      {
+        "group": "apps",
+        "kind": "StatefulSet"
+      }
+    ],
+    "sourceRepos": [
+      "https://github.com/kangjuhyup/k3s.git"
+    ]
+  }
+}

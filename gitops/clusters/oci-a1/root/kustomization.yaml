@@ -12,6 +12,8 @@
     "platform-project.json",
     "postgresql-project.json",
     "postgresql.json",
+    "redis-project.json",
+    "redis.json",
     "root-project.json",
     "root.json"
   ]
