@@ -50,6 +50,8 @@ TLS는 Istio에서 종료하고 내부 HTTP로 전달한다. Namespace의 sideca
 - UI 빌드가 mock 없이 same-origin API base를 사용하는지 확인한다.
   프록시 신뢰 홉 수 1과 실제 클라이언트 IP·Secure cookie·OIDC issuer 동작은 배포 전 확인한다.
 - worker는 DB 키만 받으며 Redis·초기 관리자·OIDC 암호화 키를 받지 않는다.
+- API는 OIDC 캐시 TTL margin/negative/backfill과 비밀번호 재설정 TTL을 명시한다.
+  이 필수 설정은 readiness만으로 검증되지 않으므로 배포 후 실제 로그인도 확인한다.
 
 ## 배포 및 갱신 확인
 

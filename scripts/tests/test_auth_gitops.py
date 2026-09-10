@@ -73,6 +73,13 @@ class AuthTests(unittest.TestCase):
             self.assertEqual(ca["secret"]["items"], [{"key": "DB_TLS_CA_CERT", "path": "ca.crt"}])
             self.assertTrue(next(v for v in c["volumeMounts"] if v["name"] == "db-ca")["readOnly"])
 
+    def test_login_and_password_reset_have_required_runtime_ttls(self):
+        c = self.resource("auth-service")["spec"]["template"]["spec"]["containers"][0]
+        values = {e["name"]: e.get("value") for e in c["env"]}
+        for name, value in {"OIDC_CACHE_TTL_MARGIN_SEC": "5", "OIDC_CACHE_NEGATIVE_TTL_SEC": "3",
+                            "OIDC_CACHE_BACKFILL_TTL_SEC": "60", "OTP_PASSWORD_RESET_TTL_SEC": "900"}.items():
+            self.assertEqual(values[name], value)
+
     def test_ui_runs_unprivileged_and_public_paths_preserve_oidc(self):
         pod = self.resource("auth-ui")["spec"]["template"]["spec"]
         self.assertEqual(pod["securityContext"]["runAsUser"], 101)

@@ -134,6 +134,14 @@ spec:
           value: hybrid
         - name: OIDC_ACCESS_TOKEN_FORMAT
           value: opaque
+        - name: OIDC_CACHE_TTL_MARGIN_SEC
+          value: '5'
+        - name: OIDC_CACHE_NEGATIVE_TTL_SEC
+          value: '3'
+        - name: OIDC_CACHE_BACKFILL_TTL_SEC
+          value: '60'
+        - name: OTP_PASSWORD_RESET_TTL_SEC
+          value: '900'
         - name: HTTP_TRUST_PROXY_HOPS
           value: '1'
         - name: HTTP_HSTS_ENABLED
