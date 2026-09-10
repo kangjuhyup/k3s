@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+  name: auth-ui
+  namespace: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth-ui
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth-ui
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - command:
+        - nginx
+        - -g
+        - daemon off;
+        image: ghcr.io/kangjuhyup/auth/auth-ui:main-812ed68@sha256:a540a700a17602cf44c45d480d27c9e2cd4b36206f5d4cb16b3e4bf1d3593da1
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        name: auth-ui
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /etc/nginx/nginx.conf
+          name: nginx
+          readOnly: true
+          subPath: nginx.conf
+        - mountPath: /tmp
+          name: tmp
+      securityContext:
+        fsGroup: 101
+        runAsGroup: 101
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir:
+          sizeLimit: 32Mi
+        name: tmp
+      - configMap:
+          name: auth-ui-nginx
+        name: nginx

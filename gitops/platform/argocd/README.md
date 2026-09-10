@@ -2,7 +2,7 @@
 
 [공개 도메인 연결](../../../docs/runbooks/argocd-public-domain.md): `argo.rvkang.app`을 Istio TLS passthrough로 연결하고 Cloudflare DNS-01로 인증서를 발급하는 GitOps 선언을 추가했다. 아래 bootstrap 설명과 별도로 공개 URL은 환경 values에서 설정한다. 실제 DNS·토큰 준비 및 배포 검증은 해당 절차를 따른다.
 
-Argo CD의 설치 원본과 설정을 둘 위치다. **개인 계정/RBAC용 Helm values 생성 코드**와 [2단계 bootstrap/자기관리 연결 코드](../../../docs/runbooks/argocd-bootstrap.md)를 준비했다. [base.values.json](base.values.json), [versions.json](versions.json)에 공식 chart·ARM64 image digest와 단일 노드 설정을 고정했다. 실제 Git 입력은 비어 있어 운영 Application 생성·설치는 하지 않았다.
+Argo CD의 설치 원본과 설정을 둘 위치다. **개인 계정/RBAC용 Helm values 생성 코드**와 [2단계 bootstrap/자기관리 연결 코드](../../../docs/runbooks/argocd-bootstrap.md)를 준비했다. [base.values.yaml](base.values.yaml), [versions.json](versions.json)에 공식 chart·ARM64 image digest와 단일 노드 설정을 고정했다. 실제 Git 입력은 비어 있어 운영 Application 생성·설치는 하지 않았다.
 
 최초 seed는 [Ansible bootstrap](../../../ansible/roles/argocd_bootstrap/README.md), 일상적인 자기관리 변경은 [클러스터 Application](../../clusters/oci-a1/README.md)을 통해 수행한다. 두 경로가 동일 리소스를 계속 중복 관리하지 않도록 인계한다.
 
@@ -16,8 +16,8 @@ Argo CD의 설치 원본과 설정을 둘 위치다. **개인 계정/RBAC용 Hel
 | --- | --- |
 | [accounts.json](accounts.json) | 검토할 비밀값 없는 계정 목록과 전환 확인 기록; 현재 bootstrap·빈 목록 |
 | [accounts.json.example](accounts.json.example) | 비활성 합성 계정의 입력 형식; 실제 사용자 아님 |
-| [accounts.values.json](accounts.values.json) | 공식 argo-cd chart가 읽을 생성 Helm values; Git 검토 대상 |
-| [생성 도구](../../../scripts/argocd_accounts.py) | Python 3.9+ 표준 라이브러리로 검증·결정적 렌더링 |
+| [accounts.values.yaml](accounts.values.yaml) | 공식 argo-cd chart가 읽을 생성 Helm values; Git 검토 대상 |
+| [생성 도구](../../../scripts/argocd_accounts.py) | Python·PyYAML로 검증·YAML 렌더링 |
 | [테스트](../../../scripts/tests/test_argocd_accounts.py) | 권한·전환 조건·입력 거부·CLI 쓰기/검사 테스트 |
 
 계정의 `name`, `enabled`, `role`, `projects`를 모두 명시한다. 이름은 32자 이하의 소문자/숫자/하이픈이며 소문자로 시작하고 하이픈으로 끝나지 않는다. `admin`은 예약 이름이다. project는 wildcard가 아닌 실제 AppProject 이름을 사용한다.
@@ -30,14 +30,17 @@ Argo CD의 설치 원본과 설정을 둘 위치다. **개인 계정/RBAC용 Hel
 
 ## 생성 및 검사
 
-저장소 루트에서 실행한다. 기본 동작은 read-only이며 `--write`를 명시해야 생성 파일을 갱신한다. 외부 API·인증·배포는 호출하지 않는다.
+저장소 루트에서 실행한다. Python 3.12.9·PyYAML 6.0.3이 있는
+`.local/os-cleanup-venv` 환경을 활성화한 뒤 아래 `python3` 명령을 사용한다.
+기본 동작은 read-only이며 `--write`를 명시해야 YAML 생성 파일을 갱신한다.
+외부 API·인증·배포는 호출하지 않는다.
 
 ```bash
 rtk proxy python3 -m unittest discover -s scripts/tests -p 'test_argocd_accounts*.py' -v
-rtk proxy python3 scripts/argocd_accounts.py --input gitops/platform/argocd/accounts.json --output gitops/platform/argocd/accounts.values.json
+rtk proxy python3 scripts/argocd_accounts.py --input gitops/platform/argocd/accounts.json --output gitops/platform/argocd/accounts.values.yaml
 ```
 
-기본 실행은 표준 라이브러리 테스트 10개를 수행하고 선택적 공식 도구 테스트 2개는 건너뛴다. [공식 도구 테스트](../../../scripts/tests/test_argocd_accounts_native.py)까지 실행하려면 검증된 로컬 바이너리와 chart 압축 파일의 절대 경로를 지정한다. 아래 경로는 설명용이며 실제 파일 경로로 바꾼다.
+기본 실행은 로컬 단위 테스트를 수행하며 선택적 공식 도구 테스트는 필요한 도구가 없으면 건너뛴다. [공식 도구 테스트](../../../scripts/tests/test_argocd_accounts_native.py)까지 실행하려면 검증된 로컬 바이너리와 chart 압축 파일의 절대 경로를 지정한다. 아래 경로는 설명용이며 실제 파일 경로로 바꾼다.
 
 ```bash
 rtk proxy env ARGOCD_TEST_BINARY=/absolute/path/argocd HELM_TEST_BINARY=/absolute/path/helm ARGOCD_TEST_CHART=/absolute/path/argo-cd-10.8.2.tgz python3 -m unittest discover -s scripts/tests -p 'test_argocd_accounts*.py' -v
@@ -48,14 +51,14 @@ rtk proxy env ARGOCD_TEST_BINARY=/absolute/path/argocd HELM_TEST_BINARY=/absolut
 검토한 계정 입력을 바꾼 뒤 생성물을 갱신한다. 두 파일을 함께 Git에서 검토하고 반영한다. `.example`을 운영 입력으로 사용하지 않는다.
 
 ```bash
-rtk proxy python3 scripts/argocd_accounts.py --input gitops/platform/argocd/accounts.json --output gitops/platform/argocd/accounts.values.json --write
+rtk proxy python3 scripts/argocd_accounts.py --input gitops/platform/argocd/accounts.json --output gitops/platform/argocd/accounts.values.yaml --write
 ```
 
 `phase=bootstrap`은 기본 admin을 유지한다. 개인 관리자 로그인·권한과 복구 경로를 실제 확인한 후에만 `cutover.verified_admin`에 해당 활성 개인 관리자 이름을 기록하고 `cutover.recovery_verified=true`, `phase=managed`로 별도 전환한다. 도구는 이 조건이 맞지 않으면 생성을 거부한다. **확인 기록은 사용자 선언이지 실클러스터 검증이나 실행 승인이 아니다.** 한 번 managed로 전환한 환경의 일상 변경에서는 bootstrap으로 되돌리지 않는다. Git 리뷰에서 이전 phase와 검증 기록의 유효성을 확인한다.
 
 ## Argo CD 설치에 연결할 때
 
-계정 생성물은 Kubernetes manifest가 아니라 `configs.cm`/`configs.rbac`를 포함하는 **Helm values 조각**이다. 2단계 생성기가 만드는 자기관리 Application의 공식 chart source는 Git의 이 파일을 `$values` 참조로 읽는다. bootstrap도 동일한 base·환경·계정 values 순서로 렌더링한다. JSON은 Helm values에서 읽을 수 있는 YAML 호환 표현이다.
+계정 생성물은 Kubernetes manifest가 아니라 `configs.cm`/`configs.rbac`를 포함하는 **Helm values 조각**이다. 직접 관리하는 자기관리 Application의 공식 chart source는 Git의 이 파일을 `$values` 참조로 읽는다. bootstrap도 동일한 base·환경·계정 values 순서로 렌더링한다. 생성 출력은 YAML이며 계정 입력 accounts.json은 JSON으로 유지한다.
 
 계정 ConfigMap을 별도 Application이나 직접 apply로 중복 생성하지 않는다. 다른 values/parameters가 계정·admin/RBAC를 덮어쓰거나 별도 `policy.*.csv`가 권한을 추가하지 않도록 전체 렌더링 결과를 검증한다. 생성물 비교 검사만으로 최종 RBAC 안전성을 보장하지 않는다.
 

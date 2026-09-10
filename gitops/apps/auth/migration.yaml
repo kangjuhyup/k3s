@@ -1,0 +1,99 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '-10'
+  name: auth-migrate-f759bf458a94
+  namespace: auth
+spec:
+  activeDeadlineSeconds: 600
+  backoffLimit: 1
+  template:
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - command:
+        - node
+        - dist/cli/migrate.js
+        env:
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              key: DB_HOST
+              name: auth-runtime
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              key: DB_PORT
+              name: auth-runtime
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: DB_NAME
+              name: auth-runtime
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: DB_USER
+              name: auth-runtime
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: DB_PASSWORD
+              name: auth-runtime
+        - name: PGSSLMODE
+          valueFrom:
+            secretKeyRef:
+              key: DB_SSLMODE
+              name: auth-runtime
+        - name: NODE_EXTRA_CA_CERTS
+          value: /var/run/auth-db-ca/ca.crt
+        - name: NODE_ENV
+          value: production
+        - name: DB_DRIVER
+          value: postgresql
+        - name: MIKRO_ORM_LOGGER
+          value: silent
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: ADMIN_USERNAME
+              name: auth-bootstrap
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: ADMIN_PASSWORD
+              name: auth-bootstrap
+        image: ghcr.io/kangjuhyup/auth/auth-service:main-812ed68@sha256:f759bf458a949e4a917658012f4ecd613cc1093bf256a4cda2e1cb7a4626708c
+        name: migrate
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /var/run/auth-db-ca
+          name: db-ca
+          readOnly: true
+        - mountPath: /tmp
+          name: tmp
+      restartPolicy: Never
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: db-ca
+        secret:
+          secretName: auth-runtime
+          items:
+          - key: DB_TLS_CA_CERT
+            path: ca.crt
+      - emptyDir:
+          sizeLimit: 32Mi
+        name: tmp

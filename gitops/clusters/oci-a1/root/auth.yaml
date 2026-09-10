@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '70'
+  name: auth
+  namespace: argocd
+spec:
+  destination:
+    namespace: auth
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+  - group: apps
+    jsonPointers:
+    - /spec/replicas
+    kind: Deployment
+    name: auth-service
+    namespace: auth
+  project: app-auth
+  source:
+    path: gitops/clusters/oci-a1/auth
+    repoURL: https://github.com/kangjuhyup/k3s.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      enabled: true
+      prune: false
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+    - FailOnSharedResource=true
+    - RespectIgnoreDifferences=true

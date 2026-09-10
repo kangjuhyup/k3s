@@ -1,9 +1,9 @@
 # 모니터링 운영
 
 Argo CD `monitoring` Application이 kube-prometheus-stack 90.0.0을 관리한다.
-원본은 `gitops/platform/monitoring/base.values.json`, 설치 단계는
-`gitops/clusters/oci-a1/monitoring.json`이다. 생성은 기존
-`scripts/argocd_gitops.py --repo-root . --write`를 사용한다.
+원본은 `gitops/platform/monitoring/base.values.yaml`, 설치 단계는
+`gitops/clusters/oci-a1/root/monitoring.yaml` Application과 `monitoring/` 매니페스트다.
+직접 편집 후 `scripts/gitops_validate.py --repo-root .`로 읽기 전용 검사한다.
 
 ## 비밀값과 설치 순서
 
@@ -12,9 +12,9 @@ Argo CD `monitoring` Application이 kube-prometheus-stack 90.0.0을 관리한다
 `alertmanager-slack` Secret에 주입한다. 웹훅은 Alertmanager의 `api_url_file`로
 읽으며 토큰이나 실제 URL을 Git에 넣지 않는다. 봇·앱 토큰은 사용하지 않는다.
 
-최초에는 `enabled: false`로 namespace만 먼저 생성한다. Doppler 동기화와
-필수 키를 값 출력 없이 확인한 뒤 두 플래그를 true로 변경하고 Git에 반영한다.
-스택 활성화 이후 false로 되돌리는 것은 제거 절차가 아니며 생성기가 거부한다.
+최초 설치는 namespace·Doppler 동기화·필수 키를 값 출력 없이 확인한 뒤
+Helm source와 워크로드를 Git에 연결한다. 현재 선언은 활성 스택을 직접 관리한다.
+Application source 변경이나 파일 삭제는 제거 절차가 아니며 별도 철거 검토가 필요하다.
 
 ## 용량과 수집 범위
 
@@ -38,7 +38,8 @@ local-path PVC는 같은 노드의 디스크를 사용한다. 요청 용량은 �
 
 ## 접속과 확인
 
-확인된 kubeconfig/context를 사용한다. 모든 서비스는 ClusterIP이며 Ingress는 없다.
+확인된 kubeconfig/context를 사용한다. 서비스는 ClusterIP이며 Grafana만
+[공개 도메인](grafana-public-domain.md)의 Istio 경로로 연결한다.
 
 ```sh
 kubectl --kubeconfig "$KUBECONFIG" --context "$K3S_CONTEXT" -n monitoring get pods,pvc

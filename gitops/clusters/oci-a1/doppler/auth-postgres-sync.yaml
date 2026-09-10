@@ -1,0 +1,30 @@
+apiVersion: secrets.doppler.com/v1alpha1
+kind: DopplerSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '20'
+  name: auth-postgres
+  namespace: doppler-operator-system
+spec:
+  config: prd
+  host: https://api.doppler.com
+  managedSecret:
+    name: auth-db-credentials
+    namespace: databases
+    type: kubernetes.io/basic-auth
+  processors:
+    DB_PASSWORD:
+      asName: password
+      type: plain
+    DB_USER:
+      asName: username
+      type: plain
+  project: auth
+  resyncSeconds: 120
+  secrets:
+  - DB_PASSWORD
+  - DB_USER
+  tokenSecret:
+    name: doppler-auth-auth-prd
+    namespace: doppler-operator-system
+  verifyTLS: true

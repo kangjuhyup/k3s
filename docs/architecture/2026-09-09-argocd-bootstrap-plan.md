@@ -1,5 +1,10 @@
 # 2단계: Argo CD bootstrap과 GitOps 인계
 
+이 문서는 당시 구현 계획의 기록이다. 2026-09-11부터 고정 앱의 생성기를 제거하고
+Application·AppProject·매니페스트·values를 직접 관리한다. 현재 명령은
+[운영 안내](../runbooks/argocd-bootstrap.md)를 따른다. 계정·Doppler 생성기는 별도로 유지한다.
+같은 정리에서 배포 파일은 YAML로 전환했다. 아래 JSON 생성 설명은 당시 구현 기록이다.
+
 ## 범위
 
 사용자의 2단계 구현 요청에 따라 코드와 로컬 검증만 수행한다. OCI/SSH/클러스터/Doppler 접속, commit/push, 실제 설치·계정 발급은 하지 않는다. 실제 Git URL/branch는 필수 입력이며 임의 값을 활성 설정에 넣지 않는다.

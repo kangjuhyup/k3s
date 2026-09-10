@@ -1,0 +1,42 @@
+apiVersion: secrets.doppler.com/v1alpha1
+kind: DopplerSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '20'
+  name: auth-postgres-identity
+  namespace: doppler-operator-system
+spec:
+  config: prd
+  host: https://api.doppler.com
+  managedSecret:
+    name: auth-db-private
+    namespace: databases
+    type: Opaque
+  processors:
+    DB_INIT_ACL_SQL:
+      asName: 03-acl.sql
+      type: plain
+    DB_INIT_DATABASE_SQL:
+      asName: 02-database.sql
+      type: plain
+    DB_INIT_ROLE_SQL:
+      asName: 01-role.sql
+      type: plain
+    DB_NAME:
+      asName: database
+      type: plain
+    DB_USER:
+      asName: username
+      type: plain
+  project: auth
+  resyncSeconds: 120
+  secrets:
+  - DB_INIT_ACL_SQL
+  - DB_INIT_DATABASE_SQL
+  - DB_INIT_ROLE_SQL
+  - DB_NAME
+  - DB_USER
+  tokenSecret:
+    name: doppler-auth-auth-prd
+    namespace: doppler-operator-system
+  verifyTLS: true

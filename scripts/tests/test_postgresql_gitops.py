@@ -1,21 +1,14 @@
 """Database creation requires delivered credentials and keeps application isolation."""
 import unittest
-from test_argocd_gitops import fixture, load
+from test_argocd_gitops import manifest_files, load
 
 
 class PostgreSQLTests(unittest.TestCase):
-    def test_namespace_can_be_prepared_without_creating_database(self):
-        config = {"database_enabled": False, "credentials_ready_reviewed": False,
-                  "preserve_existing_bootstrap": True, "storage_size": "10Gi"}
-        self.assertFalse(any(v.get("kind") == "Cluster" for v in load("postgresql_gitops").render(fixture(), config).values()))
-        config["database_enabled"] = True
-        with self.assertRaises(ValueError):
-            load("postgresql_gitops").render(fixture(), config)
 
     def test_database_is_private_single_instance_and_has_no_backup_credentials(self):
         config = {"database_enabled": True, "credentials_ready_reviewed": True,
                   "preserve_existing_bootstrap": True, "storage_size": "10Gi"}
-        objects = load("postgresql_gitops").render(fixture(), config)
+        objects = manifest_files("postgresql")
         spec = next(v for v in objects.values() if v.get("kind") == "Cluster")["spec"]
         self.assertEqual(spec["instances"], 1)
         self.assertEqual(spec["storage"]["size"], "10Gi")

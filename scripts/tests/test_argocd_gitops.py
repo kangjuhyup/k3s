@@ -1,14 +1,37 @@
 """Non-secret stage-two contracts, no cluster or Git service access."""
 import importlib.util
-import json
 from pathlib import Path
+import yaml
 import unittest
 from types import SimpleNamespace
-import subprocess
-import sys
-import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def manifest_files(component=None):
+    """Read the checked-in source of truth, optionally scoped to one application."""
+    files = {str(p.relative_to(ROOT)): yaml.safe_load(p.read_text())
+             for p in (ROOT / "gitops").rglob("*")
+             if p.is_file() and p.suffix in {".json", ".yaml"}}
+    if component is None:
+        return files
+    base = "gitops/clusters/oci-a1/"
+    return {p: obj for p, obj in files.items() if p.startswith(base + component + "/")
+            or p in {base + "root/" + component + ".yaml", base + "root/" + component + "-project.yaml"}}
+
+
+def layout(component):
+    """Paths only; no generated defaults or resource construction."""
+    result = SimpleNamespace(PATH="gitops/clusters/oci-a1/" + component,
+                             ROOT="gitops/clusters/oci-a1/root",
+                             ENV="gitops/clusters/oci-a1/argocd.values.yaml",
+                             VALUES="gitops/platform/" + component + "/base.values.yaml",
+                             PUBLIC_VALUES="gitops/clusters/oci-a1/grafana-public.values.yaml",
+                             NAMESPACE="cnpg-system" if component == "cnpg" else component)
+    if component == "redis":
+        data = manifest_files("redis")[result.PATH + "/config.yaml"]["data"]
+        result.START, result.CONFIG, result.HEALTH = data["start.sh"], data["redis.conf"], data["health.sh"]
+    return result
 
 
 def load(name):
@@ -28,13 +51,13 @@ def fixture():
 
 class GitOpsTests(unittest.TestCase):
     def setUp(self):
-        self.module = load("argocd_gitops")
+        self.module = load("gitops_validate")
 
     def test_self_management_uses_pinned_chart_and_git_values(self):
-        files = self.module.render(fixture())
-        app = files["gitops/clusters/oci-a1/root/argocd.json"]
+        files = manifest_files()
+        app = files["gitops/clusters/oci-a1/root/argocd.yaml"]
         self.assertEqual(app["spec"]["sources"][0]["targetRevision"], "10.8.2")
-        self.assertIn("$values/gitops/platform/argocd/accounts.values.json", app["spec"]["sources"][0]["helm"]["valueFiles"])
+        self.assertIn("$values/gitops/platform/argocd/accounts.values.yaml", app["spec"]["sources"][0]["helm"]["valueFiles"])
         self.assertEqual(app["spec"]["sources"][1]["ref"], "values")
         for path, value in files.items():
             if value.get("kind") == "Application":
@@ -44,9 +67,9 @@ class GitOpsTests(unittest.TestCase):
                 self.assertNotIn("finalizers", value["metadata"])
 
     def test_root_is_restricted_and_secrets_are_not_git_objects(self):
-        files = self.module.render(fixture())
-        project = files["gitops/clusters/oci-a1/root/root-project.json"]["spec"]
-        self.assertEqual(project["sourceRepos"], [fixture()["repo_url"]])
+        files = manifest_files()
+        project = files["gitops/clusters/oci-a1/root/root-project.yaml"]["spec"]
+        self.assertEqual(project["sourceRepos"], [files[self.module.SETTINGS_PATH]["repo_url"]])
         self.assertEqual(project["clusterResourceWhitelist"], [])
         self.assertEqual({p["kind"] for p in project["namespaceResourceWhitelist"]}, {"Application", "AppProject"})
         self.assertFalse(any(value.get("kind") == "Secret" for value in files.values()))
@@ -59,18 +82,18 @@ class GitOpsTests(unittest.TestCase):
             config = fixture()
             config.update(change)
             with self.subTest(change=list(change)), self.assertRaises(ValueError) as failure:
-                self.module.render(config)
+                self.module.validate(config)
             self.assertNotIn("DO_NOT_ECHO", str(failure.exception))
 
     def test_active_configuration_is_reviewed_and_public_git_is_explicit(self):
-        config = json.loads((ROOT / "gitops/clusters/oci-a1/bootstrap.json").read_text())
+        config = yaml.safe_load((ROOT / "gitops/clusters/oci-a1/bootstrap.json").read_text())
         self.assertTrue(config['reviewed'])
         self.assertEqual(config['auth']['mode'], 'public')
-        files = self.module.render(config)
-        self.assertEqual(files['gitops/clusters/oci-a1/root/root.json']['spec']['source']['repoURL'], config['repo_url'])
+        files = manifest_files()
+        self.assertEqual(files['gitops/clusters/oci-a1/root/root.yaml']['spec']['source']['repoURL'], config['repo_url'])
 
     def test_baseline_separates_secrets_and_keeps_private_single_node_settings(self):
-        values = json.loads((ROOT / "gitops/platform/argocd/base.values.json").read_text())
+        values = yaml.safe_load((ROOT / "gitops/platform/argocd/base.values.yaml").read_text())
         self.assertFalse(values["configs"]["secret"]["createSecret"])
         self.assertFalse(values["redisSecretInit"]["enabled"])
         self.assertEqual(values["server"]["service"]["type"], "ClusterIP")
@@ -91,27 +114,6 @@ class GitOpsTests(unittest.TestCase):
         self.assertIn("http.followRedirects=false", calls[0][0])
         with self.assertRaises(ValueError):
             module.verify(fixture(), "b" * 40, environment, execute=fake)
-
-    def test_generator_cli_checks_before_writing_and_refuses_symlinks(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            settings = root / self.module.SETTINGS_PATH
-            settings.parent.mkdir(parents=True)
-            settings.write_text(json.dumps(fixture()), encoding="utf-8")
-            args = [sys.executable, str(ROOT / "scripts/argocd_gitops.py"), "--repo-root", str(root)]
-            result = subprocess.run(args, text=True, capture_output=True, check=False)
-            self.assertEqual(result.returncode, 1)
-            self.assertFalse((root / self.module.ROOT_PATH).exists())
-            result = subprocess.run(args + ["--write"], text=True, capture_output=True, check=False)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertTrue(self.module.check_files(root, self.module.render(fixture())))
-            self.assertEqual(subprocess.run(args, capture_output=True, check=False).returncode, 0)
-            target = root / self.module.ENV_PATH
-            target.unlink()
-            target.symlink_to(settings)
-            original = settings.read_bytes()
-            self.assertEqual(subprocess.run(args + ["--write"], capture_output=True, check=False).returncode, 1)
-            self.assertEqual(settings.read_bytes(), original)
 
 
 if __name__ == "__main__":

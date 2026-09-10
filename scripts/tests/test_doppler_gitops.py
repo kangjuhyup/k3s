@@ -1,9 +1,9 @@
 """Offline Doppler declarations, ownership and upstream artifact checks."""
 import copy
-import json
 import os
 from pathlib import Path
 import tempfile
+import yaml
 import unittest
 
 from test_argocd_gitops import ROOT, fixture as bootstrap, load
@@ -74,25 +74,6 @@ class DopplerTests(unittest.TestCase):
                 self.module.validate(config)
             self.assertNotIn("DO_NOT_PRINT", str(failure.exception))
 
-    def test_root_integration_and_orphan_protection(self):
-        gitops = load("argocd_gitops")
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            for path, value in [(gitops.SETTINGS_PATH, bootstrap()), (self.module.SETTINGS, fixture())]:
-                target = root / path
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text(json.dumps(value))
-            files = gitops.render_repository(root)
-            self.assertIn("doppler.json", files[gitops.ROOT_PATH + "/kustomization.yaml"]["resources"])
-            for path, value in files.items():
-                target = root / path
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text(json.dumps(value))
-            changed = fixture()
-            changed["mappings"][0]["target_secret"] = "another-tls"
-            (root / self.module.SETTINGS).write_text(json.dumps(changed))
-            with self.assertRaises(ValueError):
-                gitops.render_repository(root)
 
     def test_pinned_upstream_chart_and_hardened_render(self):
         archive = os.environ.get("DOPPLER_TEST_CHART")
@@ -102,7 +83,7 @@ class DopplerTests(unittest.TestCase):
         files = vendor.render(Path(archive))
         self.assertEqual(len([v for v in files.values() if v.get("kind") != "Kustomization"]), 9)
         for path, value in files.items():
-            self.assertEqual(json.loads((ROOT / path).read_text()), value)
+            self.assertEqual(yaml.safe_load((ROOT / path).read_text()), value)
         deployment = next(v for v in files.values() if v.get("kind") == "Deployment")
         pod = deployment["spec"]["template"]["spec"]
         self.assertEqual(pod["nodeSelector"]["kubernetes.io/arch"], "arm64")

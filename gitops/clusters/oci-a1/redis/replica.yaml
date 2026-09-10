@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+    argocd.argoproj.io/sync-wave: '20'
+  name: shared-redis-replica
+  namespace: databases
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: replica
+      app.kubernetes.io/name: shared-redis
+  serviceName: shared-redis-replica-headless
+  template:
+    metadata:
+      annotations:
+        infra.oci-a1.example/acl-revision: '2'
+        infra.oci-a1.example/tls-revision: '1'
+        sidecar.istio.io/inject: 'false'
+      labels:
+        app.kubernetes.io/component: replica
+        app.kubernetes.io/name: shared-redis
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - command:
+        - sh
+        - /config/start.sh
+        env:
+        - name: REDIS_ROLE
+          value: replica
+        image: docker.io/library/redis:8.2.9-alpine@sha256:30abb90e62f14b737010746def3ba99cc79fe19dcdb3d37b41f21fc62e7da19d
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - /config/health.sh
+          failureThreshold: 6
+          periodSeconds: 10
+          timeoutSeconds: 3
+        name: redis
+        ports:
+        - containerPort: 6379
+          name: redis
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - /config/health.sh
+            - ready
+          periodSeconds: 10
+          timeoutSeconds: 3
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        startupProbe:
+          exec:
+            command:
+            - sh
+            - /config/health.sh
+          failureThreshold: 60
+          periodSeconds: 10
+          timeoutSeconds: 3
+        volumeMounts:
+        - mountPath: /data
+          name: data
+          readOnly: false
+        - mountPath: /runtime
+          name: runtime
+          readOnly: false
+        - mountPath: /config
+          name: config
+          readOnly: true
+        - mountPath: /private
+          name: private
+          readOnly: true
+        - mountPath: /accounts/auth
+          name: auth-account
+          readOnly: true
+        - mountPath: /tls
+          name: tls
+          readOnly: true
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 999
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 1Mi
+        name: runtime
+      - configMap:
+          name: shared-redis-config
+        name: config
+      - name: private
+        secret:
+          defaultMode: 288
+          secretName: shared-redis-private
+      - name: auth-account
+        secret:
+          defaultMode: 288
+          secretName: auth-redis-credentials
+      - name: tls
+        secret:
+          defaultMode: 288
+          secretName: shared-redis-replica-tls
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: local-path

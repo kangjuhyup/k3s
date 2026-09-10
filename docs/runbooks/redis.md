@@ -13,7 +13,7 @@ Argo CD로 master 1개와 read-only replica 1개를 관리한다. 각 Pod는 메
 
 ## 운영
 
-원본은 `scripts/redis_gitops.py`, 활성화 게이트는 `gitops/clusters/oci-a1/redis.json`, 비밀값 매핑은 `gitops/clusters/oci-a1/doppler.json`이다. 저장소 Python으로 `scripts/argocd_gitops.py --repo-root . --write`를 실행하고 생성물·테스트·server dry-run을 검토한 뒤 Git으로 반영한다. 새 서비스는 자기 Doppler config·읽기 토큰·계정 Secret 매핑과 `/accounts/` 하위 mount를 추가한다. 기존 계정명 중복·접두사 겹침을 반드시 검사한다.
+원본은 `gitops/clusters/oci-a1/redis/`와 `root/redis.yaml`, 비밀값 매핑은 `gitops/clusters/oci-a1/doppler.json`이다. 매니페스트를 직접 수정한 뒤 `scripts/gitops_validate.py --repo-root .`, 테스트·server dry-run을 검토하고 Git으로 반영한다. Secret에서 ACL을 조립하는 컨테이너 시작 스크립트는 유지한다. 새 서비스는 전용 Doppler config·토큰·Secret과 /accounts/ mount를 추가하고 계정명 중복·접두사 겹침을 반드시 검사한다.
 
 Secret/ConfigMap 변경만으로 실행 중 ACL·설정이 갱신되지 않는다. 계정 추가·교체는 Pod template의 Git 변경으로 재배포하며 master의 쓰기 중단을 고려한다. 자동 reload나 직접 ACL/CONFIG 변경으로 우회하지 않는다. 신규 config 인증은 기존 `bootstrap-doppler-auth.yml`에 `doppler_token_env`를 명시해 해당 인증 Secret만 create한다. 기존 토큰은 덮어쓰지 않는다.
 
@@ -35,7 +35,7 @@ Python 의존성은 `scripts/requirements-pki.txt`를 사용한다. 저장소 �
 "$PKI_PYTHON" scripts/redis_pki.py --write --renew-leaves
 ```
 
-CA 유효기간은 1095일, leaf는 90일이다. `--check`는 잔여 30일 미만이면 실패한다. **자동 갱신·알림은 아직 없다.** 만료 전 운영자가 갱신한 뒤 `--check`, Doppler Secret의 인증서·키 일치 검증을 수행하고 `redis.json`의 `tls_revision`을 증가시켜 생성·검토·Git 반영한다. 앱도 새 클라이언트 인증서를 로딩해야 한다. 서버는 시작 시 인증서를 보호된 메모리 볼륨에 복사하므로 Secret 변경만으로 재로딩되지 않는다. 순차 master/replica 재배포 중 쓰기·복제 중단이 발생할 수 있다. CA 교체·긴급 인증서 폐기는 단순 leaf 갱신과 구분하여 신뢰 번들 전환을 별도로 계획한다.
+CA 유효기간은 1095일, leaf는 90일이다. `--check`는 잔여 30일 미만이면 실패한다. **자동 갱신·알림은 아직 없다.** 만료 전 운영자가 갱신한 뒤 `--check`, Doppler Secret의 인증서·키 일치 검증을 수행하고 Redis StatefulSet의 Pod template 인증서 revision annotation을 갱신·검토·Git 반영한다. 앱도 새 클라이언트 인증서를 로딩해야 한다. 서버는 시작 시 인증서를 보호된 메모리 볼륨에 복사하므로 Secret 변경만으로 재로딩되지 않는다. 순차 master/replica 재배포 중 쓰기·복제 중단이 발생할 수 있다. CA 교체·긴급 인증서 폐기는 단순 leaf 갱신과 구분하여 신뢰 번들 전환을 별도로 계획한다.
 
 Redis 8.2.9의 복제 TLS는 CA 체인 검증을 하지만 SNI 설정만으로 호스트명 대조까지 수행하지는 않는다. 전용 CA와 client-only 앱 인증서로 신뢰 범위를 줄였으나, 복제 연결에서 서버 SAN을 검증했다고 보고하지 않는다. 앱/검증 클라이언트는 SAN 대조를 수행한다. [Redis TLS 구현](https://github.com/redis/redis/blob/8.2.9/src/tls.c), [TLS 설정](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).
 

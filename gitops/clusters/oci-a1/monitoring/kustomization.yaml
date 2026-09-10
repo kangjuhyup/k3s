@@ -1,16 +1,13 @@
-{
-  "apiVersion": "kustomize.config.k8s.io/v1beta1",
-  "kind": "Kustomization",
-  "resources": [
-    "namespace.json",
-    "postgresql-podmonitor.json",
-    "redis-metrics-master.json",
-    "redis-metrics-replica.json",
-    "redis-podmonitor.json",
-    "database-rules.json",
-    "grafana-certificate.json",
-    "grafana-gateway.json",
-    "grafana-route.json",
-    "grafana-destination.json"
-  ]
-}
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- namespace.yaml
+- postgresql-podmonitor.yaml
+- redis-metrics-master.yaml
+- redis-metrics-replica.yaml
+- redis-podmonitor.yaml
+- database-rules.yaml
+- grafana-certificate.yaml
+- grafana-gateway.yaml
+- grafana-route.yaml
+- grafana-destination.yaml

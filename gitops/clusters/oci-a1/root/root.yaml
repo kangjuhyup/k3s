@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+  name: oci-a1-root
+  namespace: argocd
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: bootstrap-root
+  source:
+    path: gitops/clusters/oci-a1/root
+    repoURL: https://github.com/kangjuhyup/k3s.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      enabled: true
+      prune: false
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+    - FailOnSharedResource=true

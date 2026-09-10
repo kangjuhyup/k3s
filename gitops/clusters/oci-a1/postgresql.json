@@ -1,6 +1,0 @@
-{
-  "database_enabled": true,
-  "credentials_ready_reviewed": true,
-  "preserve_existing_bootstrap": true,
-  "storage_size": "10Gi"
-}

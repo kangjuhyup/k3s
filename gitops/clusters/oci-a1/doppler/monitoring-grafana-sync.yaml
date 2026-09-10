@@ -1,0 +1,30 @@
+apiVersion: secrets.doppler.com/v1alpha1
+kind: DopplerSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '20'
+  name: monitoring-grafana
+  namespace: doppler-operator-system
+spec:
+  config: prd
+  host: https://api.doppler.com
+  managedSecret:
+    name: grafana-admin
+    namespace: monitoring
+    type: Opaque
+  processors:
+    GRAFANA_ADMIN_PASSWORD:
+      asName: admin-password
+      type: plain
+    GRAFANA_ADMIN_USER:
+      asName: admin-user
+      type: plain
+  project: infrastructure
+  resyncSeconds: 120
+  secrets:
+  - GRAFANA_ADMIN_PASSWORD
+  - GRAFANA_ADMIN_USER
+  tokenSecret:
+    name: doppler-auth-infrastructure-prd
+    namespace: doppler-operator-system
+  verifyTLS: true

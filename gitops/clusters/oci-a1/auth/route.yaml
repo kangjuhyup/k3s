@@ -1,0 +1,45 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+  name: auth-public
+  namespace: istio-system
+spec:
+  exportTo:
+  - .
+  gateways:
+  - auth-public
+  hosts:
+  - auth.rvkang.app
+  http:
+  - match:
+    - port: 80
+    redirect:
+      port: 443
+      scheme: https
+  - match:
+    - port: 443
+      uri:
+        prefix: /admin/
+    - port: 443
+      uri:
+        prefix: /auth/
+    - port: 443
+      uri:
+        prefix: /t/
+    - port: 443
+      uri:
+        prefix: /interaction-assets/
+    route:
+    - destination:
+        host: auth-service.auth.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: auth-ui.auth.svc.cluster.local
+        port:
+          number: 80

@@ -1,0 +1,102 @@
+apiVersion: secrets.doppler.com/v1alpha1
+kind: DopplerSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '-20'
+  name: auth-runtime
+  namespace: doppler-operator-system
+spec:
+  config: prd
+  host: https://api.doppler.com
+  managedSecret:
+    name: auth-runtime
+    namespace: auth
+    type: Opaque
+  processors:
+    DB_TLS_CA_CERT:
+      asName: DB_TLS_CA_CERT
+      type: plain
+    DB_HOST:
+      asName: DB_HOST
+      type: plain
+    DB_NAME:
+      asName: DB_NAME
+      type: plain
+    DB_PASSWORD:
+      asName: DB_PASSWORD
+      type: plain
+    DB_PORT:
+      asName: DB_PORT
+      type: plain
+    DB_SSLMODE:
+      asName: DB_SSLMODE
+      type: plain
+    DB_USER:
+      asName: DB_USER
+      type: plain
+    JWKS_ENCRYPTION_KEY:
+      asName: JWKS_ENCRYPTION_KEY
+      type: plain
+    OIDC_COOKIE_KEYS:
+      asName: OIDC_COOKIE_KEYS
+      type: plain
+    OTP_TOKEN_SECRET:
+      asName: OTP_TOKEN_SECRET
+      type: plain
+    REDIS_DB:
+      asName: REDIS_DB
+      type: plain
+    REDIS_HOST:
+      asName: REDIS_HOST
+      type: plain
+    REDIS_KEY_PREFIX:
+      asName: REDIS_KEY_PREFIX
+      type: plain
+    REDIS_PASSWORD:
+      asName: REDIS_PASSWORD
+      type: plain
+    REDIS_PORT:
+      asName: REDIS_PORT
+      type: plain
+    REDIS_TLS_CA_CERT:
+      asName: REDIS_TLS_CA_CERT
+      type: plain
+    REDIS_TLS_CERT:
+      asName: REDIS_TLS_CERT
+      type: plain
+    REDIS_TLS_ENABLED:
+      asName: REDIS_TLS_ENABLED
+      type: plain
+    REDIS_TLS_KEY:
+      asName: REDIS_TLS_KEY
+      type: plain
+    REDIS_USERNAME:
+      asName: REDIS_USERNAME
+      type: plain
+  project: auth
+  resyncSeconds: 120
+  secrets:
+  - DB_TLS_CA_CERT
+  - DB_HOST
+  - DB_NAME
+  - DB_PASSWORD
+  - DB_PORT
+  - DB_SSLMODE
+  - DB_USER
+  - JWKS_ENCRYPTION_KEY
+  - OIDC_COOKIE_KEYS
+  - OTP_TOKEN_SECRET
+  - REDIS_DB
+  - REDIS_HOST
+  - REDIS_KEY_PREFIX
+  - REDIS_PASSWORD
+  - REDIS_PORT
+  - REDIS_TLS_CA_CERT
+  - REDIS_TLS_CERT
+  - REDIS_TLS_ENABLED
+  - REDIS_TLS_KEY
+  - REDIS_USERNAME
+  tokenSecret:
+    name: doppler-auth-auth-prd
+    namespace: doppler-operator-system
+  verifyTLS: true

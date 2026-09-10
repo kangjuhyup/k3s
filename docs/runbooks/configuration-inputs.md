@@ -8,9 +8,9 @@
 | 사전: Ubuntu 초기화 | [OS 교체 점검 기록](os-rebuild.md) | 자동 실행 코드 없음 |
 | 1. K3s | `ansible/inventories/oci-a1/settings.json` — 아래 예제를 복사해 신규 작성 | 설치·입력 검증 코드 있음 |
 | 2. Argo CD | `gitops/clusters/oci-a1/bootstrap.json` 및 `gitops/platform/argocd/accounts.json` | 코드 있음, 실제 값 미입력 |
-| 3. Istio | `gitops/clusters/oci-a1/istio.json`, `gitops/clusters/oci-a1/ingress.json` | 내부 baseline 및 ServiceLB 외부 TLS·라우팅·mTLS 코드 있음, 비활성 |
+| 3. Istio | `gitops/clusters/oci-a1/root/istio.yaml`, `istio/`, `ingress.values.yaml` | 직접 관리하는 Helm·ServiceLB 선언 |
 | 4. Doppler 동기화 | `gitops/clusters/oci-a1/doppler.json`, 로컬 `doppler-run.json` | Operator·인증 bootstrap·매핑·조회 검사 코드 있음, 비활성 |
-| TLS 자동화 기반 | `gitops/clusters/oci-a1/cert-manager.json` | cert-manager 설치 코드 있음. DNS 업체 미확인으로 Issuer·Certificate는 아직 미구현 |
+| TLS 자동화 기반 | `gitops/clusters/oci-a1/root/cert-manager.yaml`, `cert-manager/`, `argocd-ingress/` | cert-manager·Cloudflare DNS-01 선언 |
 | 5. Wasabi 백업 | 아래 5단계 준비 항목, 추후 백업 schema 작성 | 미구현 — 현재 입력해도 소비되지 않음 |
 | 6. 종합 검증 | 아래 6단계 준비 항목 | 통합 실행기 미구현 |
 
@@ -73,7 +73,7 @@ Ubuntu 초기화에서는 instance OCID, 이전 boot volume OCID, 새 **Ubuntu A
 | `cluster_dns` | Service CIDR 내부의 사용할 DNS 서비스 IP |
 | `endpoint` | 모든 노드에서 접근할 `https://실제-주소:6443` |
 | `tls_sans` | endpoint의 호스트/IP를 포함하는 인증서 SAN 배열; URL/포트가 아니라 호스트/IP |
-| `servicelb` | 사용자 선택에 따라 첫 설치부터 **true**. 외부 ingress 생성기가 true인지 검사 |
+| `servicelb` | 사용자 선택에 따라 첫 설치부터 **true**. 외부 ingress 검사에서 true인지 확인 |
 | `token_env.server` | Doppler 키 이름, 기본 `K3S_SERVER_TOKEN` |
 | `token_env.agent` | Doppler 키 이름, 기본 `K3S_AGENT_TOKEN`; server 키와 이름 달라야 함 |
 | `nodes.<고정키>.role` | 첫 노드 `server`, 추가 노드 `agent`; server 정확히 1대 |
@@ -156,46 +156,25 @@ admin 원문 비밀번호도 승인된 Doppler 키로 보관하되, 현재 자�
 
 ## 3단계: Istio
 
-직접 편집: [istio.json](../../gitops/clusters/oci-a1/istio.json). 활성화 전에 2단계 Argo CD 자기관리와 CRD health 설정 반영을 확인한다.
+원본은 `gitops/clusters/oci-a1/root/istio.yaml`, `istio/`, `ingress.values.yaml`과
+`gitops/platform/istio/*.values.yaml`이다. 직접 관리하는 Application source와
+Kustomization resources가 배포 범위를 결정한다. 환경 활성화용 JSON은 사용하지 않는다.
 
-| 키 | 값 / 지원 범위 |
-| --- | --- |
-| `enabled` | 현재 false. 실제 배포 준비가 되면 검토한 Git 변경에서 true |
-| `reviewed` | 모드·namespace·호환 버전·내부 노출·기존 리소스 충돌 확인 후 true |
-| `mode` | 현재 코드 지원은 `sidecar`만. ambient 선택은 별도 CNI/ztunnel 구현 필요 |
-| `namespace` | 현재 baseline은 `istio-system`만 지원. 기존 클러스터의 namespace 추정값이 아니라 신규 선언 |
-| `gateway_service_type` | baseline 값 `ClusterIP` 유지. 아래 `ingress.json`을 활성화하면 생성 overlay가 ServiceLB용 `LoadBalancer`로 변경 |
+Gateway의 정확한 host·TLS Secret 참조, VirtualService의 경로·ClusterIP Service port,
+DestinationRule TLS 모드를 함께 검토한다. 기존 namespace 소유권·이름 충돌과 sidecar
+가입을 확인하고 앱 namespace에만 STRICT를 적용한다. Argo CD·시스템 namespace를
+일괄 변경하지 않는다. TLS SAN·체인·만료·키 일치·SDS 반영, DNS·OCI/Ubuntu 80/443·
+포트 충돌과 ServiceLB 신규 노드 배치 범위는 실제 검증한다. 실제 IP·PEM은 Git에 넣지 않는다.
 
-`gitops/platform/istio/versions.json`은 검증한 chart 버전·SHA256·image digest 기록이다. 현재 Istio 1.30.4, Kubernetes 1.32~1.36 범위를 확인했다. `bootstrap.json.kube_version`과 연결하며 아직 K3s 실제 버전은 선택하지 않았다. [공식 지원표](https://istio.io/latest/docs/releases/supported-releases/), 확인일 2026-09-09. 실제 설치 시 지원 기간을 다시 확인한다.
+K3s settings의 ServiceLB·네트워크 검토, bootstrap Kubernetes 버전과 chart 지원 범위를
+맞춘다. namespace label은 기존 Pod를 재시작하지 않는다. 고정 chart checksum·ARM64
+digest와 자원 용량을 함께 검토한다. 설정 검사는 `scripts/gitops_validate.py --repo-root .`,
+chart 검사는 `istio_validate.py`를 사용한다. 검증은 실제 TLS·mTLS 통신 성공을 대신하지 않는다.
 
-`base.values.json`, `istiod.values.json`, `gateway.values.json`은 제공하는 baseline이다. `resources.requests/limits`, `replicaCount` 등을 변경하면 chart 렌더링·capacity·테스트도 다시 검토한다. version·digest·검증 코드의 잠금을 한 군데만 바꾸지 않는다. 최초 gateway에는 별도 Doppler 입력이 없다.
-
-외부 노출은 **K3s ServiceLB**로 확정했다. [ingress.json](../../gitops/clusters/oci-a1/ingress.json)에 아래 값을 나중에 입력한다. [구조 예제](../../gitops/clusters/oci-a1/ingress.json.example)는 활성 파일이 아니며 실제 도메인으로 사용하지 않는다. `istio.json`에 이 키를 추가하지 않는다.
-
-| `ingress.json` 키 | 입력할 값 |
-| --- | --- |
-| `enabled`, `reviewed` | 최초 false. 실제 namespace 소유권·메시 가입·경로 준비 검토 후 true |
-| `exposure` | 확정값 `k3s-servicelb` |
-| `network_reviewed` | 공인 IP/DNS·OCI/Ubuntu 80/443·포트 충돌·ServiceLB 대상 노드 점검 후 true |
-| `tls_ready_reviewed` | 인증서 전달·SAN·체인·유효기간·키 일치·갱신 경로 확인 후 true. 자동 점검 flag가 아닌 수동 확인 기록 |
-| `mesh_namespaces` | 이 Istio Application이 관리할 앱 namespace 목록; sidecar 가입 label과 namespace STRICT 정책 생성 |
-| `routes[].name` | 고유 route 이름, 소문자 영문 시작·최대 40자 |
-| `routes[].host` | 실제 외부 도메인. 소문자 DNS 이름, wildcard/URL/포트 없음 |
-| `routes[].tls_secret` | `istio-system`에 준비한 TLS Secret 이름. 실제 인증서/개인키 값 금지 |
-| `routes[].backend_namespace` | 위 mesh namespace 중 하나 |
-| `routes[].backend_service` | 실제 앱의 HTTP ClusterIP Service 이름 |
-| `routes[].backend_port` | HTTP **Service port** 정수 |
-| `routes[].path_prefix` | `/` 또는 `/api` 같은 경로 접두어, rewrite 없음 |
-
-host 및 backend Service 중복은 현재 지원하지 않는다. Gateway·VirtualService·DestinationRule은 `networking.istio.io`, mTLS 정책은 `security.istio.io`로 생성한다. Kubernetes Gateway API는 계속 비활성이다. `ingress.values.json`과 `istio/`의 리소스는 생성물이므로 손으로 수정하지 않는다.
-
-외부 TLS 자동 발급/갱신은 cert-manager로 준비하며 DNS 업체별 연결은 남아 있다. 보유 인증서는 아래 4단계 매핑으로 인증서 키→`tls.crt`, 개인키 키→`tls.key`를 전달할 수 있으며 실제 PEM은 Doppler에만 저장한다. 자동 발급 인증서 Secret은 cert-manager, DNS 인증 자격 증명은 Doppler로 분리한다. 아직 존재하지 않는 Doppler 키 이름을 실제 소비되는 키로 가정하지 않는다.
-
-외부 활성화 생성기는 Git의 `ansible/inventories/oci-a1/settings.json`이 유효하고 `servicelb=true`이며 K3s 기본 버전이 `bootstrap.json.kube_version`과 같은지도 검사한다. 기존 서버의 설정을 자동 변경하지 않는다. 자세한 전제·노드 확장·mTLS 범위·검증은 [외부 ingress 안내](istio-external-ingress.md)를 따른다.
-
-생성·로컬 검사·배포 후 확인: [Istio 3단계](istio-bootstrap.md). 게이트웨이 Pod가 Ready인 것과 도메인 요청이 성공하는 것은 다르다.
-
-runbook의 로컬 셸 변수는 `ISTIO_HELM_BINARY`=검증한 Helm 절대 경로, `ISTIO_CHART_DIR`=3개 tgz가 있는 절대 디렉터리, `K3S_KUBE_VERSION`=`bootstrap.json.kube_version`과 같은 문자열이다. 배포 후 조회의 `K3S_KUBECONFIG`=보호된 kubeconfig 경로, `K3S_CONTEXT`=그 안에서 확인한 context 이름이다. 모두 명령 입력이며 `istio.json`에 추가하는 키가 아니다. kubeconfig 내용은 Git/Doppler 참조표/로그에 복사하지 않는다.
+Helm·chart 경로와 Kubernetes 버전은 검토한 로컬 명령 입력이다. 배포 후 보호된
+kubeconfig와 확인한 context를 사용하며 내용을 Git·로그에 복사하지 않는다.
+상세 입력·복구·보안 조건은 [Istio baseline](istio-bootstrap.md)과
+[외부 ingress](istio-external-ingress.md)를 따른다.
 
 ## 4단계: Doppler 지속 동기화
 
@@ -212,7 +191,7 @@ Git 원본은 `gitops/clusters/oci-a1/doppler.json`이다. [예시](../../gitops
 | `mappings[].token_secret` | `doppler-auth-` 접두사의 인증 Secret 이름. namespace는 `doppler-operator-system`, data 키는 `serviceToken` 고정 |
 | `mappings[].token_env` | 컨트롤러에 주입할 토큰의 Doppler 키 이름. 예 `DOPPLER_WEB_SERVICE_TOKEN` |
 | `mappings[].target_namespace` | 다른 GitOps 원본이 먼저 생성한 앱 namespace. `istio-system`은 외부 TLS type만 허용 |
-| `mappings[].target_secret` | 대상 Secret 이름. 외부 TLS는 `ingress.json.routes[].tls_secret`과 일치 |
+| `mappings[].target_secret` | 대상 Secret 이름. 외부 TLS는 `Gateway.spec.servers[].tls.credentialName`과 일치 |
 | `mappings[].type` | `Opaque` 또는 `kubernetes.io/tls` |
 | `mappings[].resync_seconds` | 정수 60~3600초. 예 120 |
 | `mappings[].keys` | `{ "DOPPLER_KEY_NAME": "target-key" }` 키명 매핑. 전체 config 동기화·빈 매핑 금지 |
@@ -236,16 +215,13 @@ Ansible 입력 `doppler_python`=PyYAML을 포함한 controller Python 절대 경
 
 ## TLS 자동 발급·갱신 기반
 
-사용자는 자동 발급·갱신을 선택했다. 현재는 cert-manager 공통 설치까지 구현했으며 provider별 DNS-01·Issuer·Certificate 연결은 DNS 업체 확인 후 진행한다. 실제 값은 나중에 채운다.
-
-| 위치 / 키 | 넣을 값 |
-| --- | --- |
-| `gitops/clusters/oci-a1/cert-manager.json`: `enabled` | 공통 설치 선언 활성화 시 true, 기본 false |
-| 같은 파일: `reviewed` | 버전·RBAC·기존 설치 부재 검토 후 true |
-| `gitops/platform/cert-manager/base.values.json` | 제공하는 ARM64·image digest·단일 A1 자원 baseline. 일상 입력으로 수정하지 않음 |
-| `gitops/platform/cert-manager/versions.json` | chart v1.21.1·checksum·Helm 4.2.4. 변경 시 관련 테스트 함께 검토 |
-
-`bootstrap.json.kube_version`은 1.33~1.36 범위를 요구한다. 위 JSON에 DNS token·도메인 등 미지원 키를 추가하지 않는다. 현재 필요한 선택은 DNS 서비스명이며, 후속 도메인·ACME 이메일·Doppler DNS 인증 키의 입력 위치는 [자동 TLS 절차](tls-automatic.md)에 구현 상태와 구분해 정리했다. 인증서 Secret은 cert-manager, DNS 인증은 Doppler 소유이며 인증서 자체를 양방향 동기화하지 않는다.
+원본은 `gitops/clusters/oci-a1/root/cert-manager.yaml`, `cert-manager/`와
+`gitops/platform/cert-manager/base.values.yaml`이다. versions.json의 chart checksum·
+Helm 버전·Kubernetes 지원 범위와 ARM64 digest를 함께 검토한다.
+Cloudflare DNS-01 Issuer는 `argocd-ingress/`에 있다. 도메인 추가 시 Certificate,
+Gateway의 credentialName과 공유 Issuer의 dnsNames를 함께 직접 수정한다.
+인증서 Secret은 cert-manager, DNS 인증은 Doppler 소유이며 이중 동기화하지 않는다.
+RBAC·기존 설치 소유권·DNS 권한·발급 및 갱신은 [자동 TLS 절차](tls-automatic.md)를 따른다.
 
 ## 5단계: Wasabi — 아직 미구현
 
@@ -273,10 +249,10 @@ Ansible 입력 `doppler_python`=PyYAML을 포함한 controller Python 절대 경
 ## 직접 수정하지 않는 생성물
 
 - `.local/ansible/oci-a1/hosts.json`: `k3s_inventory.py`가 생성.
-- `gitops/platform/argocd/accounts.values.json`: `argocd_accounts.py`가 생성.
-- `gitops/clusters/oci-a1/root/`, `argocd.values.json`, 활성화 시 `istio/`, `ingress.values.json`, `doppler/`: `argocd_gitops.py`가 생성. **Git 커밋 대상**, 현재 미입력이라 활성 생성물 없음.
+- `gitops/platform/argocd/accounts.values.yaml`: `argocd_accounts.py`가 생성.
+- root/·앱 디렉터리·argocd.values.yaml·ingress.values.yaml은 생성물이 아니라 직접 관리하는 Git 원본이다. Doppler 매핑 선언만 doppler_gitops.py로 관리한다.
 - `gitops/platform/doppler/install/`: `doppler_vendor.py`로 변환한 고정 upstream Git 대상. 비밀값 없음.
-- `gitops/clusters/oci-a1/cert-manager/`, `root/cert-manager*.json`: 활성 입력으로 `argocd_gitops.py`가 생성하는 Git 대상. 기본 비활성.
+- cert-manager/와 root/cert-manager*.yaml도 직접 관리하는 Git 원본이다.
 - Kubernetes Secret data: bootstrap/선택한 동기화 주체/해당 컨트롤러가 관리. Git에 수동 복사하지 않음.
 
 이 문서의 표는 입력 위치 안내이지 실제 값 확인·배포·인증 발급 완료 기록이 아니다.

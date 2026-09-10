@@ -1,13 +1,13 @@
 # Argo CD 공개 도메인
 
-`argo.rvkang.app`을 Argo CD에 연결한다. [입력](../../gitops/clusters/oci-a1/argocd-ingress.json)은 공개 도메인만 포함한다. 공개 도메인·공개 URL은 Git에 기록할 수 있으며 API 토큰·서버 IP·개인키는 Doppler 관리 대상이다.
+`argo.rvkang.app`을 Argo CD에 연결한다. [매니페스트](../../gitops/clusters/oci-a1/argocd-ingress/)를 직접 관리한다. 공개 도메인·공개 URL은 Git에 기록할 수 있으며 API 토큰·서버 IP·개인키는 Doppler 관리 대상이다.
 
 ## 연결과 소유권
 
 Cloudflare DNS → OCI 공인 경로의 443 → K3s ServiceLB → Istio SNI 라우팅 → `argocd-server.argocd.svc.cluster.local:443` 순서다. Istio는 TLS를 그대로 전달하고 Argo CD가 HTTPS를 종료한다. HTTP 80은 HTTPS로 리다이렉트한다. `server.insecure=false`를 유지하며 Argo CD namespace에 sidecar 주입이나 STRICT mTLS를 추가하지 않는다. DestinationRule의 `DISABLE`은 Istio가 TLS를 추가로 감싸지 않는다는 뜻이며, 전달되는 Argo CD HTTPS를 평문으로 바꾸지 않는다.
 
 - `argocd` Application: 기존 설치와 공개 URL 설정을 소유한다.
-- `istio` Application: 기존 gateway Service의 ServiceLB overlay를 소유한다. 일반 앱의 `ingress.json` 활성화와 독립적이며 80/443만 노출한다.
+- `istio` Application: 기존 gateway Service의 ServiceLB overlay를 소유한다. 일반 앱 라우팅과 독립적이며 80/443만 노출한다.
 - `cert-manager` Application: 고정된 controller·CRD 설치를 소유한다.
 - `doppler` Application: `infrastructure/prd`의 `CLOUDFLARE_DNS_API_TOKEN_`을 `cert-manager/cloudflare-dns-api-token` Secret의 `api-token` 키로 전달한다.
 - `argocd-ingress` Application: ClusterIssuer → Certificate → Gateway/VirtualService/DestinationRule을 wave 0/10/20으로 적용한다. 기존 Argo CD 3.5.2의 cert-manager health 검사로 최초 인증서 Ready 이후 라우팅을 적용한다. 다른 Application 사이의 wave만으로 controller/webhook 준비를 보장하지 않으므로 초기 API 미준비 오류는 준비 후 재동기화한다.
@@ -31,8 +31,7 @@ Cloudflare 프록시를 켜면 `Full (strict)`를 사용한다. CLI는 `argocd l
 저장소에서 확인한 Python 3.9+와 PyYAML, Helm v4.2.4 및 고정 chart archive를 사용한다. 현재 로컬 환경은 `.local/os-cleanup-venv/bin/python`(3.12.9), `.local/downloads/darwin-arm64/helm`(v4.2.4)이다.
 
 ```sh
-.local/os-cleanup-venv/bin/python scripts/argocd_gitops.py --repo-root . --write
-.local/os-cleanup-venv/bin/python scripts/argocd_gitops.py --repo-root .
+.local/os-cleanup-venv/bin/python scripts/gitops_validate.py --repo-root .
 ```
 
 `test_argocd_ingress.py`는 정확한 SNI·backend·TLS 유지, 인증서 소유권·적용 순서, 잘못된 입력 및 누락된 의존성, ServiceLB 공유를 검사한다. `HELM_TEST_BINARY`, `CERT_MANAGER_TEST_CHART`, `ISTIO_TEST_CHART_DIR`, `ARGOCD_TEST_CHART`에 로컬 고정 파일을 지정하면 실제 차트와 CRD 검사도 실행한다.
@@ -41,7 +40,7 @@ Cloudflare 프록시를 켜면 `Full (strict)`를 사용한다. CLI는 `argocd l
 .local/os-cleanup-venv/bin/python -m unittest discover -s scripts/tests -p 'test_argocd_ingress.py' -v
 ```
 
-실제 배포 후 TLS 검증을 끄지 않고 `curl -I https://argo.rvkang.app`과 로그인, HTTP→HTTPS 전환을 확인한다. 기존 port-forward 복구 경로는 유지한다. `enabled=false`는 기존 공개 리소스의 철거 절차가 아니며 생성기가 이를 차단한다.
+실제 배포 후 TLS 검증을 끄지 않고 `curl -I https://argo.rvkang.app`과 로그인, HTTP→HTTPS 전환을 확인한다. 기존 port-forward 복구 경로는 유지한다. 파일 삭제나 source 연결 해제는 기존 공개 리소스의 철거 절차가 아니다.
 
 이 작업에서 로컬 GitOps 선언을 준비했다. DNS 변경·토큰 발급/저장·Git push·실클러스터 동기화·인증서 발급 검증은 수행하지 않았다.
 

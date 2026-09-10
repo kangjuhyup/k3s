@@ -1,0 +1,92 @@
+apiVersion: v1
+data:
+  health.sh: |
+    set -eu
+    probe() {
+      # Existing plaintext Pods keep working while the GitOps TLS rollout replaces them.
+      set -- "$1"
+      if [ -f /runtime/tls/ca.crt ]; then
+        set -- "$1" --tls --cacert /runtime/tls/ca.crt --cert /runtime/tls/tls.crt --key /runtime/tls/tls.key
+      fi
+      command=$1; shift
+      { printf 'AUTH %s %s\n' "$(cat /runtime/probe-username)" "$(cat /runtime/probe-password)"; printf '%s\n' "$command"; } | redis-cli --raw "$@"
+    }
+    probe 'INFO server' | grep -q '^redis_version:'
+    if [ "${1:-}" = ready ] && [ "$REDIS_ROLE" = replica ]; then
+      probe 'INFO replication' | grep -q '^master_link_status:up'
+    fi
+  redis.conf: |
+    bind 0.0.0.0
+    protected-mode yes
+    port 0
+    tls-port 6379
+    tls-auth-clients yes
+    tls-replication yes
+    tls-cert-file /runtime/tls/tls.crt
+    tls-key-file /runtime/tls/tls.key
+    tls-ca-cert-file /runtime/tls/ca.crt
+    tls-protocols "TLSv1.2 TLSv1.3"
+    tls-session-cache-size 128
+    daemonize no
+    loglevel warning
+    dir /data
+    aclfile /runtime/users.acl
+    databases 1
+    maxmemory 128mb
+    maxmemory-policy noeviction
+    replica-read-only yes
+    replica-ignore-maxmemory yes
+    replica-serve-stale-data no
+    maxclients 100
+    repl-backlog-size 1mb
+    client-output-buffer-limit replica 16mb 8mb 60
+    client-output-buffer-limit normal 4mb 2mb 60
+    client-output-buffer-limit pubsub 4mb 2mb 60
+    appendonly yes
+    appendfsync everysec
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 32mb
+    save ""
+  start.sh: |
+    set -eu
+    umask 077
+    safe() { case "$1" in ''|*[!a-zA-Z0-9_-]*) exit 1;; esac; }
+    password() { case "$1" in ''|*[!a-f0-9]*) exit 1;; esac; [ "${#1}" -eq 64 ]; }
+    printf 'user default off\n' > /runtime/users.acl
+    for role in admin replication probe; do
+      name=$(cat "/private/$role-username"); secret=$(cat "/private/$role-password")
+      safe "$name"; password "$secret"
+      case "$role" in
+        admin) rules='~* &* +@all';;
+        replication) rules='+psync +replconf +ping';;
+        probe) rules='+ping +info';;
+      esac
+      printf 'user %s on >%s %s\n' "$name" "$secret" "$rules" >> /runtime/users.acl
+    done
+    for account in /accounts/*; do
+      name=$(cat "$account/username"); secret=$(cat "$account/password"); prefix=$(cat "$account/prefix")
+      safe "$name"; password "$secret"
+      case "$prefix" in ''|*[!a-zA-Z0-9_:-]*) exit 1;; esac
+      scripting=''
+      # Only the auth mount may run its atomic replay-protection script.
+      [ "$account" != /accounts/auth ] || scripting='+eval'
+      printf 'user %s on >%s ~%s* resetchannels -@all +@read +@write -@dangerous -@scripting -keys -scan -randomkey -dbsize +ping +hello +echo +client|setname +client|setinfo +client|getname +multi +exec +discard +watch +unwatch %s\n' "$name" "$secret" "$prefix" "$scripting" >> /runtime/users.acl
+    done
+    cp /private/probe-username /runtime/probe-username
+    cp /private/probe-password /runtime/probe-password
+    mkdir -p /runtime/tls
+    cp /tls/ca.crt /tls/tls.crt /tls/tls.key /runtime/tls/
+    cp /config/redis.conf /runtime/redis.conf
+    if [ "$REDIS_ROLE" = replica ]; then
+      host=$(cat /private/master-host); port=$(cat /private/port)
+      case "$host" in ''|*[!a-zA-Z0-9.-]*) exit 1;; esac
+      [ "$port" = 6379 ]
+      name=$(cat /private/replication-username); secret=$(cat /private/replication-password)
+      printf 'replicaof %s %s\nmasteruser %s\nmasterauth %s\n' "$host" "$port" "$name" "$secret" >> /runtime/redis.conf
+    fi
+    unset name secret prefix host port scripting
+    exec redis-server /runtime/redis.conf
+kind: ConfigMap
+metadata:
+  name: shared-redis-config
+  namespace: databases

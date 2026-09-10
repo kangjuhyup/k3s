@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: auth-migrate-f759bf458a94
+  namespace: auth
+spec:
+  template:
+    spec:
+      containers:
+      - name: migrate
+        resources:
+          limits:
+            memory: 768Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        env:
+        - name: ADMIN_UI_URL
+          value: https://auth.rvkang.app

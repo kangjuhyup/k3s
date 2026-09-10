@@ -1,13 +1,12 @@
 """Shared Redis isolation and constrained single-node replication contracts."""
 import unittest
-from test_argocd_gitops import fixture, load
+from test_argocd_gitops import manifest_files, layout
 
 
 class RedisTests(unittest.TestCase):
     def setUp(self):
-        self.module = load("redis_gitops")
-        self.objects = self.module.render(fixture(), {"enabled": True, "credentials_ready_reviewed": True,
-                                                   "mtls_enabled": True, "tls_revision": 1})
+        self.module = layout("redis")
+        self.objects = manifest_files("redis")
 
     def test_two_persistent_instances_each_have_256_mib_limit(self):
         states = [o for o in self.objects.values() if o.get("kind") == "StatefulSet"]
@@ -23,9 +22,6 @@ class RedisTests(unittest.TestCase):
             self.assertEqual(spec["volumeClaimTemplates"][0]["apiVersion"], "v1")
             self.assertEqual(spec["volumeClaimTemplates"][0]["kind"], "PersistentVolumeClaim")
 
-    def test_unreviewed_credentials_block_deployment(self):
-        with self.assertRaises(ValueError):
-            self.module.render(fixture(), {"enabled": True, "credentials_ready_reviewed": False})
 
     def test_service_accounts_use_private_acl_inputs_and_no_global_key_discovery(self):
         self.assertFalse(any(o.get("kind") in {"Secret", "Namespace", "Ingress"} for o in self.objects.values()))
@@ -49,3 +45,11 @@ class RedisTests(unittest.TestCase):
                 tls = next(v for v in pod["volumes"] if v["name"] == "tls")
                 self.assertEqual(tls["secret"]["secretName"], obj["metadata"]["name"] + "-tls")
                 self.assertNotIn("ca-key", str(pod))
+
+    def test_only_auth_can_use_eval_and_other_scripting_stays_denied(self):
+        self.assertIn("scripting=''", self.module.START)
+        self.assertIn('[ "$account" != /accounts/auth ] || scripting=\'+eval\'', self.module.START)
+        self.assertIn('-@scripting', self.module.START)
+        self.assertNotIn('+@scripting', self.module.START)
+        self.assertNotIn('+evalsha', self.module.START)
+        self.assertNotIn('+script', self.module.START)

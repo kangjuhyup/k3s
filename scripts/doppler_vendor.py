@@ -56,7 +56,7 @@ def render(chart):
             container = pod["containers"][0]
             container["image"] = IMAGE
             container["securityContext"]["capabilities"] = {"drop": ["ALL"]}
-        files[PATH + "/" + kind.lower() + "-" + metadata["name"] + ".json"] = obj
+        files[PATH + "/" + kind.lower() + "-" + metadata["name"] + ".yaml"] = obj
     files[PATH + "/kustomization.yaml"] = {
         "apiVersion": "kustomize.config.k8s.io/v1beta1", "kind": "Kustomization",
         "resources": sorted(Path(path).name for path in files)}
@@ -77,12 +77,12 @@ def main():
             require(not any(p.is_symlink() for p in target.parents if p.is_relative_to(root)))
         for path, obj in files.items():
             target = root / path
-            data = json.dumps(obj, indent=2, sort_keys=True) + "\n"
+            data = yaml.safe_dump(obj, sort_keys=False, allow_unicode=True)
             if args.write:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(data, encoding="utf-8")
             else:
-                require(target.is_file() and target.read_text() == data)
+                require(target.is_file() and yaml.safe_load(target.read_text()) == obj)
         print("Doppler pinned manifests generated." if args.write else "Doppler pinned manifests match.")
         return 0
     except (ValueError, OSError, tarfile.TarError, yaml.YAMLError):

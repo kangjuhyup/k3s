@@ -4,9 +4,10 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import yaml
 import unittest
 
-from test_argocd_gitops import ROOT, fixture, load
+from test_argocd_gitops import manifest_files, ROOT, load
 
 
 class BundleNativeTests(unittest.TestCase):
@@ -18,16 +19,16 @@ class BundleNativeTests(unittest.TestCase):
         self.module = load("argocd_bundle")
 
     def populate(self, root):
-        config = fixture()
-        files = self.module.gitops.render(config)
+        config = manifest_files()["gitops/clusters/oci-a1/bootstrap.json"]
+        files = manifest_files()
         files[self.module.gitops.SETTINGS_PATH] = config
         for path in [self.module.gitops.BASE_PATH, self.module.gitops.ACCOUNTS_PATH,
                      "gitops/platform/argocd/accounts.json", "gitops/platform/argocd/versions.json"]:
-            files[path] = json.loads((ROOT / path).read_text())
+            files[path] = yaml.safe_load((ROOT / path).read_text())
         for path, value in files.items():
             target = root / path
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(self.module.gitops.encoded(value), encoding="utf-8")
+            target.write_text(yaml.safe_dump(value, sort_keys=False) if target.suffix == ".yaml" else json.dumps(value, indent=2) + "\n", encoding="utf-8")
         return config
 
     def git(self, root, *args):
@@ -45,8 +46,8 @@ class BundleNativeTests(unittest.TestCase):
             self.assertGreater(len(resources), 15)
             self.assertNotIn("Secret", {obj["kind"] for obj in resources})
             self.assertNotIn("Job", {obj["kind"] for obj in resources})
-            files = self.module.gitops.render(config)
-            project = files[self.module.gitops.ROOT_PATH + "/platform-project.json"]["spec"]
+            files = manifest_files()
+            project = files[self.module.gitops.ROOT_PATH + "/platform-project.yaml"]["spec"]
             for obj in resources:
                 group = obj["apiVersion"].split("/")[0] if "/" in obj["apiVersion"] else ""
                 allowed = project["namespaceResourceWhitelist"] if obj["metadata"].get("namespace") else project["clusterResourceWhitelist"]
@@ -54,7 +55,7 @@ class BundleNativeTests(unittest.TestCase):
             params = next(obj for obj in resources if obj["metadata"]["name"] == "argocd-cmd-params-cm")
             self.assertEqual(params["data"]["server.insecure"], "false")
 
-    def test_bundle_requires_matching_committed_generated_state(self):
+    def test_bundle_requires_matching_committed_manifests(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.populate(root)

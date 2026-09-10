@@ -1,0 +1,30 @@
+apiVersion: secrets.doppler.com/v1alpha1
+kind: DopplerSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '-20'
+  name: auth-bootstrap
+  namespace: doppler-operator-system
+spec:
+  config: prd
+  host: https://api.doppler.com
+  managedSecret:
+    name: auth-bootstrap
+    namespace: auth
+    type: Opaque
+  processors:
+    ADMIN_PASSWORD:
+      asName: ADMIN_PASSWORD
+      type: plain
+    ADMIN_USERNAME:
+      asName: ADMIN_USERNAME
+      type: plain
+  project: auth
+  resyncSeconds: 120
+  secrets:
+  - ADMIN_PASSWORD
+  - ADMIN_USERNAME
+  tokenSecret:
+    name: doppler-auth-auth-prd
+    namespace: doppler-operator-system
+  verifyTLS: true

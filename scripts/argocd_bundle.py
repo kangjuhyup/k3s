@@ -20,7 +20,7 @@ def load(name):
     return module
 
 
-gitops = load("argocd_gitops")
+gitops = load("gitops_validate")
 accounts = load("argocd_accounts")
 runtime = load("argocd_bootstrap_runtime")
 
@@ -85,14 +85,13 @@ def render_chart(root, helm, chart, config):
 def prepare(root, helm, chart, revision):
     verify_checkout(root, revision)
     config = gitops.validate(gitops.read_json(root / gitops.SETTINGS_PATH))
-    files = gitops.render_repository(root)
-    gitops.require(gitops.check_files(root, files))
+    files = gitops.validate_repository(root)
     account_config = gitops.read_json(root / "gitops/platform/argocd/accounts.json")
     gitops.require(accounts.render_values(account_config) == gitops.read_json(root / gitops.ACCOUNTS_PATH))
     bundle = {"schema": 1, "config": config, "identity": gitops.identity(config), "expected_revision": revision,
               "resources": render_chart(root, helm, chart, config),
-              "root": files[gitops.ROOT_PATH + "/root.json"], "self": files[gitops.ROOT_PATH + "/argocd.json"],
-              "projects": [files[gitops.ROOT_PATH + "/" + name] for name in ["root-project.json", "platform-project.json"]],
+              "root": files[gitops.ROOT_PATH + "/root.yaml"], "self": files[gitops.ROOT_PATH + "/argocd.yaml"],
+              "projects": [files[gitops.ROOT_PATH + "/" + name] for name in ["root-project.yaml", "platform-project.yaml"]],
               "initial_accounts": account_config["phase"] == "bootstrap" and not any(a["enabled"] for a in account_config["accounts"])}
     runtime.validate_bundle(bundle)
     return bundle
@@ -110,7 +109,7 @@ def main():
         print(json.dumps(result))
         return 0
     except (ValueError, KeyError, TypeError, OSError, StopIteration, yaml.YAMLError, subprocess.SubprocessError):
-        print("Bundle rejected: verify clean committed inputs, generated files, pinned local tools/chart and explicit Git SHA.", file=sys.stderr)
+        print("Bundle rejected: verify clean committed declarations, pinned local tools/chart and explicit Git SHA.", file=sys.stderr)
         return 1
 
 

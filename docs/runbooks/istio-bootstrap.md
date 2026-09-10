@@ -18,7 +18,7 @@ Istio 1.30.4의 base·istiod·gateway Helm chart를 **하나의 `istio` Applicat
 | 10 | istiod Deployment; Argo CD의 Deployment health로 준비 완료 대기 |
 | 20 | gateway chart 리소스; istiod의 gateway injection 후 Deployment 준비 대기 |
 
-CRD health Lua는 2단계 Argo CD `base.values.json`에 포함한다. NamesAccepted 실패/종료 중인 CRD는 Degraded다. **기존 2단계를 이미 설치했다면 이 health 설정이 실제 argocd-cm에 반영된 것을 먼저 확인한 후 별도 Git 변경으로 Istio를 켠다.** Argo CD의 자기관리와 root 앱에는 재귀적인 Application health를 추가하지 않는다. 2단계 bootstrap 완료 판정은 여전히 Argo CD 인계만 검사하며 Istio 성공을 대신하지 않는다.
+CRD health Lua는 2단계 Argo CD `base.values.yaml`에 포함한다. NamesAccepted 실패/종료 중인 CRD는 Degraded다. **기존 2단계를 이미 설치했다면 이 health 설정이 실제 argocd-cm에 반영된 것을 먼저 확인한 후 별도 Git 변경으로 Istio를 켠다.** Argo CD의 자기관리와 root 앱에는 재귀적인 Application health를 추가하지 않는다. 2단계 bootstrap 완료 판정은 여전히 Argo CD 인계만 검사하며 Istio 성공을 대신하지 않는다.
 
 신규 namespace를 자동 sidecar 가입시키지 않는다. `sidecar` baseline만 지원하며 CNI/ztunnel/ambient는 설치하지 않는다. gateway workload는 같은 `istio-system` namespace에서 pod의 gateway injection template을 사용한다. chart에 보이는 `image: auto`는 실제 운영 이미지가 아니라 주입 표식이다. 실제 proxy·init 이미지 원본은 istiod values의 고정 `proxyv2` digest다. 실제 Pod의 주입 결과는 배포 후 별도 확인한다.
 
@@ -29,17 +29,16 @@ Istiod/gateway는 각각 1 replica, requests 합계 350m CPU·640Mi 메모리, m
 ## 로컬 준비
 
 1. [bootstrap.json](../../gitops/clusters/oci-a1/bootstrap.json)의 실제 Git/branch/Kubernetes 입력을 검토한다. Istio 1.30 지원 범위와 실제 K3s 버전을 맞춘다.
-2. [istio.json](../../gitops/clusters/oci-a1/istio.json)에서 baseline을 검토한 뒤 `enabled=true`, `reviewed=true`로 변경한다. 아직 결정하지 않았다면 false를 유지한다.
+2. [Istio Application](../../gitops/clusters/oci-a1/root/istio.yaml), `istio/`와 platform values를 직접 검토·수정한다. 기존 리소스 소유권을 먼저 확인한다.
 3. 공개 공식 chart 3개를 로컬에 확보한다. [versions.json](../../gitops/platform/istio/versions.json)의 SHA256과 맞아야 한다. URL 패턴은 `https://blob.istio.io/istio-release/charts/<chart>-1.30.4.tgz`, chart는 `base`, `istiod`, `gateway`다. Helm v4.2.4와 PyYAML이 설치된 controller Python을 사용한다.
 4. 아래 로컬 명령으로 검사한다. 변수에는 실제 로컬 절대 경로와 검토한 Kubernetes 기본 버전을 지정한다. 비밀값은 필요 없다.
 
 ```bash
 rtk proxy python3 scripts/istio_validate.py --repo-root . --helm "$ISTIO_HELM_BINARY" --chart-dir "$ISTIO_CHART_DIR" --kube-version "$K3S_KUBE_VERSION"
-rtk proxy python3 scripts/argocd_gitops.py --repo-root . --write
-rtk proxy python3 scripts/argocd_gitops.py --repo-root .
+rtk proxy .local/os-cleanup-venv/bin/python scripts/gitops_validate.py --repo-root .
 ```
 
-`--write`는 로컬 생성만 한다. 활성화하면 root에 `istio-project.json`, `istio.json`이 연결되고, `gitops/clusters/oci-a1/istio/`에 namespace·Kustomization이 생성된다. settings의 `istio.json`과 **디렉터리 `istio/`는 다른 대상**이다. 생성물을 손으로 고치지 않는다.
+root/istio-project.yaml·root/istio.yaml, istio/의 namespace·Kustomization과 Helm values를 직접 관리한다. gitops_validate.py는 쓰기 옵션 없이 검사만 수행한다.
 
 5. Git 변경을 검토하고 별도 반영 권한 아래 commit/push/merge한다. Argo CD가 Git에서 배포한다. 이 문서 작성 중에는 commit/push/sync를 수행하지 않았다. 최초 설치 전 기존 Istio CRD·webhook·namespace 소유권과 이름 충돌을 확인한다.
 
@@ -58,7 +57,7 @@ rtk proxy istioctl --kubeconfig "$K3S_KUBECONFIG" --context "$K3S_CONTEXT" proxy
 
 App의 4개 source revision이 `[1.30.4, 1.30.4, 1.30.4, 기대 Git SHA]`인지, Synced/Healthy·성공 operation·오류 조건 없음인지 확인한다. 실제 Pod의 ARM64 이미지 digest, CRD Established, gateway injection/xDS와 endpoints를 확인한다. 도메인 요청·TLS·backend 응답·mTLS/접근 정책은 라우팅이 추가된 뒤 별도 검증한다. `istioctl`은 같은 검토한 Istio 버전과 실행 머신 아키텍처를 사용한다.
 
-`prune=false`, Application cascading finalizer 없음, namespace Delete/Prune 보호를 유지한다. 활성화 후 `enabled=false`로 바꾸는 것은 uninstall이 아니며 생성기는 기존 선언을 조용히 버리지 않고 중단한다. 장애 시 리소스 삭제·직접 Helm/istioctl 설치·강제 재시작으로 우회하지 않는다. 업그레이드는 단순 버전 치환이 아니라 CRD 호환·revision·dataplane 갱신·Git 복귀 계획을 별도로 검토한다.
+`prune=false`, Application cascading finalizer 없음, namespace Delete/Prune 보호를 유지한다. 파일 삭제나 source 연결 해제는 uninstall이 아니며 기존 리소스가 남을 수 있다. 장애 시 리소스 삭제·직접 Helm/istioctl 설치·강제 재시작으로 우회하지 않는다. 업그레이드는 단순 버전 치환이 아니라 CRD 호환·revision·dataplane 갱신·Git 복귀 계획을 별도로 검토한다.
 
 ## 검증 근거
 

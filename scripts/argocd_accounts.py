@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import sys
 import tempfile
+import yaml
 
 
 class ConfigError(ValueError):
@@ -114,7 +115,7 @@ def reject_constant(_value):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, type=Path, help="non-secret accounts JSON")
-    parser.add_argument("--output", required=True, type=Path, help="generated Helm values JSON")
+    parser.add_argument("--output", required=True, type=Path, help="generated Helm values YAML")
     parser.add_argument("--write", action="store_true", help="write generated values; default only checks")
     args = parser.parse_args(argv)
     temporary = None
@@ -126,7 +127,7 @@ def main(argv=None):
                                 object_pairs_hook=unique_object, parse_constant=reject_constant)
         except (json.JSONDecodeError, UnicodeError):
             raise ConfigError("input must be valid UTF-8 JSON") from None
-        rendered = json.dumps(render_values(config), indent=2, sort_keys=True) + "\n"
+        rendered = yaml.safe_dump(render_values(config), sort_keys=False, allow_unicode=True)
         if args.write:
             # Atomic replacement avoids a partially written desired-state file.
             with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=args.output.parent,
@@ -138,14 +139,14 @@ def main(argv=None):
             print("Account values generated; no external changes performed.")
         else:
             require(args.output.is_file(), "generated values are missing; use --write to create them")
-            require(args.output.read_text(encoding="utf-8") == rendered,
+            require(yaml.safe_load(args.output.read_text(encoding="utf-8")) == render_values(config),
                     "generated values differ; review input and regenerate with --write")
             print("Account values match the validated configuration.")
         return 0
     except ConfigError as error:
         print("Account configuration rejected: " + str(error), file=sys.stderr)
         return 1
-    except (OSError, UnicodeError):
+    except (OSError, UnicodeError, yaml.YAMLError):
         print("Unable to read/write account files; check paths and permissions.", file=sys.stderr)
         return 1
     finally:

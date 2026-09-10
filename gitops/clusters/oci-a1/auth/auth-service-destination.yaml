@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+  name: auth-service
+  namespace: istio-system
+spec:
+  exportTo:
+  - .
+  host: auth-service.auth.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+  workloadSelector:
+    matchLabels:
+      app: istio-ingress

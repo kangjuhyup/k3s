@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '40'
+  name: argocd-ingress
+  namespace: argocd
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: platform-argocd-ingress
+  source:
+    path: gitops/clusters/oci-a1/argocd-ingress
+    repoURL: https://github.com/kangjuhyup/k3s.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      enabled: true
+      prune: false
+      selfHeal: true
+    retry:
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+      limit: 5
+    syncOptions:
+    - ServerSideApply=true
+    - FailOnSharedResource=true

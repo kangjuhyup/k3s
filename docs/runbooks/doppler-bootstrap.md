@@ -27,11 +27,15 @@
 ```bash
 rtk proxy "$DOPPLER_PYTHON" scripts/doppler_vendor.py \
   --repo-root . --chart "$DOPPLER_CHART"
-rtk proxy "$DOPPLER_PYTHON" scripts/argocd_gitops.py --repo-root . --write
-rtk proxy "$DOPPLER_PYTHON" scripts/argocd_gitops.py --repo-root .
+rtk proxy "$DOPPLER_PYTHON" scripts/gitops_validate.py --repo-root .
+rtk proxy "$DOPPLER_PYTHON" scripts/doppler_gitops.py --repo-root .
 ```
 
-생성 `root/doppler*.json`, `doppler/`는 Git 대상이다. `install/` 재생성은 출처·checksum·image를 함께 검토하는 버전 갱신 때만 `doppler_vendor.py --write`로 한다. 생성 파일을 직접 편집하지 않는다.
+생성 `root/doppler*.yaml`, `doppler/`는 Git 대상이다. `install/` 재생성은 출처·checksum·image를 함께 검토하는 버전 갱신 때만 `doppler_vendor.py --write`로 한다. 생성 파일을 직접 편집하지 않는다.
+
+매핑 변경 시 `scripts/doppler_gitops.py --repo-root . --write`로 Doppler 소유 선언만
+갱신하고 기본 명령으로 일치를 검사한다. root Kustomization은 직접 관리하며
+이 명령이 Application 연결을 자동 추가하지 않는다. 다른 앱 선언은 재생성하지 않는다.
 
 ## 2. Operator 설치 인계와 대상 확인
 
@@ -78,7 +82,7 @@ rtk proxy "$DOPPLER_PYTHON" scripts/doppler_runtime.py verify \
 
 ## TLS 연결과 앱 반영
 
-보유 인증서는 Doppler의 `WEB_TLS_CERT → tls.crt`, `WEB_TLS_KEY → tls.key`처럼 매핑한다. 실제 PEM은 매핑의 project/config에만 보관한다. processor는 `plain`이므로 base64 문자열이 아닌 원문 PEM이다. `target_namespace=istio-system`, `target_secret=ingress.json.routes[].tls_secret`로 맞춘다. 실제 유효성·SDS 검증 전 ingress의 `tls_ready_reviewed`를 켜지 않는다.
+보유 인증서는 Doppler의 `WEB_TLS_CERT → tls.crt`, `WEB_TLS_KEY → tls.key`처럼 매핑한다. 실제 PEM은 매핑의 project/config에만 보관한다. processor는 `plain`이므로 base64 문자열이 아닌 원문 PEM이다. `target_namespace=istio-system`, `target_secret=Gateway.spec.servers[].tls.credentialName`로 맞춘다. 실제 유효성·SDS 검증 전에 공개 ingress 경로를 연결하지 않는다.
 
 자동 발급 컨트롤러를 채택하면 그 인증서 Secret을 Doppler가 동시에 관리하지 않는다. DNS API 인증만 Doppler로 공급하는 등 소유권을 별도로 설계한다. 외부 인증서는 자동 발급·갱신을 선택했으며 [cert-manager 공통 설치](tls-automatic.md)까지 준비했다. DNS 업체별 issuer 연결은 아직 남아 있다.
 

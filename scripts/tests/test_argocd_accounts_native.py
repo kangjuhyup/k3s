@@ -12,6 +12,7 @@ import re
 import subprocess
 import tempfile
 import unittest
+import yaml
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "argocd_accounts.py"
@@ -103,12 +104,12 @@ class NativeAccountTests(unittest.TestCase):
         helm = self.local_file("HELM_TEST_BINARY")
         chart = self.local_file("ARGOCD_TEST_CHART")
         with tempfile.TemporaryDirectory() as directory:
-            values_file = Path(directory) / "accounts.values.json"
+            values_file = Path(directory) / "accounts.values.yaml"
             for phase, expected in [("bootstrap", "true"), ("managed", "false")]:
                 with self.subTest(phase=phase):
                     config = fixture()
                     config["phase"] = phase
-                    values_file.write_text(json.dumps(renderer.render_values(config)), encoding="utf-8")
+                    values_file.write_text(yaml.safe_dump(renderer.render_values(config)), encoding="utf-8")
                     result = self.invoke([
                         helm, "template", "accounts-check", chart, "--namespace", "argocd",
                         "--values", str(values_file),

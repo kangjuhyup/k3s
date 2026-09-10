@@ -9,16 +9,16 @@ Ansible이 namespace·필수 Secret·공식 chart의 최소 설치 리소스·�
 | 원본/코드 | 역할 |
 | --- | --- |
 | [bootstrap.json](../../gitops/clusters/oci-a1/bootstrap.json) | Git URL/branch, Kubernetes 버전, Doppler 참조; 현재 미확정 입력 |
-| [base.values.json](../../gitops/platform/argocd/base.values.json) | 단일 A1·ARM64·ClusterIP·TLS·리소스 requests와 digest 고정 |
+| [base.values.yaml](../../gitops/platform/argocd/base.values.yaml) | 단일 A1·ARM64·ClusterIP·TLS·리소스 requests와 digest 고정 |
 | [versions.json](../../gitops/platform/argocd/versions.json) | 공식 chart 10.8.2, Argo CD v3.5.2, chart SHA256, Helm v4.2.4 |
-| [accounts.values.json](../../gitops/platform/argocd/accounts.values.json) | 기존 개인 계정/RBAC 생성물; 마지막 values로 병합 |
-| [argocd_gitops.py](../../scripts/argocd_gitops.py) | root/self-management Application·AppProjects·Kustomization·환경 values 생성/일치 검사 |
+| [accounts.values.yaml](../../gitops/platform/argocd/accounts.values.yaml) | 기존 개인 계정/RBAC 생성물; 마지막 values로 병합 |
+| [gitops_validate.py](../../scripts/gitops_validate.py) | root/self-management Application·AppProjects·Kustomization·values 직접 선언 검사 |
 | [argocd_bundle.py](../../scripts/argocd_bundle.py) | 깨끗한 Git SHA·생성물·chart checksum·전체 렌더링을 검증한 공개 bundle 준비 |
 | [argocd_remote_check.py](../../scripts/argocd_remote_check.py) | 실제 실행 시 원격 Git branch SHA 확인; Git 쓰기 없음 |
 | [bootstrap-argocd.yml](../../ansible/playbooks/bootstrap-argocd.yml) | 확인된 server에 최소 bootstrap 역할 실행 |
 | [argocd_bootstrap_runtime.py](../../scripts/argocd_bootstrap_runtime.py) | 명시적 kubeconfig/context로 최초 create 및 인계 검사; Ansible 전용 |
 
-생성되는 경로는 `gitops/clusters/oci-a1/root/`의 Application/AppProject JSON과 `kustomization.yaml`, `gitops/clusters/oci-a1/argocd.values.json`이다. 현재 가짜 Git URL로 생성하지 않았다. JSON은 Kubernetes/Kustomize에서 읽을 수 있는 YAML 호환 표현이다.
+root/의 YAML Application·AppProject·Kustomization과 argocd.values.yaml은 직접 관리하는 원본이다. 배포 매니페스트와 Helm values는 YAML로 관리하며 실행 설정·버전 잠금은 JSON으로 유지한다.
 
 ## 운영 전 입력
 
@@ -47,12 +47,12 @@ Argo CD가 내부적으로 생성하는 self-signed TLS와 기타 내부 자격 
 
 ## 로컬 준비 및 검증
 
-저장소 루트에서 실행한다. 현재 빈 입력은 의도적으로 실패한다. 입력 검토 후 생성물을 함께 Git에서 검토하며 자동 commit/push하지 않는다.
+저장소 루트에서 실행한다. bootstrap 설정과 직접 관리하는 선언을 함께 검토한다.
+검사는 파일이나 외부 상태를 변경하지 않으며 자동 commit/push하지 않는다.
 
 ```bash
-rtk proxy python3 scripts/argocd_gitops.py --repo-root . --write
-rtk proxy python3 scripts/argocd_gitops.py --repo-root .
-rtk proxy python3 scripts/argocd_accounts.py --input gitops/platform/argocd/accounts.json --output gitops/platform/argocd/accounts.values.json
+rtk proxy .local/os-cleanup-venv/bin/python scripts/gitops_validate.py --repo-root .
+rtk proxy python3 scripts/argocd_accounts.py --input gitops/platform/argocd/accounts.json --output gitops/platform/argocd/accounts.values.yaml
 rtk proxy python3 -m unittest discover -s scripts/tests -v
 ```
 

@@ -2,6 +2,11 @@
 
 2026-09-07 사용자가 승인한 역할별 디렉터리 구조를 기준으로 한다.
 
+2026-09-11 관리 방식: `gitops/clusters/oci-a1/root/`와 앱별 매니페스트·values는
+직접 관리하는 원본이다. 고정 앱 생성기와 환경별 활성화 입력은 제거했다.
+계정·Doppler 생성기, bootstrap 실행 설정과 비밀값 런타임 처리는 별도로 유지한다.
+아래 구축 경과는 당시 상태의 기록이며 현재 실행은 runbook을 따른다.
+
 ## 범위
 
 저장소 골격 단계에서는 디렉터리와 안내 문서, Git 제외 규칙만 생성했다. 이후 [기존 A1 편입 계획](2026-09-07-terraform-adoption-plan.md)에 따라 Terraform resource·import 선언·mock 테스트를 추가했다. [단계별 구현](2026-09-09-bootstrap-stages.md)의 1단계로 Ubuntu ARM64 Ansible 설치·가입 playbook과 inventory 생성기를, [2단계](2026-09-09-argocd-bootstrap-plan.md)로 Argo CD 최소 bootstrap·GitOps 선언 생성·자기관리 인계 코드를 추가했다. 실제 Git 입력이 미정이라 활성 Application은 생성하지 않았으며 접속·편입·설치도 하지 않았다. 이후 Istio ServiceLB ingress·mTLS와 Doppler Operator·최소 인증·Secret 매핑 코드를 추가했다. 인증서 자동 발급·Wasabi 백업·종합 운영 검증은 후속 단계다. 기존 스킬은 보존한다.

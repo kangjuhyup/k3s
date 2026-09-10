@@ -18,7 +18,7 @@ def load(name):
     return module
 
 
-doppler, gitops = load("doppler_gitops"), load("argocd_gitops")
+doppler, gitops = load("doppler_gitops"), load("gitops_validate")
 require = doppler.require
 OWNER = "infra.oci-a1.example/doppler-auth-owner"
 
@@ -165,13 +165,13 @@ def main():
         bootstrap = gitops.validate(gitops.read_json(root / gitops.SETTINGS_PATH))
         config = doppler.validate(gitops.read_json(root / doppler.SETTINGS))
         require(config["enabled"])
-        files = gitops.render_repository(root)
-        require(gitops.check_files(root, files))
+        files = gitops.validate_repository(root)
+        require(gitops.check_files(root, doppler.render(bootstrap, config)))
         require(gitops.check_files(root, load("doppler_vendor").render(Path(run["chart"]))))
         cluster = Cluster(run)
         for name in ["root", "doppler"]:
             incremental = args.action == "bootstrap-auth" and bool(args.token_env) and config["sync_enabled"]
-            application_ready(cluster, files[gitops.ROOT_PATH + "/" + name + ".json"], run["expected_revision"],
+            application_ready(cluster, files[gitops.ROOT_PATH + "/" + name + ".yaml"], run["expected_revision"],
                               require_healthy=not (incremental and name == "doppler"))
         if incremental:
             # A newly declared config has no auth yet. Existing config delivery must remain healthy.

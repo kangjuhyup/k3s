@@ -10,7 +10,7 @@ import sys
 
 import yaml
 
-spec = importlib.util.spec_from_file_location("argocd_gitops", Path(__file__).with_name("argocd_gitops.py"))
+spec = importlib.util.spec_from_file_location("gitops_validate", Path(__file__).with_name("gitops_validate.py"))
 gitops = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gitops)
 
@@ -19,15 +19,7 @@ def render(root, helm, chart_dir, kube_version, ingress=None):
     require = gitops.require
     require(gitops.match(kube_version, r"1\.[0-9]+\.[0-9]+"))
     require(32 <= int(kube_version.split(".")[1]) <= 36)
-    external = ingress is not None and gitops.ingress_enabled(ingress)
-    ingress_files = {}
-    if external:
-        # Reuse the production renderer to derive exactly the generated values.
-        additions, ingress_files = gitops.render_istio({
-            "repo_url": "https://git.example.invalid/test/infra.git", "revision": "main", "kube_version": kube_version},
-            {"enabled": True, "reviewed": True, "mode": "sidecar", "namespace": "istio-system", "gateway_service_type": "ClusterIP"})
-        ingress_files.update({gitops.ROOT_PATH + "/" + name: obj for name, obj in additions.items()})
-        gitops.add_ingress(ingress_files, ingress)
+    external = bool(ingress)
     base = root / "gitops/platform/istio"
     versions = gitops.read_json(base / "versions.json")
     require(versions["version"] == gitops.ISTIO_VERSION and versions["repository"] == gitops.ISTIO_REPO)
@@ -44,9 +36,9 @@ def render(root, helm, chart_dir, kube_version, ingress=None):
         archive = chart_dir / (chart + "-" + versions["version"] + ".tgz")
         require(hashlib.sha256(archive.read_bytes()).hexdigest() == versions["charts"][chart])
         args = [str(helm), "template", release, str(archive), "--namespace", "istio-system",
-                "--kube-version", kube_version, "--values", str(base / (chart + ".values.json"))]
+                "--kube-version", kube_version, "--values", str(base / (chart + ".values.yaml"))]
         if external and chart == "gateway":
-            args += ["--set-json", "service=" + json.dumps(ingress_files[gitops.INGRESS_VALUES_PATH]["service"])]
+            args += ["--values", str(root / gitops.INGRESS_VALUES_PATH)]
         rendered = run(args)
         for obj in yaml.safe_load_all(rendered):
             if not obj:
@@ -105,9 +97,10 @@ def main():
         root = args.repo_root.resolve()
         ingress = None
         if args.with_ingress:
-            gitops.render_repository(root)
-            ingress = gitops.read_json(root / gitops.INGRESS_SETTINGS_PATH)
-            gitops.require(gitops.ingress_enabled(ingress))
+            gitops.validate_repository(root)
+            ingress = True
+            k3s = gitops.read_json(root / gitops.K3S_SETTINGS_PATH)
+            gitops.require(k3s["servicelb"] is True and k3s["network_reviewed"] is True)
             gitops.require(gitops.read_json(root / gitops.SETTINGS_PATH)["kube_version"] == args.kube_version)
         objects = render(root, args.helm.resolve(), args.chart_dir.resolve(), args.kube_version, ingress)
         print(f"Istio offline render validated: {len(objects)} objects. No deployment occurred.")

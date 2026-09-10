@@ -1,0 +1,39 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    release: monitoring
+  name: database-health
+  namespace: monitoring
+spec:
+  groups:
+  - name: database-health
+    rules:
+    - alert: RedisUnavailable
+      annotations:
+        summary: Redis authentication or availability check failed
+      expr: redis_up == 0
+      for: 2m
+      labels:
+        severity: critical
+    - alert: RedisReplicationDisconnected
+      annotations:
+        summary: Redis replica has lost its master connection
+      expr: redis_master_link_up == 0
+      for: 2m
+      labels:
+        severity: critical
+    - alert: RedisMemoryNearLimit
+      annotations:
+        summary: Redis memory is above 85 percent of its configured limit
+      expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+      for: 5m
+      labels:
+        severity: warning
+    - alert: PostgreSQLCollectorUnavailable
+      annotations:
+        summary: PostgreSQL monitoring connection failed
+      expr: cnpg_collector_up == 0
+      for: 2m
+      labels:
+        severity: critical

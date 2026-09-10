@@ -4,25 +4,24 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import yaml
 import unittest
 
-from test_argocd_gitops import ROOT, fixture, load
-from test_istio_gitops import istio_fixture
-from test_istio_ingress import ingress_fixture
+from test_argocd_gitops import manifest_files, ROOT, load
 
 
 class IstioNativeTests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get("HELM_TEST_BINARY") and os.environ.get("ISTIO_TEST_CHART_DIR"), "local Helm/charts not supplied")
     def test_servicelb_render_and_istio_crd_fields(self):
         module = load("istio_validate")
-        gitops = load("argocd_gitops")
-        objects = module.render(ROOT, Path(os.environ["HELM_TEST_BINARY"]), Path(os.environ["ISTIO_TEST_CHART_DIR"]), "1.35.1", ingress_fixture())
+        gitops = load("gitops_validate")
+        objects = module.render(ROOT, Path(os.environ["HELM_TEST_BINARY"]), Path(os.environ["ISTIO_TEST_CHART_DIR"]), "1.35.1", True)
         service = next(o for o in objects if o["kind"] == "Service" and o["metadata"]["name"] == "istio-ingress")
         self.assertEqual(service["spec"]["type"], "LoadBalancer")
         deployment = next(o for o in objects if o["kind"] == "Deployment" and o["metadata"]["name"] == "istio-ingress")
         self.assertEqual(deployment["spec"]["template"]["metadata"]["labels"]["app"], "istio-ingress")
-        files = gitops.render(fixture(), istio_fixture(), ingress_fixture())
-        # Validate each generated Istio spec against the exact pinned CRD's schema.
+        files = manifest_files()
+        # Validate each declared Istio spec against the exact pinned CRD's schema.
         crds = {o["spec"]["names"]["kind"]: o for o in objects if o["kind"] == "CustomResourceDefinition"}
         for obj in files.values():
             if obj.get("kind") not in ["Gateway", "VirtualService", "DestinationRule", "PeerAuthentication"]:
@@ -46,9 +45,9 @@ class IstioNativeTests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get("HELM_TEST_BINARY") and os.environ.get("ISTIO_TEST_CHART_DIR"), "local Helm/charts not supplied")
     def test_render_and_project_permissions(self):
         module = load("istio_validate")
-        config = load("argocd_gitops")
+        config = load("gitops_validate")
         objects = module.render(ROOT, Path(os.environ["HELM_TEST_BINARY"]), Path(os.environ["ISTIO_TEST_CHART_DIR"]), "1.35.1")
-        project = config.render(fixture(), istio_fixture())[config.ROOT_PATH + "/istio-project.json"]["spec"]
+        project = manifest_files()[config.ROOT_PATH + "/istio-project.yaml"]["spec"]
         for obj in objects:
             group = obj["apiVersion"].split("/")[0] if "/" in obj["apiVersion"] else ""
             scope = "namespace" if obj["metadata"].get("namespace") else "cluster"
@@ -60,7 +59,7 @@ class IstioNativeTests(unittest.TestCase):
 
     @unittest.skipUnless(os.environ.get("ARGOCD_TEST_BINARY"), "local Argo CD CLI not supplied")
     def test_crd_health_real_lua(self):
-        cm_values = json.loads((ROOT / "gitops/platform/argocd/base.values.json").read_text())["configs"]["cm"]
+        cm_values = yaml.safe_load((ROOT / "gitops/platform/argocd/base.values.yaml").read_text())["configs"]["cm"]
         key = "resource.customizations.health.apiextensions.k8s.io_CustomResourceDefinition"
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)

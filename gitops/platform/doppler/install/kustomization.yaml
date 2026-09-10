@@ -1,15 +1,12 @@
-{
-  "apiVersion": "kustomize.config.k8s.io/v1beta1",
-  "kind": "Kustomization",
-  "resources": [
-    "clusterrole-doppler-operator-manager-role.json",
-    "clusterrolebinding-doppler-operator-manager-rolebinding.json",
-    "configmap-doppler-operator-manager-config.json",
-    "customresourcedefinition-dopplersecrets.secrets.doppler.com.json",
-    "deployment-doppler-operator-controller-manager.json",
-    "namespace-doppler-operator-system.json",
-    "role-doppler-operator-leader-election-role.json",
-    "rolebinding-doppler-operator-leader-election-rolebinding.json",
-    "serviceaccount-doppler-operator-controller-manager.json"
-  ]
-}
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- clusterrole-doppler-operator-manager-role.yaml
+- clusterrolebinding-doppler-operator-manager-rolebinding.yaml
+- configmap-doppler-operator-manager-config.yaml
+- customresourcedefinition-dopplersecrets.secrets.doppler.com.yaml
+- deployment-doppler-operator-controller-manager.yaml
+- namespace-doppler-operator-system.yaml
+- role-doppler-operator-leader-election-role.yaml
+- rolebinding-doppler-operator-leader-election-rolebinding.yaml
+- serviceaccount-doppler-operator-controller-manager.yaml

@@ -1,26 +1,25 @@
-{
-  "apiVersion": "kustomize.config.k8s.io/v1beta1",
-  "kind": "Kustomization",
-  "resources": [
-    "argocd-ingress-project.json",
-    "argocd-ingress.json",
-    "argocd.json",
-    "cert-manager-project.json",
-    "cert-manager.json",
-    "cnpg-project.json",
-    "cnpg.json",
-    "doppler-project.json",
-    "doppler.json",
-    "istio-project.json",
-    "istio.json",
-    "monitoring-project.json",
-    "monitoring.json",
-    "platform-project.json",
-    "postgresql-project.json",
-    "postgresql.json",
-    "redis-project.json",
-    "redis.json",
-    "root-project.json",
-    "root.json"
-  ]
-}
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- argocd-ingress-project.yaml
+- argocd-ingress.yaml
+- argocd.yaml
+- auth-project.yaml
+- auth.yaml
+- cert-manager-project.yaml
+- cert-manager.yaml
+- cnpg-project.yaml
+- cnpg.yaml
+- doppler-project.yaml
+- doppler.yaml
+- istio-project.yaml
+- istio.yaml
+- monitoring-project.yaml
+- monitoring.yaml
+- platform-project.yaml
+- postgresql-project.yaml
+- postgresql.yaml
+- redis-project.yaml
+- redis.yaml
+- root-project.yaml
+- root.yaml

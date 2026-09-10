@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '-10'
+  name: platform-istio
+  namespace: argocd
+spec:
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  - group: apiextensions.k8s.io
+    kind: CustomResourceDefinition
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRole
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRoleBinding
+  - group: admissionregistration.k8s.io
+    kind: MutatingWebhookConfiguration
+  - group: admissionregistration.k8s.io
+    kind: ValidatingWebhookConfiguration
+  description: Administrator-only Istio CRDs, admission and cluster RBAC
+  destinations:
+  - namespace: istio-system
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: ServiceAccount
+  - group: ''
+    kind: Service
+  - group: ''
+    kind: ConfigMap
+  - group: apps
+    kind: Deployment
+  - group: rbac.authorization.k8s.io
+    kind: Role
+  - group: rbac.authorization.k8s.io
+    kind: RoleBinding
+  sourceRepos:
+  - https://github.com/kangjuhyup/k3s.git
+  - https://blob.istio.io/istio-release/charts

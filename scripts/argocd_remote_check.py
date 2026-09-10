@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 
-spec = importlib.util.spec_from_file_location("argocd_gitops", Path(__file__).with_name("argocd_gitops.py"))
+spec = importlib.util.spec_from_file_location("gitops_validate", Path(__file__).with_name("gitops_validate.py"))
 gitops = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gitops)
 

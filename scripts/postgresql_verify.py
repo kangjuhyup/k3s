@@ -31,7 +31,7 @@ def main():
             # Password is stdin only, not argv or shared environment. No shell expansion of values.
             command = ['sh', '-c', 'IFS= read -r PGPASSWORD; export PGPASSWORD; exec psql "$@"', 'sh',
                        '-X', '-w', '-v', 'ON_ERROR_STOP=1', '-At',
-                       f'host=shared-postgres-rw.databases.svc.cluster.local port=5432 dbname={database} user={user} sslmode={sslmode} sslrootcert=/controller/certificates/server-ca.crt',
+                       f'host={db["status"]["writeService"]}.databases.svc.cluster.local port=5432 dbname={database} user={user} sslmode={sslmode} sslrootcert=/controller/certificates/server-ca.crt',
                        '-c', sql]
             return subprocess.run(cluster.prefix + ['-n', 'databases', 'exec', '-i', pod, '-c', 'postgres', '--'] + command,
                                   input=password + '\n', text=True, capture_output=True, timeout=30,

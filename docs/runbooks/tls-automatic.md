@@ -4,45 +4,32 @@
 
 ## 현재 구현 범위
 
-공통 cert-manager 설치 Application·AppProject·namespace·고정 chart/ARM64 values·오프라인 검사를 준비했다. 실제 DNS 업체가 미확인이라 provider별 DNS-01 solver·인증 Secret 매핑·ACME Issuer·Certificate 생성 코드는 아직 작성하지 않았다. 실제 DNS/OCI/Kubernetes 접속·Git push·발급·갱신 시험도 수행하지 않았다.
+공통 cert-manager 설치 Application·AppProject·namespace·고정 chart/ARM64 values와
+Cloudflare DNS-01 solver·Doppler 토큰 매핑·ACME Issuer·Certificate를 직접 관리한다.
+Argo CD·Grafana 공개 경로가 연결되어 있다. 이번 생성기 정리는 로컬 선언 관리 방식만
+변경하며 새 발급·갱신 시험이나 운영 변경을 수행하지 않는다.
 
 DNS-01은 도메인의 TXT 레코드로 검증하므로 최초 발급을 위해 Istio 외부 TLS 라우팅을 미리 열 필요가 없다. DNS 업체의 API와 권한 범위, 전파/self-check 동작을 확인해야 한다. DNS 업체를 임의로 Cloudflare/OCI라고 가정하거나 무관한 webhook을 설치하지 않는다. [DNS-01](https://cert-manager.io/docs/configuration/acme/dns01/).
 
-## 지금 소비되는 설정
+## 직접 관리하는 설정
 
-파일: `gitops/clusters/oci-a1/cert-manager.json`
+원본은 `gitops/clusters/oci-a1/root/cert-manager.yaml`, `cert-manager/`와
+`gitops/platform/cert-manager/base.values.yaml`이다. Cloudflare DNS-01 Issuer는
+`argocd-ingress/`에 있다. 도메인 변경 시 Certificate와 공유 Issuer의 dnsNames,
+Gateway의 credentialName을 함께 맞춘다. 인증 토큰은 기존 Doppler 매핑으로 공급한다.
+실제 키·인증서는 Git에 넣지 않는다. DNS zone 권한·CAA·TXT 전파·ACME 약관과
+연락 이메일 필요성을 검토한다. 인증서 Secret을 여러 컨트롤러가 중복 소유하지 않는다.
 
-| 키 | 값 |
-| --- | --- |
-| `enabled` | cert-manager 설치 선언을 생성할 때 true. 기본 false |
-| `reviewed` | 버전·관리 권한·리소스·기존 설치 부재를 검토한 뒤 true. 실제 검증/승인을 대신하지 않음 |
-
-기존 `bootstrap.json`의 Git URL/branch/Kubernetes 버전도 채워야 한다. 현재 chart의 지원 범위는 1.33~1.36이며 1.32는 활성화 검사에서 거부한다. 현재 운영 버전을 자동 변경하지 않는다.
-
-저장소 루트에서 아래는 **로컬 코드 생성/검사만** 수행한다. `CERT_MANAGER_PYTHON`=PyYAML 포함 Python 절대 경로, `CERT_MANAGER_HELM`=검증한 Helm 4.2.4 절대 경로, `CERT_MANAGER_CHART`=공식 `cert-manager-v1.21.1.tgz` 절대 경로, `K3S_KUBE_VERSION`=검토한 `bootstrap.json.kube_version`이다.
+bootstrap Git/branch·Kubernetes 버전과 Application 선언을 맞춘다. chart 지원 범위는
+1.33~1.36이며 운영 버전을 자동 변경하지 않는다. 아래는 저장소 루트의 로컬 검사다.
+Python은 PyYAML 포함 경로, Helm은 4.2.4, chart는 검증한 cert-manager-v1.21.1.tgz다.
 
 ```bash
-rtk proxy "$CERT_MANAGER_PYTHON" scripts/cert_manager_validate.py \
-  --repo-root . --helm "$CERT_MANAGER_HELM" \
-  --chart "$CERT_MANAGER_CHART" --kube-version "$K3S_KUBE_VERSION"
-rtk proxy "$CERT_MANAGER_PYTHON" scripts/argocd_gitops.py --repo-root . --write
-rtk proxy "$CERT_MANAGER_PYTHON" scripts/argocd_gitops.py --repo-root .
+rtk proxy "$CERT_MANAGER_PYTHON" scripts/cert_manager_validate.py --repo-root . --helm "$CERT_MANAGER_HELM" --chart "$CERT_MANAGER_CHART" --kube-version "$K3S_KUBE_VERSION"
+rtk proxy "$CERT_MANAGER_PYTHON" scripts/gitops_validate.py --repo-root .
 ```
 
-생성되는 `root/cert-manager*.json`, `cert-manager/`는 Git 검토 대상이다. 직접 Helm 설치나 kubectl apply로 반영하지 않는다. 기본 설정은 미입력이라 활성 선언 생성이 차단된다.
-
-## 다음 구현에 필요한 정보
-
-지금 필요한 선택은 **DNS 관리 서비스명**이다. 나머지 실제 값은 사용자 요청대로 나중에 채운다. 아래는 아직 작동하는 JSON 키가 아니라 후속 입력 목록이다.
-
-| 입력 | 보관 위치/용도 |
-| --- | --- |
-| DNS 서비스 | provider별 solver 및 필요 시 ARM64 webhook 선정. 업체 확인 전 추가 배포 없음 |
-| 관리 zone·인증서 도메인 | Git의 값 없는 공개 도메인 선언. zone 범위·CAA·TXT 전파 확인 |
-| ACME 연락 이메일 | Git의 issuer 설정. 공개 CA 약관 검토 필요 |
-| DNS API 인증 키 | Doppler의 전용 최소 권한 config. 선택 provider에 맞춰 정확한 키명·Secret 위치를 후속 명시 |
-| Doppler project/config·Service Token 참조 | 기존 4단계 매핑 원본 및 보호된 최초 인증 경로 |
-| 인증서와 Secret 이름 | Istio gateway와 같은 `istio-system` namespace. `ingress.json.routes[].tls_secret`과 연결 |
+직접 편집한 Git을 Argo CD가 반영한다. Helm 설치나 kubectl apply로 우회하지 않는다.
 
 ## 예정된 활성화·검증 순서
 

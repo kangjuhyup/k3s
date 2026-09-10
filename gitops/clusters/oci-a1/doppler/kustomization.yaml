@@ -1,23 +1,20 @@
-{
-  "apiVersion": "kustomize.config.k8s.io/v1beta1",
-  "kind": "Kustomization",
-  "resources": [
-    "../../../platform/doppler/install",
-    "cert-manager-role.json",
-    "cert-manager-binding.json",
-    "databases-role.json",
-    "databases-binding.json",
-    "monitoring-role.json",
-    "monitoring-binding.json",
-    "auth-postgres-sync.json",
-    "auth-postgres-identity-sync.json",
-    "auth-redis-sync.json",
-    "cloudflare-dns-sync.json",
-    "monitoring-grafana-sync.json",
-    "monitoring-redis-sync.json",
-    "monitoring-slack-sync.json",
-    "shared-redis-sync.json",
-    "shared-redis-master-tls-sync.json",
-    "shared-redis-replica-tls-sync.json"
-  ]
-}
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../../platform/doppler/install
+- cert-manager-role.yaml
+- cert-manager-binding.yaml
+- databases-role.yaml
+- databases-binding.yaml
+- monitoring-role.yaml
+- monitoring-binding.yaml
+- auth-postgres-sync.yaml
+- auth-postgres-identity-sync.yaml
+- auth-redis-sync.yaml
+- cloudflare-dns-sync.yaml
+- monitoring-grafana-sync.yaml
+- monitoring-redis-sync.yaml
+- monitoring-slack-sync.yaml
+- shared-redis-sync.yaml
+- shared-redis-master-tls-sync.yaml
+- shared-redis-replica-tls-sync.yaml

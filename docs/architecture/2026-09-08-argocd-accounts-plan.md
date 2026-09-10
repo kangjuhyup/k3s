@@ -4,9 +4,12 @@
 
 **Spec:** 사용자가 승인한 [계정 운영 정책](../runbooks/argocd-accounts.md). 실제 계정명은 별도로 확인하며 이번 범위는 코드 준비다.
 
-**Architecture:** 비밀값 없는 `accounts.json`을 Python 표준 라이브러리 도구가 검증하여 공식 argo-cd chart용 `accounts.values.json`을 생성한다. 생성물도 Git 검토 대상이며 단독 Kubernetes manifest로 적용하지 않는다. 기존 Argo CD 설치 Application이 향후 이 values를 소비한다. 별도의 ConfigMap 소유자를 만들지 않는다.
+**Architecture:** 비밀값 없는 `accounts.json`을 검증하여 공식 argo-cd chart용
+`accounts.values.yaml`을 생성한다. 현재 출력은 PyYAML 기반 YAML이며 입력 JSON은 유지한다.
+생성물도 Git 검토 대상이며 단독 Kubernetes manifest로 적용하지 않는다.
+Argo CD 설치 Application이 이 values를 소비하고 별도 ConfigMap 소유자를 만들지 않는다.
 
-**Tech Stack:** Python 3.9+ 표준 라이브러리, JSON, argo-cd Helm values, unittest.
+**Tech Stack:** 저장소 Python 3.12.9·PyYAML 6.0.3, JSON 입력·YAML Helm values, unittest.
 
 ## 계약과 안전 경계
 
@@ -22,7 +25,7 @@
 
 - [x] `scripts/tests/test_argocd_accounts.py`에 순수 렌더링·입력 거부·CLI 검증/쓰기 테스트를 먼저 작성하고 미구현 실패를 확인한다.
 - [x] `scripts/argocd_accounts.py`의 `render_values(config)`와 CLI를 구현한다. CLI는 기본 read-only 비교, 명시적 `--write`일 때만 생성 파일을 갱신한다.
-- [x] `gitops/platform/argocd/accounts.json`은 bootstrap·빈 계정으로 작성하고 `accounts.values.json`을 생성한다. `.example`에는 비활성 합성 계정의 입력 형식만 둔다.
+- [x] `gitops/platform/argocd/accounts.json`은 bootstrap·빈 계정으로 작성하고 `accounts.values.yaml`을 생성한다. `.example`에는 비활성 합성 계정의 입력 형식만 둔다.
 - [x] `rtk proxy python3 -m unittest discover -s scripts/tests -v`와 생성물 일치 검사를 실행한다. 가능한 경우 공식 도구의 렌더링/RBAC 검증을 추가한다.
 - [x] README/runbook을 갱신하고 독립 코드 리뷰 및 문서 링크 검증 후 준비 범위와 미확정 입력을 보고한다.
 

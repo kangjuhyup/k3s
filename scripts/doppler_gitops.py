@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Strict, value-free Doppler contracts and Argo CD declarations (stdlib only)."""
 import re
+import argparse
+import json
+from pathlib import Path
+import yaml
 
 SETTINGS = "gitops/clusters/oci-a1/doppler.json"
 PATH = "gitops/clusters/oci-a1/doppler"
@@ -98,7 +102,7 @@ def render(bootstrap, config):
         "project": "platform-doppler", "destination": destination,
         "source": {"repoURL": bootstrap["repo_url"], "targetRevision": bootstrap["revision"], "path": PATH},
         "syncPolicy": policy})
-    files = {ROOT + "/doppler-project.json": project, ROOT + "/doppler.json": app}
+    files = {ROOT + "/doppler-project.yaml": project, ROOT + "/doppler.yaml": app}
     resources = ["../../../platform/doppler/install"]
 
     def add(filename, obj):
@@ -107,16 +111,16 @@ def render(bootstrap, config):
 
     for namespace in namespaces:
         targets = sorted(m["target_secret"] for m in config["mappings"] if m["target_namespace"] == namespace)
-        add(namespace + "-role.json", resource("rbac.authorization.k8s.io/v1", "Role", "doppler-secret-writer",
+        add(namespace + "-role.yaml", resource("rbac.authorization.k8s.io/v1", "Role", "doppler-secret-writer",
             namespace, rules=[
                 {"apiGroups": [""], "resources": ["secrets"], "verbs": ["create"]},
                 {"apiGroups": [""], "resources": ["secrets"], "verbs": ["update"], "resourceNames": targets}]))
-        add(namespace + "-binding.json", resource("rbac.authorization.k8s.io/v1", "RoleBinding", "doppler-secret-writer",
+        add(namespace + "-binding.yaml", resource("rbac.authorization.k8s.io/v1", "RoleBinding", "doppler-secret-writer",
             namespace, subjects=[{"kind": "ServiceAccount", "name": SERVICE_ACCOUNT, "namespace": NAMESPACE}],
             roleRef={"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": "doppler-secret-writer"}))
     if config["sync_enabled"]:
         for mapping in sorted(config["mappings"], key=lambda m: m["name"]):
-            add(mapping["name"] + "-sync.json", resource("secrets.doppler.com/v1alpha1", "DopplerSecret",
+            add(mapping["name"] + "-sync.yaml", resource("secrets.doppler.com/v1alpha1", "DopplerSecret",
                 mapping["name"], NAMESPACE, "20", spec={
                     "tokenSecret": {"name": mapping["token_secret"], "namespace": NAMESPACE},
                     "managedSecret": {"name": mapping["target_secret"], "namespace": mapping["target_namespace"],
@@ -132,7 +136,7 @@ def render(bootstrap, config):
 
 def check_previous(root, files, read):
     """prune=false cannot retire old writers or retarget a mapping safely."""
-    require(not (root / ROOT / "doppler.json").exists() or ROOT + "/doppler.json" in files)
+    require(not (root / ROOT / "doppler.yaml").exists() or ROOT + "/doppler.yaml" in files)
     previous = root / PATH / "kustomization.yaml"
     if not previous.exists():
         return
@@ -140,9 +144,39 @@ def check_previous(root, files, read):
     old = read(previous)["resources"]
     require(set(old).issubset(set(current)))
     for filename in old:
-        if not filename.endswith("-sync.json"):
+        if not filename.endswith("-sync.yaml"):
             continue
         before = read(root / PATH / filename)["spec"]
         after = files[PATH + "/" + filename]["spec"]
         # New names/explicit migration are required for source or ownership changes.
         require(all(before[k] == after[k] for k in ["managedSecret", "project", "config"]))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", type=Path, required=True)
+    parser.add_argument("--write", action="store_true", help="Update only Doppler declarations locally")
+    args = parser.parse_args()
+    try:
+        root = args.repo_root.resolve()
+        def read(path):
+            return yaml.safe_load(path.read_text())
+        files = render(read(root / "gitops/clusters/oci-a1/bootstrap.json"), read(root / SETTINGS))
+        check_previous(root, files, read)
+        for path, value in files.items():
+            target = root / path
+            require(target.resolve().is_relative_to(root) and not target.is_symlink())
+            if args.write:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(yaml.safe_dump(value, sort_keys=False, allow_unicode=True))
+            else:
+                require(read(target) == value)
+        print("Doppler declarations " + ("updated locally." if args.write else "match the key mapping."))
+        return 0
+    except (ValueError, KeyError, TypeError, OSError):
+        print("Doppler declaration check failed; values suppressed.")
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

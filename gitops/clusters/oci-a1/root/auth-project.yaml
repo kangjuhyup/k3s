@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '-10'
+  name: app-auth
+  namespace: argocd
+spec:
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  destinations:
+  - namespace: auth
+    server: https://kubernetes.default.svc
+  - namespace: istio-system
+    server: https://kubernetes.default.svc
+  - namespace: doppler-operator-system
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: Service
+  - group: ''
+    kind: ConfigMap
+  - group: apps
+    kind: Deployment
+  - group: batch
+    kind: Job
+  - group: autoscaling
+    kind: HorizontalPodAutoscaler
+  - group: rbac.authorization.k8s.io
+    kind: Role
+  - group: rbac.authorization.k8s.io
+    kind: RoleBinding
+  - group: secrets.doppler.com
+    kind: DopplerSecret
+  - group: cert-manager.io
+    kind: Certificate
+  - group: networking.istio.io
+    kind: Gateway
+  - group: networking.istio.io
+    kind: VirtualService
+  - group: networking.istio.io
+    kind: DestinationRule
+  sourceRepos:
+  - https://github.com/kangjuhyup/k3s.git

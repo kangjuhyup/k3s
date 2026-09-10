@@ -1,0 +1,6 @@
+configs:
+  cm:
+    url: https://argo.rvkang.app
+global:
+  domain: argo.rvkang.app
+kubeVersionOverride: 1.36.4

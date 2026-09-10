@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import yaml
 import unittest
 
 
@@ -141,13 +142,14 @@ class AccountTests(unittest.TestCase):
     def test_cli_checks_without_writing_and_detects_drift(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "accounts.json"
-            output = Path(directory) / "accounts.values.json"
+            output = Path(directory) / "accounts.values.yaml"
             source.write_text(json.dumps(bootstrap()), encoding="utf-8")
             self.assertNotEqual(self.invoke(source, output).returncode, 0)
             self.assertFalse(output.exists())
             result = self.invoke(source, output, "--write")
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(json.loads(output.read_text()), self.render(bootstrap()))
+            self.assertEqual(yaml.safe_load(output.read_text()), self.render(bootstrap()))
+            self.assertFalse(output.read_text().lstrip().startswith("{"))
             self.assertEqual(self.invoke(source, output).returncode, 0)
             output.write_text("stale", encoding="utf-8")
             self.assertNotEqual(self.invoke(source, output).returncode, 0)
@@ -156,7 +158,7 @@ class AccountTests(unittest.TestCase):
     def test_invalid_input_never_overwrites_output_or_echoes_secret(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "accounts.json"
-            output = Path(directory) / "accounts.values.json"
+            output = Path(directory) / "accounts.values.yaml"
             output.write_text("keep-me", encoding="utf-8")
             for body in ['{"phase":"bootstrap","phase":"managed"}',
                          '{"password":"DO_NOT_ECHO_THIS"}', 'DO_NOT_ECHO_THIS']:
@@ -173,7 +175,7 @@ class AccountTests(unittest.TestCase):
             before = source.read_text()
             self.assertNotEqual(self.invoke(source, source, "--write").returncode, 0)
             self.assertEqual(source.read_text(), before)
-            link = Path(directory) / "link.values.json"
+            link = Path(directory) / "link.values.yaml"
             link.symlink_to(source)
             self.assertNotEqual(self.invoke(source, link, "--write").returncode, 0)
             self.assertEqual(source.read_text(), before)

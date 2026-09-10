@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- auth-service.yaml
+- auth-ui.yaml
+- auth-worker.yaml
+- migration.yaml
+- auth-service-service.yaml
+- auth-ui-service.yaml
+- ui-config.yaml

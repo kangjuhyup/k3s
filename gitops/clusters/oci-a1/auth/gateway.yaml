@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+  name: auth-public
+  namespace: istio-system
+spec:
+  selector:
+    app: istio-ingress
+  servers:
+  - hosts:
+    - ./auth.rvkang.app
+    port:
+      name: http-auth
+      number: 80
+      protocol: HTTP
+    tls:
+      httpsRedirect: true
+  - hosts:
+    - ./auth.rvkang.app
+    port:
+      name: https-auth
+      number: 443
+      protocol: HTTPS
+    tls:
+      credentialName: auth-public-tls
+      minProtocolVersion: TLSV1_2
+      mode: SIMPLE

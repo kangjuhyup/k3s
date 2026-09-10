@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: '-15'
+  name: auth-public
+  namespace: istio-system
+spec:
+  dnsNames:
+  - auth.rvkang.app
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: argocd-cloudflare
+  privateKey:
+    algorithm: RSA
+    rotationPolicy: Always
+    size: 2048
+  secretName: auth-public-tls

@@ -29,8 +29,8 @@ def render(root, helm, chart, kube_version):
         return result.stdout
 
     require(run(["version", "--template", "{{.Version}} "]).strip() == lock["helm_version"])
-    values_path = root / "gitops/platform/cert-manager/base.values.json"
-    values = json.loads(values_path.read_text())
+    values_path = root / "gitops/platform/cert-manager/base.values.yaml"
+    values = yaml.safe_load(values_path.read_text())
     objects = [o for o in yaml.safe_load_all(run([
         "template", "cert-manager", str(chart), "--namespace", "cert-manager", "--kube-version", kube_version,
         "--values", str(values_path)])) if o]

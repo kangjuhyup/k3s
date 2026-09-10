@@ -52,7 +52,7 @@ class DopplerNativeTests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get("ARGOCD_TEST_BINARY"), "local Argo CD CLI not supplied")
     def test_real_lua_does_not_echo_operator_error_messages(self):
         key = "resource.customizations.health.secrets.doppler.com_DopplerSecret"
-        script = json.loads((ROOT / "gitops/platform/argocd/base.values.json").read_text())["configs"]["cm"][key]
+        script = yaml.safe_load((ROOT / "gitops/platform/argocd/base.values.yaml").read_text())["configs"]["cm"][key]
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
             cm, secret, resource = [folder / (name + ".json") for name in ["cm", "secret", "resource"]]

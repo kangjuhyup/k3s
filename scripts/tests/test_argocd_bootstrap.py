@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from types import SimpleNamespace
 
-from test_argocd_gitops import fixture, load
+from test_argocd_gitops import manifest_files, fixture, load
 
 
 def secret_fixture():
@@ -60,14 +60,16 @@ class FakeClient:
 class BootstrapTests(unittest.TestCase):
     def setUp(self):
         self.runtime = load("argocd_bootstrap_runtime")
-        gitops = load("argocd_gitops")
+        gitops = load("gitops_validate")
         config = fixture()
-        files = gitops.render(config)
+        files = manifest_files()
+        # Keep transport credentials synthetic while exercising the Git-owned apps.
+        config["repo_url"] = files[gitops.SETTINGS_PATH]["repo_url"]
         self.bundle = {"schema": 1, "config": config, "identity": gitops.identity(config),
                        "expected_revision": "a" * 40, "initial_accounts": True,
-                       "root": files[gitops.ROOT_PATH + "/root.json"],
-                       "self": files[gitops.ROOT_PATH + "/argocd.json"],
-                       "projects": [files[gitops.ROOT_PATH + "/" + name] for name in ["root-project.json", "platform-project.json"]],
+                       "root": files[gitops.ROOT_PATH + "/root.yaml"],
+                       "self": files[gitops.ROOT_PATH + "/argocd.yaml"],
+                       "projects": [files[gitops.ROOT_PATH + "/" + name] for name in ["root-project.yaml", "platform-project.yaml"]],
                        "resources": [
                            {"kind": "CustomResourceDefinition", "metadata": {"name": "applications.argoproj.io"}},
                            {"kind": "Deployment", "metadata": {"name": "argocd-server", "namespace": "argocd"}},
