@@ -5,6 +5,18 @@
   "auth_ready_reviewed": true,
   "targets_ready_reviewed": true,
   "mappings": [{
+    "name": "monitoring-grafana", "project": "infrastructure", "config": "prd",
+    "token_secret": "doppler-auth-infrastructure-prd", "token_env": "DOPPLER_INFRASTRUCTURE_PRD_TOKEN",
+    "target_namespace": "monitoring", "target_secret": "grafana-admin",
+    "type": "Opaque", "resync_seconds": 120,
+    "keys": {"GRAFANA_ADMIN_USER": "admin-user", "GRAFANA_ADMIN_PASSWORD": "admin-password"}
+  }, {
+    "name": "monitoring-slack", "project": "infrastructure", "config": "prd",
+    "token_secret": "doppler-auth-infrastructure-prd", "token_env": "DOPPLER_INFRASTRUCTURE_PRD_TOKEN",
+    "target_namespace": "monitoring", "target_secret": "alertmanager-slack",
+    "type": "Opaque", "resync_seconds": 120,
+    "keys": {"SLACK_WEBHOOK_URL": "webhook-url"}
+  }, {
     "name": "auth-postgres", "project": "auth", "config": "prd",
     "token_secret": "doppler-auth-auth-prd", "token_env": "DOPPLER_AUTH_PRD_TOKEN",
     "target_namespace": "databases", "target_secret": "auth-db-credentials",

@@ -341,6 +341,20 @@ def render_repository(root):
         if ROOT_PATH + "/" + name in additions:
             files[ROOT_PATH + "/kustomization.yaml"]["resources"].append(name)
     files[ROOT_PATH + "/kustomization.yaml"]["resources"].sort()
+    monitoring_spec = importlib.util.spec_from_file_location("monitoring_gitops", Path(__file__).with_name("monitoring_gitops.py"))
+    monitoring = importlib.util.module_from_spec(monitoring_spec)
+    monitoring_spec.loader.exec_module(monitoring)
+    monitoring_path = root / monitoring.SETTINGS
+    additions = monitoring.render(config, read_json(monitoring_path)) if monitoring_path.exists() else {}
+    require(not (root / ROOT_PATH / "monitoring.json").exists() or ROOT_PATH + "/monitoring.json" in additions)
+    previous_monitoring = root / ROOT_PATH / "monitoring.json"
+    if previous_monitoring.exists() and "sources" in read_json(previous_monitoring).get("spec", {}):
+        require("sources" in additions[ROOT_PATH + "/monitoring.json"]["spec"])
+    files.update(additions)
+    for name in ["monitoring-project.json", "monitoring.json"]:
+        if ROOT_PATH + "/" + name in additions:
+            files[ROOT_PATH + "/kustomization.yaml"]["resources"].append(name)
+    files[ROOT_PATH + "/kustomization.yaml"]["resources"].sort()
     old_kustomization = root / ISTIO_MANIFEST_PATH / "kustomization.yaml"
     if old_kustomization.exists():
         # prune=false is not uninstall: refuse to silently leave old public routes active.

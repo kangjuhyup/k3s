@@ -9,6 +9,8 @@
     "doppler.json",
     "istio-project.json",
     "istio.json",
+    "monitoring-project.json",
+    "monitoring.json",
     "platform-project.json",
     "postgresql-project.json",
     "postgresql.json",

@@ -1,0 +1,36 @@
+{
+  "apiVersion": "argoproj.io/v1alpha1",
+  "kind": "Application",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "25"
+    },
+    "name": "monitoring",
+    "namespace": "argocd"
+  },
+  "spec": {
+    "destination": {
+      "namespace": "monitoring",
+      "server": "https://kubernetes.default.svc"
+    },
+    "project": "platform-monitoring",
+    "source": {
+      "path": "gitops/clusters/oci-a1/monitoring",
+      "repoURL": "https://github.com/kangjuhyup/k3s.git",
+      "targetRevision": "main"
+    },
+    "syncPolicy": {
+      "automated": {
+        "allowEmpty": false,
+        "enabled": true,
+        "prune": false,
+        "selfHeal": true
+      },
+      "syncOptions": [
+        "ServerSideApply=true",
+        "FailOnSharedResource=true",
+        "RespectIgnoreDifferences=true"
+      ]
+    }
+  }
+}

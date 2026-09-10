@@ -1,0 +1,36 @@
+{
+  "apiVersion": "secrets.doppler.com/v1alpha1",
+  "kind": "DopplerSecret",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "20"
+    },
+    "name": "monitoring-slack",
+    "namespace": "doppler-operator-system"
+  },
+  "spec": {
+    "config": "prd",
+    "host": "https://api.doppler.com",
+    "managedSecret": {
+      "name": "alertmanager-slack",
+      "namespace": "monitoring",
+      "type": "Opaque"
+    },
+    "processors": {
+      "SLACK_WEBHOOK_URL": {
+        "asName": "webhook-url",
+        "type": "plain"
+      }
+    },
+    "project": "infrastructure",
+    "resyncSeconds": 120,
+    "secrets": [
+      "SLACK_WEBHOOK_URL"
+    ],
+    "tokenSecret": {
+      "name": "doppler-auth-infrastructure-prd",
+      "namespace": "doppler-operator-system"
+    },
+    "verifyTLS": true
+  }
+}

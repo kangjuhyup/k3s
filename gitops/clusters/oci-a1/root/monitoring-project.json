@@ -5,7 +5,7 @@
     "annotations": {
       "argocd.argoproj.io/sync-wave": "-10"
     },
-    "name": "platform-doppler",
+    "name": "platform-monitoring",
     "namespace": "argocd"
   },
   "spec": {
@@ -25,20 +25,23 @@
       {
         "group": "rbac.authorization.k8s.io",
         "kind": "ClusterRoleBinding"
+      },
+      {
+        "group": "admissionregistration.k8s.io",
+        "kind": "MutatingWebhookConfiguration"
+      },
+      {
+        "group": "admissionregistration.k8s.io",
+        "kind": "ValidatingWebhookConfiguration"
       }
     ],
-    "description": "Administrator-only secret delivery controller; Secret data is not Git-owned",
     "destinations": [
       {
-        "namespace": "doppler-operator-system",
-        "server": "https://kubernetes.default.svc"
-      },
-      {
-        "namespace": "databases",
-        "server": "https://kubernetes.default.svc"
-      },
-      {
         "namespace": "monitoring",
+        "server": "https://kubernetes.default.svc"
+      },
+      {
+        "namespace": "kube-system",
         "server": "https://kubernetes.default.svc"
       }
     ],
@@ -49,11 +52,31 @@
       },
       {
         "group": "",
+        "kind": "Service"
+      },
+      {
+        "group": "",
         "kind": "ConfigMap"
+      },
+      {
+        "group": "",
+        "kind": "Secret"
+      },
+      {
+        "group": "",
+        "kind": "PersistentVolumeClaim"
       },
       {
         "group": "apps",
         "kind": "Deployment"
+      },
+      {
+        "group": "apps",
+        "kind": "DaemonSet"
+      },
+      {
+        "group": "batch",
+        "kind": "Job"
       },
       {
         "group": "rbac.authorization.k8s.io",
@@ -64,12 +87,29 @@
         "kind": "RoleBinding"
       },
       {
-        "group": "secrets.doppler.com",
-        "kind": "DopplerSecret"
+        "group": "monitoring.coreos.com",
+        "kind": "Prometheus"
+      },
+      {
+        "group": "monitoring.coreos.com",
+        "kind": "Alertmanager"
+      },
+      {
+        "group": "monitoring.coreos.com",
+        "kind": "ServiceMonitor"
+      },
+      {
+        "group": "monitoring.coreos.com",
+        "kind": "PodMonitor"
+      },
+      {
+        "group": "monitoring.coreos.com",
+        "kind": "PrometheusRule"
       }
     ],
     "sourceRepos": [
-      "https://github.com/kangjuhyup/k3s.git"
+      "https://github.com/kangjuhyup/k3s.git",
+      "https://prometheus-community.github.io/helm-charts"
     ]
   }
 }
