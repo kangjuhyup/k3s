@@ -6,6 +6,7 @@
   "kubelet": {"serviceMonitor": {"tlsConfig": {"insecureSkipVerify": false}, "cAdvisorInterval": "30s"}},
   "defaultRules": {"rules": {"etcd": false, "kubeSchedulerAlerting": false, "kubeSchedulerRecording": false, "kubeProxy": false}},
   "grafana": {
+    "rbac": {"namespaced": true},
     "admin": {"existingSecret": "grafana-admin", "userKey": "admin-user", "passwordKey": "admin-password"},
     "testFramework": {"enabled": false},
     "deploymentStrategy": {"type": "Recreate"},

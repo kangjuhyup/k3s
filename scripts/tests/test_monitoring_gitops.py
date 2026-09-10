@@ -28,6 +28,7 @@ class MonitoringTests(unittest.TestCase):
         v = json.loads((ROOT / m.VALUES).read_text())
         self.assertEqual(v["grafana"]["admin"]["existingSecret"], "grafana-admin")
         self.assertNotIn("adminPassword", v["grafana"])
+        self.assertTrue(v["grafana"]["rbac"]["namespaced"])
         slack = v["alertmanager"]["config"]["receivers"][1]["slack_configs"][0]
         self.assertIn("api_url_file", slack)
         self.assertNotIn("api_url", slack)
@@ -74,3 +75,4 @@ class MonitoringTests(unittest.TestCase):
             if d["kind"] == "Service":
                 self.assertEqual(d["spec"].get("type", "ClusterIP"), "ClusterIP")
         self.assertFalse(any(d["kind"] == "Secret" and d["metadata"]["name"] in {"grafana-admin", "alertmanager-slack"} for d in docs))
+        self.assertFalse(any(d["kind"] in {"ClusterRole", "ClusterRoleBinding"} and d["metadata"]["name"].startswith("monitoring-grafana") for d in docs))

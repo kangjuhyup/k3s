@@ -49,6 +49,8 @@ kubectl --kubeconfig "$KUBECONFIG" --context "$K3S_CONTEXT" -n monitoring port-f
 확인하며 대화·스크린샷·명령 인자로 공유하지 않는다. Grafana의 관리 계정은
 최초 DB 초기화 시 반영되므로 Doppler 값 변경만으로 기존 로그인 비밀번호가
 회전하지 않는다. 교체 시 Grafana의 지원되는 계정 변경 절차를 별도로 수행한다.
+Grafana sidecar의 조회와 RBAC는 `monitoring` namespace로 제한한다.
+차트 기본값의 클러스터 전체 Secret 조회 권한은 사용하지 않는다.
 
 Prometheus Targets에서 실제 수집 성공을, Alertmanager에서는 알림 전달 성공을
 검증한다. `Watchdog`, `InfoInhibitor`는 Slack 전송하지 않는다. 원복은 Git의
