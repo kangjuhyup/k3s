@@ -19,6 +19,8 @@ class RedisTests(unittest.TestCase):
             self.assertEqual(pod["containers"][0]["resources"]["limits"]["memory"], "256Mi")
             self.assertEqual(spec["volumeClaimTemplates"][0]["spec"]["resources"]["requests"]["storage"], "1Gi")
             self.assertEqual(spec["persistentVolumeClaimRetentionPolicy"]["whenDeleted"], "Retain")
+            self.assertEqual(spec["volumeClaimTemplates"][0]["apiVersion"], "v1")
+            self.assertEqual(spec["volumeClaimTemplates"][0]["kind"], "PersistentVolumeClaim")
 
     def test_unreviewed_credentials_block_deployment(self):
         with self.assertRaises(ValueError):

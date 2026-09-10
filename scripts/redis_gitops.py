@@ -127,7 +127,7 @@ def render(bootstrap, config):
                     {"name": "config", "configMap": {"name": "shared-redis-config"}},
                     {"name": "private", "secret": {"secretName": "shared-redis-private", "defaultMode": 288}},
                     {"name": "auth-account", "secret": {"secretName": "auth-redis-credentials", "defaultMode": 288}}]}},
-            "volumeClaimTemplates": [{"metadata": {"name": "data"}, "spec": {"accessModes": ["ReadWriteOnce"],
+            "volumeClaimTemplates": [{"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "data"}, "spec": {"accessModes": ["ReadWriteOnce"],
                 "storageClassName": "local-path", "resources": {"requests": {"storage": "1Gi"}}}}]})
         statefulset["metadata"]["annotations"] = {"argocd.argoproj.io/sync-wave": "10" if role == "master" else "20",
             "argocd.argoproj.io/sync-options": "Prune=false,Delete=false"}
