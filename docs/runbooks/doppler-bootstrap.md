@@ -57,7 +57,7 @@ rtk proxy doppler run --project "$DOPPLER_BOOTSTRAP_PROJECT" \
   -e "doppler_run_config=$DOPPLER_RUN_CONFIG"
 ```
 
-localhost만 사용하며 SSH 대신 명시한 kubeconfig/context/API 주소로 접근한다. check mode·미입력·dirty Git·생성물 불일치·다른 API·TLS 검증 해제·이미 sync 활성 상태이면 중단한다. **모든 매핑·입력·충돌 검사 후** 인증 Secret만 create한다. 토큰은 환경에서 읽어 메모리/stdin으로 전달하고 `no_log: true`, `diff: false`를 적용한다. 하위 kubectl에 전체 Doppler 환경을 전달하지 않는다. 값은 셸 인자·Ansible `-e`·Git·로그에 넣지 않는다.
+localhost만 사용하며 SSH 대신 명시한 kubeconfig/context/API 주소로 접근한다. check mode·미입력·dirty Git·생성물 불일치·다른 API·TLS 검증 해제 시 중단한다. 기본 최초 bootstrap은 sync 비활성 상태에서만 실행한다. 이미 운영 중인 클러스터에 config를 추가할 때는 `doppler_token_env`에 Git 매핑의 환경변수 **이름**을 명시한다. 이 경로는 해당 config만 선택하고 기존 다른 config의 전달 상태, 기대 Git revision과 sync 성공을 검사한 뒤 인증 Secret만 create한다. 신규 config의 인증 전 Degraded 상태만 이 단계에서 허용하며 기존 토큰은 덮어쓰지 않는다. 토큰은 환경에서 읽어 메모리/stdin으로 전달하고 `no_log: true`, `diff: false`를 적용한다. 하위 kubectl에 전체 Doppler 환경을 전달하지 않는다. 값은 셸 인자·Ansible `-e`·Git·로그에 넣지 않는다.
 
 같은 소유권·같은 토큰이면 재실행 시 쓰기 0회다. 다른 토큰/Secret을 갱신·삭제하지 않는다. 여러 create 중 통신이 끊기면 부분 생성될 수 있고, 동일 입력 재실행으로 생성된 인증을 보존한다. 장애 조사 시에도 전체 Secret 덤프나 토큰 포함 debug를 켜지 않는다.
 
