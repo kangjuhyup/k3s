@@ -25,6 +25,8 @@ Argo CD `monitoring` Application이 kube-prometheus-stack 90.0.0을 관리한다
 - Redis master/replica 수집기는 각각 최대 64Mi이며 기존 probe 계정 권한은
   PING/INFO로 한정된다. 운영용 client 인증서로 mTLS를 검증하고 관리 비밀번호·CA 개인키는
   전달하지 않는다. CONFIG/키 탐색은 비활성이고 인증·복제 연결·메모리 알림을 둔다.
+  인증서 교체 시 Redis 서버뿐 아니라 수집기의 Pod template도 Git으로 갱신해
+  재시작하고 수집 성공을 재검증한다. 자동 Secret reload는 구성하지 않았다.
 - Redis 인증서 만료 자동 경보·자동 갱신은 아직 포함하지 않는다. 기존 Redis
   runbook의 PKI 검사와 갱신 절차를 계속 따른다.
 - K3s 별도 노출 설정이 필요한 etcd/controller-manager/scheduler/proxy 수집은 비활성이다.

@@ -73,6 +73,15 @@ def main():
         assert targets and not down, "Some scrape targets are down"
         for metric in ["node_memory_MemAvailable_bytes", "kube_pod_info", "container_memory_working_set_bytes", "cnpg_collector_up"]:
             assert query(prom, metric), "Required metric missing: " + metric
+        redis = query(prom, "redis_up")
+        assert len(redis) == 2 and all(float(x["value"][1]) == 1 for x in redis), "Both Redis nodes must be readable"
+        link = query(prom, "redis_master_link_up")
+        assert len(link) == 1 and float(link[0]["value"][1]) == 1, "Redis replication metric missing or disconnected"
+        assert len(query(prom, "redis_memory_max_bytes")) == 2, "Redis memory limit metrics missing"
+        rules = request(prom, "/api/v1/rules")["data"]["groups"]
+        database = next((g for g in rules if g["name"] == "database-health"), None)
+        assert database and all(r.get("health") == "ok" for r in database["rules"]), "Database rules not evaluating successfully"
+        print(json.dumps({"redis_nodes_up": 2, "replication_connected": True, "database_rules_healthy": True}), flush=True)
         alerts = request(alert, "/api/v2/alerts")
         assert any(a["labels"].get("alertname") == "Watchdog" for a in alerts), "Prometheus-to-Alertmanager delivery not verified"
         auth = get("infrastructure", "GRAFANA_ADMIN_USER") + ":" + get("infrastructure", "GRAFANA_ADMIN_PASSWORD")
