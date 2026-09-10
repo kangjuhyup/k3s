@@ -61,7 +61,8 @@
       "syncOptions": [
         "ServerSideApply=true",
         "FailOnSharedResource=true",
-        "RespectIgnoreDifferences=true"
+        "RespectIgnoreDifferences=true",
+        "SkipDryRunOnMissingResource=true"
       ]
     }
   }

@@ -17,7 +17,7 @@ def render(bootstrap, config):
     git = {"repoURL": bootstrap["repo_url"], "targetRevision": bootstrap["revision"], "path": PATH}
     spec = {"project": "platform-monitoring", "destination": destination,
             "syncPolicy": {"automated": {"enabled": True, "selfHeal": True, "prune": False, "allowEmpty": False},
-                           "syncOptions": ["ServerSideApply=true", "FailOnSharedResource=true", "RespectIgnoreDifferences=true"]}}
+                           "syncOptions": ["ServerSideApply=true", "FailOnSharedResource=true", "RespectIgnoreDifferences=true", "SkipDryRunOnMissingResource=true"]}}
     if config["enabled"]:
         spec["sources"] = [{"repoURL": REPOSITORY, "chart": "kube-prometheus-stack", "targetRevision": VERSION,
                             "helm": {"releaseName": "monitoring", "kubeVersion": bootstrap["kube_version"],
