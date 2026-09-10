@@ -24,6 +24,8 @@
           - "{{ playbook_dir }}/../.."
           - --run-config
           - "{{ doppler_run_config }}"
+          - --token-env
+          - "{{ doppler_token_env | default('') }}"
       register: doppler_auth_result
       changed_when: "'\"unchanged\": false' in doppler_auth_result.stdout"
       no_log: true

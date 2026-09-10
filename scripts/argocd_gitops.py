@@ -330,6 +330,17 @@ def render_repository(root):
         if ROOT_PATH + "/" + name in additions:
             files[ROOT_PATH + "/kustomization.yaml"]["resources"].append(name)
     files[ROOT_PATH + "/kustomization.yaml"]["resources"].sort()
+    redis_spec = importlib.util.spec_from_file_location("redis_gitops", Path(__file__).with_name("redis_gitops.py"))
+    redis = importlib.util.module_from_spec(redis_spec)
+    redis_spec.loader.exec_module(redis)
+    redis_path = root / redis.SETTINGS
+    additions = redis.render(config, read_json(redis_path)) if redis_path.exists() else {}
+    require(not (root / ROOT_PATH / "redis.json").exists() or ROOT_PATH + "/redis.json" in additions)
+    files.update(additions)
+    for name in ["redis-project.json", "redis.json"]:
+        if ROOT_PATH + "/" + name in additions:
+            files[ROOT_PATH + "/kustomization.yaml"]["resources"].append(name)
+    files[ROOT_PATH + "/kustomization.yaml"]["resources"].sort()
     old_kustomization = root / ISTIO_MANIFEST_PATH / "kustomization.yaml"
     if old_kustomization.exists():
         # prune=false is not uninstall: refuse to silently leave old public routes active.

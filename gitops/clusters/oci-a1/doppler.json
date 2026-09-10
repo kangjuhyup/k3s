@@ -17,5 +17,20 @@
     "type": "Opaque", "resync_seconds": 120,
     "keys": {"DB_NAME": "database", "DB_USER": "username",
              "DB_INIT_ROLE_SQL": "01-role.sql", "DB_INIT_DATABASE_SQL": "02-database.sql", "DB_INIT_ACL_SQL": "03-acl.sql"}
+  }, {
+    "name": "auth-redis", "project": "auth", "config": "prd",
+    "token_secret": "doppler-auth-auth-prd", "token_env": "DOPPLER_AUTH_PRD_TOKEN",
+    "target_namespace": "databases", "target_secret": "auth-redis-credentials",
+    "type": "Opaque", "resync_seconds": 120,
+    "keys": {"REDIS_USERNAME": "username", "REDIS_PASSWORD": "password", "REDIS_KEY_PREFIX": "prefix"}
+  }, {
+    "name": "shared-redis", "project": "infrastructure", "config": "prd",
+    "token_secret": "doppler-auth-infrastructure-prd", "token_env": "DOPPLER_INFRASTRUCTURE_PRD_TOKEN",
+    "target_namespace": "databases", "target_secret": "shared-redis-private",
+    "type": "Opaque", "resync_seconds": 120,
+    "keys": {"REDIS_ADMIN_USERNAME": "admin-username", "REDIS_ADMIN_PASSWORD": "admin-password",
+             "REDIS_REPLICATION_USERNAME": "replication-username", "REDIS_REPLICATION_PASSWORD": "replication-password",
+             "REDIS_PROBE_USERNAME": "probe-username", "REDIS_PROBE_PASSWORD": "probe-password",
+             "REDIS_HOST": "master-host", "REDIS_PORT": "port"}
   }]
 }

@@ -6,6 +6,8 @@
     "databases-role.json",
     "databases-binding.json",
     "auth-postgres-sync.json",
-    "auth-postgres-identity-sync.json"
+    "auth-postgres-identity-sync.json",
+    "auth-redis-sync.json",
+    "shared-redis-sync.json"
   ]
 }

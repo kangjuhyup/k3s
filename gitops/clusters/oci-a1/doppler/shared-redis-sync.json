@@ -1,0 +1,71 @@
+{
+  "apiVersion": "secrets.doppler.com/v1alpha1",
+  "kind": "DopplerSecret",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "20"
+    },
+    "name": "shared-redis",
+    "namespace": "doppler-operator-system"
+  },
+  "spec": {
+    "config": "prd",
+    "host": "https://api.doppler.com",
+    "managedSecret": {
+      "name": "shared-redis-private",
+      "namespace": "databases",
+      "type": "Opaque"
+    },
+    "processors": {
+      "REDIS_ADMIN_PASSWORD": {
+        "asName": "admin-password",
+        "type": "plain"
+      },
+      "REDIS_ADMIN_USERNAME": {
+        "asName": "admin-username",
+        "type": "plain"
+      },
+      "REDIS_HOST": {
+        "asName": "master-host",
+        "type": "plain"
+      },
+      "REDIS_PORT": {
+        "asName": "port",
+        "type": "plain"
+      },
+      "REDIS_PROBE_PASSWORD": {
+        "asName": "probe-password",
+        "type": "plain"
+      },
+      "REDIS_PROBE_USERNAME": {
+        "asName": "probe-username",
+        "type": "plain"
+      },
+      "REDIS_REPLICATION_PASSWORD": {
+        "asName": "replication-password",
+        "type": "plain"
+      },
+      "REDIS_REPLICATION_USERNAME": {
+        "asName": "replication-username",
+        "type": "plain"
+      }
+    },
+    "project": "infrastructure",
+    "resyncSeconds": 120,
+    "secrets": [
+      "REDIS_ADMIN_PASSWORD",
+      "REDIS_ADMIN_USERNAME",
+      "REDIS_HOST",
+      "REDIS_PORT",
+      "REDIS_PROBE_PASSWORD",
+      "REDIS_PROBE_USERNAME",
+      "REDIS_REPLICATION_PASSWORD",
+      "REDIS_REPLICATION_USERNAME"
+    ],
+    "tokenSecret": {
+      "name": "doppler-auth-infrastructure-prd",
+      "namespace": "doppler-operator-system"
+    },
+    "verifyTLS": true
+  }
+}

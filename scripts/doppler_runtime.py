@@ -98,12 +98,15 @@ def target_safe(cluster, mapping):
     return existing
 
 
-def bootstrap_tokens(cluster, bootstrap, config, environment):
+def bootstrap_tokens(cluster, bootstrap, config, environment, token_env=None):
     doppler.validate(config)
-    require(config["enabled"] and not config["sync_enabled"] and config["mappings"])
+    require(config["enabled"] and config["mappings"])
+    require(not config["sync_enabled"] or token_env)
+    mappings = [m for m in config["mappings"] if not token_env or m["token_env"] == token_env]
+    require(mappings)
     pending, checked = [], set()
     # Validate ALL inputs and existing targets before the first write.
-    for mapping in config["mappings"]:
+    for mapping in mappings:
         target_safe(cluster, mapping)
         name = mapping["token_secret"]
         if name in checked:
@@ -152,6 +155,7 @@ def main():
     parser.add_argument("action", choices=["bootstrap-auth", "verify"])
     parser.add_argument("--repo-root", type=Path, required=True)
     parser.add_argument("--run-config", type=Path, required=True)
+    parser.add_argument("--token-env", default="", help="Explicit single config authentication bootstrap; never a token value")
     args = parser.parse_args()
     try:
         root = args.repo_root.resolve()
@@ -168,7 +172,7 @@ def main():
         for name in ["root", "doppler"]:
             application_ready(cluster, files[gitops.ROOT_PATH + "/" + name + ".json"], run["expected_revision"])
         if args.action == "bootstrap-auth":
-            count = bootstrap_tokens(cluster, bootstrap, config, os.environ)
+            count = bootstrap_tokens(cluster, bootstrap, config, os.environ, args.token_env or None)
             print(json.dumps({"created": count, "unchanged": count == 0}))
         else:
             count = verify_delivery(cluster, bootstrap, config)

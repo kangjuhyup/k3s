@@ -117,3 +117,14 @@ class DopplerRuntimeTests(unittest.TestCase):
             self.cluster.objects = old
             cr = self.cluster.objects[("dopplersecret", "doppler-operator-system", "web-tls")]
             secret = self.cluster.objects[("secret", "istio-system", "web-external-tls")]
+
+    def test_explicit_config_bootstrap_does_not_require_unrelated_tokens(self):
+        config = fixture()
+        other = copy.deepcopy(config["mappings"][0])
+        other.update(name="other-tls", target_secret="other-tls", token_secret="doppler-auth-other", token_env="OTHER_TOKEN")
+        config["mappings"].append(other)
+        self.assertEqual(self.module.bootstrap_tokens(self.cluster, bootstrap(), config, self.environment,
+                         self.mapping["token_env"]), 1)
+        self.assertEqual(len(self.cluster.writes), 1)
+        with self.assertRaises(ValueError):
+            self.module.bootstrap_tokens(self.cluster, bootstrap(), config, self.environment, "UNKNOWN_TOKEN")
