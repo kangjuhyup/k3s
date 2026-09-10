@@ -68,13 +68,13 @@ class Cluster:
         self.execute(["create", "--namespace", doppler.NAMESPACE, "-f", "-", "-o", "json"], obj)
 
 
-def application_ready(cluster, expected, revision):
+def application_ready(cluster, expected, revision, require_healthy=True):
     actual = cluster.get("application", expected["metadata"]["name"], "argocd")
     spec, status = actual.get("spec", {}), actual.get("status", {})
     require(all(spec.get(k) == v for k, v in expected["spec"].items()))
     sync = status.get("sync", {})
     require(sync.get("status") == "Synced" and sync.get("revision") == revision)
-    require(status.get("health", {}).get("status") == "Healthy")
+    require(not require_healthy or status.get("health", {}).get("status") == "Healthy")
     require(not any(c.get("type", "").endswith("Error") for c in status.get("conditions", [])))
     require(status.get("operationState", {}).get("phase") == "Succeeded" and not actual.get("operation"))
 
@@ -170,7 +170,14 @@ def main():
         require(gitops.check_files(root, load("doppler_vendor").render(Path(run["chart"]))))
         cluster = Cluster(run)
         for name in ["root", "doppler"]:
-            application_ready(cluster, files[gitops.ROOT_PATH + "/" + name + ".json"], run["expected_revision"])
+            incremental = args.action == "bootstrap-auth" and bool(args.token_env) and config["sync_enabled"]
+            application_ready(cluster, files[gitops.ROOT_PATH + "/" + name + ".json"], run["expected_revision"],
+                              require_healthy=not (incremental and name == "doppler"))
+        if incremental:
+            # A newly declared config has no auth yet. Existing config delivery must remain healthy.
+            others = {**config, "mappings": [m for m in config["mappings"] if m["token_env"] != args.token_env]}
+            if others["mappings"]:
+                verify_delivery(cluster, bootstrap, others)
         if args.action == "bootstrap-auth":
             count = bootstrap_tokens(cluster, bootstrap, config, os.environ, args.token_env or None)
             print(json.dumps({"created": count, "unchanged": count == 0}))
