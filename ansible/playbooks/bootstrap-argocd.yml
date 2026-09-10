@@ -1,0 +1,9 @@
+---
+- name: Bootstrap Argo CD then hand Kubernetes management to GitOps
+  hosts: k3s_servers
+  gather_facts: false
+  become: true
+  any_errors_fatal: true
+  serial: 1
+  roles:
+    - argocd_bootstrap

@@ -1,0 +1,25 @@
+# Managed by this repository. No environment file or secret in ExecStart.
+[Unit]
+Description=K3s {{ k3s_plan.node.role }}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+{% if k3s_plan.config.get('etcd-s3', false) %}
+EnvironmentFile=/etc/rancher/k3s/wasabi.env
+{% endif %}
+Type=notify
+User=root
+KillMode=process
+Delegate=yes
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+TimeoutStartSec=0
+Restart=always
+RestartSec=5s
+ExecStart=/usr/local/bin/k3s {{ k3s_plan.node.role }} --config /etc/rancher/k3s/config.yaml
+
+[Install]
+WantedBy=multi-user.target

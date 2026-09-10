@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "reviewed": true,
+  "mode": "sidecar",
+  "namespace": "istio-system",
+  "gateway_service_type": "ClusterIP"
+}

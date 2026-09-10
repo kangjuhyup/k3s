@@ -1,0 +1,13 @@
+---
+- name: Require the explicitly selected server role
+  ansible.builtin.assert:
+    that: k3s_plan.node.role == 'server'
+    quiet: true
+
+- name: Install server from the common reviewed contract
+  ansible.builtin.include_role:
+    name: k3s_install
+
+- name: Configure the reviewed SSH user's local administrator access
+  ansible.builtin.include_role:
+    name: k3s_user_access

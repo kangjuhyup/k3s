@@ -1,0 +1,4 @@
+interface:
+  display_name: "K3s 인프라 관리"
+  short_description: "Terraform·Ansible·Argo CD 기반 OCI A1·K3s·Istio 운영"
+  default_prompt: "$k3s-infra OCI A1 ARM64 대상 인프라 저장소를 확인하고 Argo CD GitOps 필수 정책에 따라 K3s·Istio 구성과 상태를 점검해줘."

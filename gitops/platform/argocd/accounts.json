@@ -1,0 +1,8 @@
+{
+  "phase": "bootstrap",
+  "accounts": [],
+  "cutover": {
+    "verified_admin": null,
+    "recovery_verified": false
+  }
+}

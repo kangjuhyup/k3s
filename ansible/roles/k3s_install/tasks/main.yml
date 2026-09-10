@@ -1,0 +1,123 @@
+---
+- name: Create protected K3s configuration directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Inspect the replacement binary cache
+  ansible.builtin.stat:
+    path: "/var/cache/k3s-bootstrap/k3s-{{ k3s_plan.version }}"
+    checksum_algorithm: sha256
+    follow: false
+  register: k3s_install_cache
+
+- name: Require any cached binary to match the reviewed checksum
+  ansible.builtin.assert:
+    that:
+      - k3s_install_cache.stat.isreg | default(false)
+      - not k3s_install_cache.stat.islnk | default(true)
+      - k3s_install_cache.stat.uid == 0
+      - k3s_install_cache.stat.checksum == k3s_plan.sha256
+    quiet: true
+  when: k3s_install_cache.stat.exists
+
+- name: Install the preverified replacement from the host cache
+  ansible.builtin.copy:
+    src: "/var/cache/k3s-bootstrap/k3s-{{ k3s_plan.version }}"
+    dest: /usr/local/bin/k3s
+    remote_src: true
+    owner: root
+    group: root
+    mode: '0755'
+  when:
+    - not k3s_preflight_marker.stat.exists
+    - k3s_install_cache.stat.exists
+
+- name: Fetch exactly the reviewed ARM64 binary on hosts without a cache
+  ansible.builtin.get_url:
+    url: "{{ k3s_plan.url }}"
+    dest: /usr/local/bin/k3s
+    checksum: "sha256:{{ k3s_plan.sha256 }}"
+    owner: root
+    group: root
+    mode: '0755'
+    timeout: 60
+    use_proxy: false
+  when:
+    - not k3s_preflight_marker.stat.exists
+    - not k3s_install_cache.stat.exists
+
+- name: Deliver only the required Doppler-injected join token
+  ansible.builtin.copy:
+    content: "{{ k3s_runtime_token }}"
+    dest: /etc/rancher/k3s/bootstrap-token
+    owner: root
+    group: root
+    mode: '0600'
+  no_log: true
+  diff: false
+
+- name: Write reviewed non-secret K3s configuration
+  ansible.builtin.copy:
+    content: "{{ k3s_config_content }}"
+    dest: /etc/rancher/k3s/config.yaml
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Deliver credentials only for explicitly enabled Wasabi backups
+  ansible.builtin.import_tasks: "{{ role_path }}/../../playbooks/tasks/backup-credentials.yml"
+
+- name: Install the owned systemd unit
+  ansible.builtin.copy:
+    content: "{{ k3s_unit_content }}"
+    dest: "/etc/systemd/system/{{ k3s_plan.service }}.service"
+    owner: root
+    group: root
+    mode: '0644'
+  register: k3s_install_unit_result
+
+- name: Enable and start K3s without unconditional restart
+  ansible.builtin.systemd_service:
+    name: "{{ k3s_plan.service }}"
+    daemon_reload: "{{ k3s_install_unit_result.changed }}"
+    enabled: true
+    state: started
+
+- name: Verify installed binary reports the reviewed version
+  ansible.builtin.command:
+    argv: [/usr/local/bin/k3s, --version]
+  changed_when: false
+  register: k3s_install_version_result
+  failed_when: "('k3s version ' ~ k3s_plan.version ~ ' ') not in k3s_install_version_result.stdout"
+
+- name: Confirm service remains active
+  ansible.builtin.command:
+    argv: [systemctl, is-active, "{{ k3s_plan.service }}"]
+  changed_when: false
+  register: k3s_install_service_result
+  until: k3s_install_service_result.stdout == 'active'
+  retries: 12
+  delay: 5
+
+- name: Verify server API and local Node Ready before marking installation complete
+  ansible.builtin.include_role:
+    name: k3s_verify
+  when: k3s_plan.node.role == 'server'
+
+- name: Wait for agent kubelet client configuration
+  ansible.builtin.wait_for:
+    path: /var/lib/rancher/k3s/agent/kubelet.kubeconfig
+    timeout: 180
+  when: k3s_plan.node.role == 'agent'
+
+- name: Record installation ownership only after local readiness checks
+  ansible.builtin.copy:
+    content: "{{ k3s_plan.fingerprint }}\n"
+    dest: /etc/rancher/k3s/ansible-install-complete
+    owner: root
+    group: root
+    mode: '0600'

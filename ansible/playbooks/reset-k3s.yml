@@ -1,0 +1,68 @@
+---
+- name: Remove the reviewed legacy K3s cluster and local application data
+  hosts: k3s_servers
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+  tasks:
+    - name: Require the exact authorized single-node reset
+      ansible.builtin.assert:
+        that:
+          - inventory_hostname == 'a1-server-1'
+          - lookup('ansible.builtin.env', 'A1_PUBLIC_IP') | length > 0
+          - ansible_host == lookup('ansible.builtin.env', 'A1_PUBLIC_IP')
+          - ansible_user == 'ubuntu'
+          - groups['k3s_servers'] == ['a1-server-1']
+          - k3s_reset_authorization | default('') == 'delete-legacy-cluster-and-local-data'
+          - k3s_reset_resume | default(false) | type_debug == 'bool'
+        quiet: true
+
+    - name: Inspect the legacy reset scope without changing the server
+      ansible.builtin.script:
+        cmd: "files/reset-legacy-k3s.py {{ '--inspect-resume' if k3s_reset_resume | default(false) else '--inspect' }}"
+        executable: /usr/bin/python3
+      register: reset_inspection
+      environment:
+        K3S_RESET_EXPECTED_CIDR: "{{ lookup('ansible.builtin.env', 'A1_PRIVATE_CIDR') }}"
+      changed_when: false
+      check_mode: false
+
+    - name: Display the reviewed reset scope
+      ansible.builtin.debug:
+        var: reset_inspection.stdout_lines
+
+    - name: Validate the replacement download contract before destruction
+      ansible.builtin.set_fact:
+        reset_replacement: "{{ k3s_config | k3s_render_node(inventory_hostname) }}"
+
+    - name: Prepare the replacement binary cache outside reset paths
+      ansible.builtin.file:
+        path: /var/cache/k3s-bootstrap
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+      when: not ansible_check_mode
+
+    - name: Download and verify replacement before stopping the legacy cluster
+      ansible.builtin.get_url:
+        url: "{{ reset_replacement.url }}"
+        dest: "/var/cache/k3s-bootstrap/k3s-{{ reset_replacement.version }}"
+        checksum: "sha256:{{ reset_replacement.sha256 }}"
+        owner: root
+        group: root
+        mode: '0755'
+        timeout: 120
+        use_proxy: false
+      when: not ansible_check_mode
+
+    - name: Stop legacy containers and remove only validated K3s paths
+      ansible.builtin.script:
+        cmd: "files/reset-legacy-k3s.py {{ '--resume-cleanup' if k3s_reset_resume | default(false) else '--execute' }}"
+        executable: /usr/bin/python3
+      register: reset_result
+      environment:
+        K3S_RESET_EXPECTED_CIDR: "{{ lookup('ansible.builtin.env', 'A1_PRIVATE_CIDR') }}"
+      changed_when: "'Legacy K3s reset completed' in reset_result.stdout"
+      when: not ansible_check_mode

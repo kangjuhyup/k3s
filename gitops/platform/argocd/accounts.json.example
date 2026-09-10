@@ -1,0 +1,21 @@
+{
+  "phase": "bootstrap",
+  "accounts": [
+    {
+      "name": "example-owner",
+      "enabled": false,
+      "role": "platform-admin",
+      "projects": []
+    },
+    {
+      "name": "example-developer",
+      "enabled": false,
+      "role": "developer",
+      "projects": ["example-project"]
+    }
+  ],
+  "cutover": {
+    "verified_admin": null,
+    "recovery_verified": false
+  }
+}

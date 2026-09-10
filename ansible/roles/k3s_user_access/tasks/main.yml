@@ -1,0 +1,103 @@
+---
+- name: Restrict administrator access setup to the reviewed server SSH user
+  ansible.builtin.assert:
+    that:
+      - k3s_plan.node.role == 'server'
+      - ansible_user == k3s_plan.node.ssh_user
+      - ansible_user != 'root'
+    quiet: true
+
+- name: Resolve the existing administrator account
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ ansible_user }}"
+
+- name: Select the administrator home directory
+  ansible.builtin.set_fact:
+    k3s_user_home: "{{ ansible_facts.getent_passwd[ansible_user][4] }}"
+
+- name: Require a specific absolute user home
+  ansible.builtin.assert:
+    that:
+      - k3s_user_home.startswith('/')
+      - k3s_user_home not in ['/', '/root', '/home', '/nonexistent']
+    quiet: true
+
+- name: Inspect user configuration paths without following redirects
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    follow: false
+  loop:
+    - "{{ k3s_user_home }}"
+    - "{{ k3s_user_home }}/.kube"
+    - "{{ k3s_user_home }}/.kube/config"
+  register: k3s_user_paths
+
+- name: Reject redirected or nonstandard configuration paths
+  ansible.builtin.assert:
+    that:
+      - not item.stat.islnk | default(false)
+      - not item.stat.exists or (item.stat.isdir | default(false) if item.item != k3s_user_home ~ '/.kube/config' else item.stat.isreg | default(false))
+    quiet: true
+  loop: "{{ k3s_user_paths.results }}"
+
+- name: Protect the user kubeconfig directory
+  ansible.builtin.file:
+    path: "{{ k3s_user_home }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_facts.getent_passwd[ansible_user][2] }}"
+    mode: '0700'
+
+- name: Refresh administrator kubeconfig and back up any previous configuration
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "{{ k3s_user_home }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_facts.getent_passwd[ansible_user][2] }}"
+    mode: '0600'
+    backup: true
+  no_log: true
+  diff: false
+
+- name: Inspect the existing kubectl entry point without following symlinks
+  ansible.builtin.stat:
+    path: /usr/local/bin/kubectl
+    follow: false
+    checksum_algorithm: sha256
+  register: k3s_user_kubectl
+
+- name: Refuse to replace an unrelated kubectl installation
+  ansible.builtin.assert:
+    that:
+      - >-
+        not k3s_user_kubectl.stat.exists or
+        ((k3s_user_kubectl.stat.islnk | default(false)) and k3s_user_kubectl.stat.lnk_source == '/usr/local/bin/k3s') or
+        ((k3s_user_kubectl.stat.isreg | default(false)) and k3s_user_kubectl.stat.checksum == (lookup('ansible.builtin.file', role_path ~ '/files/kubectl', rstrip=false) | hash('sha256')))
+    quiet: true
+
+- name: Install the client-only kubectl entry point without modifying the K3s binary
+  ansible.builtin.copy:
+    src: kubectl
+    dest: /usr/local/bin/kubectl
+    follow: false
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Verify API access as the SSH user without privilege escalation
+  become: false
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/kubectl
+      - --context=default
+      - --request-timeout=15s
+      - get
+      - pods
+      - --namespace=kube-system
+  environment:
+    KUBECONFIG: "{{ k3s_user_home }}/.kube/config"
+  changed_when: false
+  register: k3s_user_access_check
+  failed_when: k3s_user_access_check.rc != 0 or k3s_user_access_check.stderr | length > 0

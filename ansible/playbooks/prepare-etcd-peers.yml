@@ -1,0 +1,43 @@
+---
+- name: Prepare reviewed server peer rules on existing and future control-plane hosts
+  hosts: k3s_servers
+  gather_facts: false
+  become: true
+  serial: 1
+  any_errors_fatal: true
+  tasks:
+    - name: Validate declared peer topology and current connection
+      ansible.builtin.set_fact:
+        k3s_plan: "{{ k3s_config | k3s_render_node(inventory_hostname) }}"
+    - name: Require the reviewed server address
+      ansible.builtin.assert:
+        that:
+          - k3s_config.datastore == 'etcd'
+          - k3s_plan.node.role == 'server'
+          - ansible_host == k3s_plan.node.ssh_host
+          - ansible_user == k3s_plan.node.ssh_user
+        quiet: true
+    - name: Inspect the existing host firewall
+      ansible.builtin.command: /usr/sbin/ufw status
+      changed_when: false
+      check_mode: false
+      register: etcd_peer_ufw
+    - name: Allow only the declared server addresses to local etcd ports
+      ansible.builtin.command:
+        argv:
+          - /usr/sbin/ufw
+          - allow
+          - proto
+          - tcp
+          - from
+          - "{{ item }}"
+          - to
+          - "{{ k3s_plan.node.node_ip }}"
+          - port
+          - '2379:2380'
+          - comment
+          - k3s-etcd-peers
+      loop: "{{ k3s_config.nodes | dict2items | selectattr('value.role', 'equalto', 'server') | map(attribute='value.node_ip') | list }}"
+      register: etcd_peer_rule
+      changed_when: "'Rule added' in etcd_peer_rule.stdout or 'Rules updated' in etcd_peer_rule.stdout"
+      when: "'Status: active' in etcd_peer_ufw.stdout"

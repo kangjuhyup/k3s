@@ -1,0 +1,17 @@
+{
+  "apiVersion": "v1",
+  "kind": "Namespace",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-options": "Prune=false,Delete=false",
+      "argocd.argoproj.io/sync-wave": "-20",
+      "infra.oci-a1.example/modified": "JSON conversion, sync waves, ARM64/image/security and restricted RBAC; see ../README.md",
+      "infra.oci-a1.example/upstream": "DopplerHQ/kubernetes-operator v1.7.1; Apache-2.0"
+    },
+    "labels": {
+      "control-plane": "controller-manager",
+      "istio-injection": "disabled"
+    },
+    "name": "doppler-operator-system"
+  }
+}

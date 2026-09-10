@@ -1,0 +1,26 @@
+{
+  "reviewed": false,
+  "network_reviewed": false,
+  "version": "",
+  "sha256": "",
+  "datastore": "etcd",
+  "bootstrap_server": "a1-server-1",
+  "pod_cidr": "",
+  "service_cidr": "",
+  "cluster_dns": "",
+  "endpoint": "",
+  "tls_sans": [],
+  "servicelb": true,
+  "token_env": {"server": "K3S_SERVER_TOKEN", "agent": "K3S_AGENT_TOKEN", "server_join": "K3S_SERVER_JOIN_TOKEN"},
+  "nodes": {
+    "a1-server-1": {
+      "role": "server",
+      "ssh_host": "",
+      "ssh_user": "",
+      "node_ip": "",
+      "flannel_iface": "",
+      "os_distribution": "Ubuntu",
+      "os_version": ""
+    }
+  }
+}

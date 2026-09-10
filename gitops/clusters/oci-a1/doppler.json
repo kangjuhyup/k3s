@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "reviewed": true,
+  "sync_enabled": true,
+  "auth_ready_reviewed": true,
+  "targets_ready_reviewed": true,
+  "mappings": [{
+    "name": "auth-postgres", "project": "auth", "config": "prd",
+    "token_secret": "doppler-auth-auth-prd", "token_env": "DOPPLER_AUTH_PRD_TOKEN",
+    "target_namespace": "databases", "target_secret": "auth-db-credentials",
+    "type": "kubernetes.io/basic-auth", "resync_seconds": 120,
+    "keys": {"DB_USER": "username", "DB_PASSWORD": "password"}
+  }, {
+    "name": "auth-postgres-identity", "project": "auth", "config": "prd",
+    "token_secret": "doppler-auth-auth-prd", "token_env": "DOPPLER_AUTH_PRD_TOKEN",
+    "target_namespace": "databases", "target_secret": "auth-db-private",
+    "type": "Opaque", "resync_seconds": 120,
+    "keys": {"DB_NAME": "database", "DB_USER": "username",
+             "DB_INIT_ROLE_SQL": "01-role.sql", "DB_INIT_DATABASE_SQL": "02-database.sql", "DB_INIT_ACL_SQL": "03-acl.sql"}
+  }]
+}

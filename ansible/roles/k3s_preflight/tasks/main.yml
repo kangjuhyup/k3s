@@ -1,0 +1,160 @@
+---
+- name: Gather target OS and network facts without modifying the host
+  ansible.builtin.setup:
+    gather_subset:
+      - min
+      - hardware
+      - network
+
+- name: Require the reviewed Ubuntu ARM64 systemd host with swap disabled
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.system == 'Linux'
+      - ansible_facts.architecture == 'aarch64'
+      - ansible_facts.distribution == k3s_plan.node.os_distribution
+      - ansible_facts.distribution_version == k3s_plan.node.os_version
+      - ansible_facts.service_mgr == 'systemd'
+      - ansible_facts.swaptotal_mb | int == 0
+      - ansible_facts.memtotal_mb | int >= (2048 if k3s_plan.node.role == 'server' else 1024)
+      - k3s_plan.node.flannel_iface in ansible_facts.interfaces
+      - k3s_plan.node.node_ip in ansible_facts.all_ipv4_addresses
+    quiet: true
+    fail_msg: Host facts differ from the reviewed Ubuntu ARM64 network and OS requirements.
+
+- name: Inspect cgroup v2 controllers
+  ansible.builtin.slurp:
+    src: /sys/fs/cgroup/cgroup.controllers
+  register: k3s_preflight_cgroups
+
+- name: Require memory and process controllers
+  ansible.builtin.assert:
+    that:
+      - "'memory' in (k3s_preflight_cgroups.content | b64decode).split()"
+      - "'pids' in (k3s_preflight_cgroups.content | b64decode).split()"
+    quiet: true
+    fail_msg: This bootstrap requires cgroup v2 memory and pids controllers.
+
+- name: Inspect ownership marker without following symlinks
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/ansible-install-complete
+    follow: false
+  register: k3s_preflight_marker
+
+- name: Inspect installed artifacts without disclosing contents
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    checksum_algorithm: sha256
+    follow: false
+  loop:
+    - /usr/local/bin/k3s
+    - /etc/rancher/k3s/config.yaml
+    - /etc/rancher/k3s/bootstrap-token
+    - "/etc/systemd/system/{{ k3s_plan.service }}.service"
+  register: k3s_preflight_artifacts
+  no_log: true
+
+- name: Inspect paths that indicate an unmanaged or partial installation
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    follow: false
+  loop:
+    - /etc/rancher/k3s
+    - /var/lib/rancher/k3s
+    - /var/lib/kubelet
+    - /run/k3s
+    - /etc/cni/net.d
+    - /etc/systemd/system/k3s.service
+    - /etc/systemd/system/k3s-agent.service
+    - /usr/lib/systemd/system/k3s.service
+    - /usr/lib/systemd/system/k3s-agent.service
+    - /usr/local/bin/k3s
+    - /etc/modules-load.d/k3s-ansible.conf
+    - /etc/sysctl.d/90-k3s-ansible.conf
+  register: k3s_preflight_existing_paths
+
+- name: Inspect K3s processes before claiming a host is clean
+  ansible.builtin.command:
+    argv: [pgrep, -x, 'k3s|k3s-server|k3s-agent']
+  changed_when: false
+  failed_when: k3s_preflight_processes.rc not in [0, 1]
+  register: k3s_preflight_processes
+  when: not k3s_preflight_marker.stat.exists
+
+- name: Reject existing or partial K3s installations without a completion marker
+  ansible.builtin.assert:
+    that:
+      - k3s_preflight_existing_paths.results | selectattr('stat.exists') | list | length == 0
+      - k3s_preflight_processes.rc == 1
+    quiet: true
+    fail_msg: Existing K3s or Kubernetes paths found. No cleanup is performed; investigate or complete the separate OS rebuild.
+  when: not k3s_preflight_marker.stat.exists
+
+- name: Inspect persistent state required for a safe rerun
+  ansible.builtin.stat:
+    path: "{{ ('/var/lib/rancher/k3s/server/db/etcd/member' if k3s_config.datastore == 'etcd' else '/var/lib/rancher/k3s/server/db/state.db') if k3s_plan.node.role == 'server' else '/var/lib/rancher/k3s/agent/kubelet.kubeconfig' }}"
+    get_checksum: false
+    follow: false
+  register: k3s_preflight_persistent_state
+  when: k3s_preflight_marker.stat.exists
+
+- name: Reject loss of persistent state rather than initializing again
+  ansible.builtin.assert:
+    that:
+      - "(k3s_preflight_persistent_state.stat.isdir | default(false)) if (k3s_config.datastore | default('sqlite')) == 'etcd' and k3s_plan.node.role == 'server' else (k3s_preflight_persistent_state.stat.isreg | default(false))"
+      - not k3s_preflight_persistent_state.stat.islnk | default(true)
+    quiet: true
+    fail_msg: Persistent state is missing or redirected; use a reviewed recovery procedure.
+  when: k3s_preflight_marker.stat.exists
+
+- name: Verify completed installation without allowing updates or token rotation
+  when: k3s_preflight_marker.stat.exists
+  block:
+    - name: Require regular root-owned artifacts and marker
+      ansible.builtin.assert:
+        that:
+          - k3s_preflight_marker.stat.isreg | default(false)
+          - not k3s_preflight_marker.stat.islnk | default(true)
+          - k3s_preflight_marker.stat.uid == 0
+          - item.stat.isreg | default(false)
+          - not item.stat.islnk | default(true)
+          - item.stat.uid | default(-1) == 0
+        quiet: true
+      loop: "{{ k3s_preflight_artifacts.results }}"
+      no_log: true
+
+    - name: Read non-secret installation contract fingerprint
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/ansible-install-complete
+      register: k3s_preflight_installed_fingerprint
+
+    - name: Reject any changed install input, binary, unit, configuration or token
+      ansible.builtin.assert:
+        that:
+          - k3s_preflight_installed_fingerprint.content | b64decode | trim == k3s_plan.fingerprint
+          - k3s_preflight_artifacts.results[0].stat.checksum == k3s_plan.sha256
+          - k3s_preflight_artifacts.results[1].stat.checksum == k3s_config_content | hash('sha256')
+          - k3s_preflight_artifacts.results[2].stat.checksum == k3s_runtime_token | hash('sha256')
+          - k3s_preflight_artifacts.results[3].stat.checksum == k3s_unit_content | hash('sha256')
+        quiet: true
+      no_log: true
+
+- name: Inspect unmanaged configuration and systemd override directories
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    follow: false
+  loop:
+    - /etc/rancher/k3s/config.yaml.d
+    - "/etc/systemd/system/{{ k3s_plan.service }}.service.d"
+    - "/run/systemd/system/{{ k3s_plan.service }}.service.d"
+    - "/usr/lib/systemd/system/{{ k3s_plan.service }}.service.d"
+    - "/etc/systemd/system/{{ 'k3s-agent' if k3s_plan.node.role == 'server' else 'k3s' }}.service"
+    - "/usr/lib/systemd/system/{{ k3s_plan.service }}.service"
+    - "/run/systemd/system/{{ k3s_plan.service }}.service"
+  register: k3s_preflight_overrides
+
+- name: Reject external configuration overrides
+  ansible.builtin.assert:
+    that:
+      - k3s_preflight_overrides.results | selectattr('stat.exists') | list | length == 0
+    quiet: true
+    fail_msg: External overrides require a separate ownership review.

@@ -1,0 +1,18 @@
+{
+  "apiVersion": "kustomize.config.k8s.io/v1beta1",
+  "kind": "Kustomization",
+  "resources": [
+    "argocd.json",
+    "cnpg-project.json",
+    "cnpg.json",
+    "doppler-project.json",
+    "doppler.json",
+    "istio-project.json",
+    "istio.json",
+    "platform-project.json",
+    "postgresql-project.json",
+    "postgresql.json",
+    "root-project.json",
+    "root.json"
+  ]
+}

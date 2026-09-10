@@ -1,0 +1,89 @@
+---
+- name: Clean unused host services before rebuilding K3s
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Restrict maintenance to the inspected A1 host
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.env', 'A1_PUBLIC_IP') | length > 0
+          - ansible_host | default(inventory_hostname) == lookup('ansible.builtin.env', 'A1_PUBLIC_IP')
+
+    - name: Check existing K3s readiness
+      ansible.builtin.command: >-
+        /usr/local/bin/k3s kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml
+        --context default --request-timeout=15s get --raw=/readyz
+      changed_when: false
+      check_mode: false
+
+    - name: Read installed packages
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Check that Docker has no running containers
+      ansible.builtin.command: docker ps -q
+      register: docker_containers
+      changed_when: false
+      check_mode: false
+      when: "'docker.io' in ansible_facts.packages"
+
+    - name: Refuse to interrupt Docker workloads
+      ansible.builtin.assert:
+        that: docker_containers.stdout | default('') | trim == ''
+
+    - name: Remove unused host packages without automatic dependency removal
+      ansible.builtin.apt:
+        name:
+          - jenkins
+          - docker.io
+          - containerd
+        state: absent
+        purge: true
+        autoremove: false
+
+    - name: Remove legacy local backup schedules pending Wasabi setup
+      ansible.builtin.cron:
+        name: "{{ item }}"
+        user: root
+        state: absent
+      loop:
+        - k3s cluster backup
+        - k3s backup cleanup
+
+    - name: Create journal configuration directory
+      ansible.builtin.file:
+        path: /etc/systemd/journald.conf.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Bound persistent journal storage
+      ansible.builtin.copy:
+        dest: /etc/systemd/journald.conf.d/60-storage-limits.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [Journal]
+          SystemMaxUse=512M
+          SystemKeepFree=2G
+          MaxRetentionSec=14day
+      notify: Restart journald
+
+    - name: Apply journal settings
+      ansible.builtin.meta: flush_handlers
+
+    - name: Verify existing K3s readiness after host cleanup
+      ansible.builtin.command: >-
+        /usr/local/bin/k3s kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml
+        --context default --request-timeout=15s get --raw=/readyz
+      changed_when: false
+      check_mode: false
+
+  handlers:
+    - name: Restart journald
+      ansible.builtin.systemd_service:
+        name: systemd-journald
+        state: restarted

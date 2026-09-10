@@ -1,0 +1,67 @@
+{
+  "apiVersion": "argoproj.io/v1alpha1",
+  "kind": "Application",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "35"
+    },
+    "name": "cnpg",
+    "namespace": "argocd"
+  },
+  "spec": {
+    "destination": {
+      "namespace": "cnpg-system",
+      "server": "https://kubernetes.default.svc"
+    },
+    "ignoreDifferences": [
+      {
+        "group": "admissionregistration.k8s.io",
+        "jqPathExpressions": [
+          ".webhooks[]?.clientConfig.caBundle"
+        ],
+        "kind": "MutatingWebhookConfiguration"
+      },
+      {
+        "group": "admissionregistration.k8s.io",
+        "jqPathExpressions": [
+          ".webhooks[]?.clientConfig.caBundle"
+        ],
+        "kind": "ValidatingWebhookConfiguration"
+      }
+    ],
+    "project": "platform-cnpg",
+    "sources": [
+      {
+        "chart": "cloudnative-pg",
+        "helm": {
+          "kubeVersion": "1.36.4",
+          "releaseName": "cnpg",
+          "valueFiles": [
+            "$values/gitops/platform/cnpg/base.values.json"
+          ]
+        },
+        "repoURL": "https://cloudnative-pg.github.io/charts",
+        "targetRevision": "0.29.0"
+      },
+      {
+        "path": "gitops/clusters/oci-a1/cnpg",
+        "ref": "values",
+        "repoURL": "https://github.com/kangjuhyup/k3s.git",
+        "targetRevision": "main"
+      }
+    ],
+    "syncPolicy": {
+      "automated": {
+        "allowEmpty": false,
+        "enabled": true,
+        "prune": false,
+        "selfHeal": true
+      },
+      "syncOptions": [
+        "ServerSideApply=true",
+        "FailOnSharedResource=true",
+        "RespectIgnoreDifferences=true"
+      ]
+    }
+  }
+}

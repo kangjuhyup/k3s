@@ -1,0 +1,9 @@
+{
+  "enabled": false,
+  "reviewed": false,
+  "exposure": "k3s-servicelb",
+  "network_reviewed": false,
+  "tls_ready_reviewed": false,
+  "mesh_namespaces": [],
+  "routes": []
+}

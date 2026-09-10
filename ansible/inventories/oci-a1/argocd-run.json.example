@@ -1,0 +1,6 @@
+{
+  "argocd_controller_python": "",
+  "argocd_helm_binary": "",
+  "argocd_chart_archive": "",
+  "argocd_expected_revision": ""
+}

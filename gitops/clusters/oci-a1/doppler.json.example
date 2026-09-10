@@ -1,0 +1,24 @@
+{
+  "enabled": false,
+  "reviewed": false,
+  "sync_enabled": false,
+  "auth_ready_reviewed": false,
+  "targets_ready_reviewed": false,
+  "mappings": [
+    {
+      "name": "web-tls",
+      "project": "replace-project",
+      "config": "replace-config",
+      "token_secret": "doppler-auth-web",
+      "token_env": "DOPPLER_WEB_SERVICE_TOKEN",
+      "target_namespace": "istio-system",
+      "target_secret": "web-external-tls",
+      "type": "kubernetes.io/tls",
+      "resync_seconds": 120,
+      "keys": {
+        "WEB_TLS_CERT": "tls.crt",
+        "WEB_TLS_KEY": "tls.key"
+      }
+    }
+  ]
+}

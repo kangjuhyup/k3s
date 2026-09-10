@@ -1,0 +1,23 @@
+{
+  "image": "docker.io/istio/pilot:1.30.4@sha256:c236c1df5cc127fe193e5a17d8ece9cdd0dc17c5d89b4e20baf01d464f029dce",
+  "autoscaleEnabled": false,
+  "replicaCount": 1,
+  "resources": {"requests": {"cpu": "250m", "memory": "512Mi"}, "limits": {"memory": "1536Mi"}},
+  "nodeSelector": {"kubernetes.io/os": "linux", "kubernetes.io/arch": "arm64"},
+  "deploymentAnnotations": {"argocd.argoproj.io/sync-wave": "10"},
+  "cni": {"enabled": false},
+  "sidecarInjectorWebhook": {"enableNamespacesByDefault": false},
+  "base": {"validationFailurePolicy": "Fail"},
+  "env": {"PILOT_ENABLE_GATEWAY_API": "false"},
+  "global": {
+    "istioNamespace": "istio-system",
+    "hub": "docker.io/istio",
+    "tag": "1.30.4",
+    "defaultPodDisruptionBudget": {"enabled": false},
+    "proxy": {
+      "image": "docker.io/istio/proxyv2:1.30.4@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9",
+      "resources": {"requests": {"cpu": "100m", "memory": "128Mi"}, "limits": {"memory": "512Mi"}}
+    },
+    "proxy_init": {"image": "docker.io/istio/proxyv2:1.30.4@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9"}
+  }
+}

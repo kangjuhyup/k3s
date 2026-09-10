@@ -1,0 +1,110 @@
+---
+- name: Disable the retired Jenkins package source while retaining its contents
+  ansible.builtin.command:
+    argv:
+      - mv
+      - /etc/apt/sources.list.d/jenkins.list
+      - /etc/apt/sources.list.d/jenkins.list.disabled
+    creates: /etc/apt/sources.list.d/jenkins.list.disabled
+    removes: /etc/apt/sources.list.d/jenkins.list
+  when: inventory_hostname == 'a1-server-1' and not k3s_preflight_marker.stat.exists
+
+- name: Install required Ubuntu host tools without upgrading existing packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - iptables
+      - iproute2
+      - conntrack
+      - socat
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: not k3s_preflight_marker.stat.exists
+
+- name: Persist required kernel modules
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k3s-ansible.conf
+    content: "overlay\nbr_netfilter\nvxlan\n"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Inspect UFW availability
+  ansible.builtin.stat:
+    path: /usr/sbin/ufw
+  register: host_prepare_ufw_binary
+
+- name: Inspect existing UFW state without enabling or disabling it
+  ansible.builtin.command:
+    argv: [/usr/sbin/ufw, status]
+  changed_when: false
+  register: host_prepare_ufw_status
+  when: host_prepare_ufw_binary.stat.exists
+
+- name: Permit cluster CIDRs through the existing active host firewall
+  ansible.builtin.command:
+    argv: [/usr/sbin/ufw, allow, from, "{{ item }}", to, any, comment, k3s-cluster]
+  register: host_prepare_ufw_allow
+  changed_when: "'Rule added' in host_prepare_ufw_allow.stdout or 'Rules updated' in host_prepare_ufw_allow.stdout"
+  loop:
+    - "{{ k3s_config.pod_cidr }}"
+    - "{{ k3s_config.service_cidr }}"
+  when: "'Status: active' in (host_prepare_ufw_status.stdout | default(''))"
+
+- name: Permit pod forwarding through the existing active host firewall
+  ansible.builtin.command:
+    argv: [/usr/sbin/ufw, route, allow, from, "{{ k3s_config.pod_cidr }}", to, any, comment, k3s-pod-forwarding]
+  register: host_prepare_ufw_route
+  changed_when: "'Rule added' in host_prepare_ufw_route.stdout or 'Rules updated' in host_prepare_ufw_route.stdout"
+  when: "'Status: active' in (host_prepare_ufw_status.stdout | default(''))"
+
+- name: Permit embedded etcd only from declared server addresses
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/ufw
+      - allow
+      - proto
+      - tcp
+      - from
+      - "{{ item }}"
+      - to
+      - "{{ k3s_plan.node.node_ip }}"
+      - port
+      - '2379:2380'
+      - comment
+      - k3s-etcd-peers
+  loop: "{{ k3s_config.nodes | dict2items | selectattr('value.role', 'equalto', 'server') | map(attribute='value.node_ip') | list }}"
+  register: host_prepare_etcd_allow
+  changed_when: "'Rule added' in host_prepare_etcd_allow.stdout or 'Rules updated' in host_prepare_etcd_allow.stdout"
+  when:
+    - k3s_config.datastore == 'etcd'
+    - k3s_plan.node.role == 'server'
+    - "'Status: active' in (host_prepare_ufw_status.stdout | default(''))"
+
+- name: Load required kernel modules
+  ansible.builtin.command:
+    argv: [modprobe, "{{ item }}"]
+    creates: "/sys/module/{{ item }}"
+  loop: [overlay, br_netfilter, vxlan]
+
+- name: Persist Kubernetes IPv4 forwarding settings
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/90-k3s-ansible.conf
+    content: "net.ipv4.ip_forward = 1\nnet.bridge.bridge-nf-call-iptables = 1\n"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Read live forwarding values
+  ansible.builtin.command:
+    argv: [sysctl, -n, "{{ item }}"]
+  changed_when: false
+  loop: [net.ipv4.ip_forward, net.bridge.bridge-nf-call-iptables]
+  register: host_prepare_sysctl_values
+
+- name: Apply managed sysctls only when live values differ
+  ansible.builtin.command:
+    argv: [sysctl, -p, /etc/sysctl.d/90-k3s-ansible.conf]
+  changed_when: true
+  when: host_prepare_sysctl_values.results | map(attribute='stdout') | list != ['1', '1']

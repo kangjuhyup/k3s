@@ -1,0 +1,32 @@
+# Schema example only: not automatically loaded by Terraform.
+# Replace placeholders only after inspecting OCI. Do not put secrets here.
+# Keep adoption_reviewed=false until the runbook's review gates are met.
+adoption_reviewed = false
+
+nodes = {
+  node01 = {
+    existing_instance_ocid = "REPLACE_WITH_EXISTING_INSTANCE_OCID"
+    compartment_id         = "REPLACE_WITH_COMPARTMENT_OR_ROOT_TENANCY_OCID"
+    availability_domain    = "REPLACE_WITH_EXISTING_AD"
+    display_name           = "REPLACE_WITH_EXISTING_DISPLAY_NAME"
+    role                   = "server"
+    ocpus                  = 4
+    memory_in_gbs          = 24
+    subnet_id              = "REPLACE_WITH_EXISTING_SUBNET_OCID"
+    assign_public_ip       = null # Required: inspect and choose true or false.
+    source_type            = "REPLACE_WITH_image_OR_bootVolume"
+    source_id              = "REPLACE_WITH_ORIGINAL_SOURCE_OCID"
+
+    # Optional existing settings: inspect before supplying/omitting.
+    # boot_volume_size_in_gbs = ...
+    # boot_volume_vpus_per_gb = ...
+    # kms_key_id              = "..."
+    # fault_domain           = "..."
+    # hostname_label         = "..."
+    # private_ip             = "..."
+    # nsg_ids                = ["..."]
+    # skip_source_dest_check = false
+    # freeform_tags          = { ... }
+    # defined_tags           = { ... }
+  }
+}

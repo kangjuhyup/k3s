@@ -1,0 +1,9 @@
+{
+  "chart": "argo-cd",
+  "repository": "https://argoproj.github.io/argo-helm",
+  "version": "10.8.2",
+  "app_version": "v3.5.2",
+  "sha256": "96fb5ab2897e3c8758cd8fef409a46668ef1a19a538116b112b0691614a48f20",
+  "helm_version": "v4.2.4",
+  "verified_at": "2026-09-09"
+}

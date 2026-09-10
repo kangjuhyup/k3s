@@ -1,0 +1,30 @@
+---
+- name: Bootstrap only Doppler operator authentication from protected controller environment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Require explicit controller inputs and reject check mode
+      ansible.builtin.assert:
+        that:
+          - not ansible_check_mode
+          - doppler_run_config is defined
+          - doppler_python is defined
+          - doppler_run_config is match('^/')
+          - doppler_python is match('^/')
+        fail_msg: Use reviewed run-config and absolute Python paths; this play creates authentication only.
+
+    - name: Create missing owned authentication Secrets without overwriting existing values
+      ansible.builtin.command:
+        argv:
+          - "{{ doppler_python }}"
+          - "{{ playbook_dir }}/../../scripts/doppler_runtime.py"
+          - bootstrap-auth
+          - --repo-root
+          - "{{ playbook_dir }}/../.."
+          - --run-config
+          - "{{ doppler_run_config }}"
+      register: doppler_auth_result
+      changed_when: "'\"unchanged\": false' in doppler_auth_result.stdout"
+      no_log: true
+      diff: false

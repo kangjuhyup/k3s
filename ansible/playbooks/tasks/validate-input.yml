@@ -1,0 +1,63 @@
+---
+- name: Validate all non-secret inputs before any remote connection
+  ansible.builtin.set_fact:
+    k3s_plan: "{{ k3s_config | k3s_render_node(inventory_hostname) }}"
+  no_log: true
+
+- name: Require inventory to match the reviewed node and connection
+  ansible.builtin.assert:
+    that:
+      - ansible_connection | default('ssh') == 'ssh'
+      - ansible_host == k3s_plan.node.ssh_host
+      - ansible_user == k3s_plan.node.ssh_user
+      - inventory_hostname in groups['k3s_servers'] if k3s_plan.node.role == 'server' else inventory_hostname in groups['k3s_agents']
+      - groups['k3s_servers'] | length >= 1
+      - groups['k3s_bootstrap'] | length == 1
+      - groups['k3s_servers'] | intersect(groups['k3s_agents']) | length == 0
+      - (groups['k3s_servers'] + groups['k3s_agents']) | sort == k3s_config.nodes.keys() | list | sort
+    quiet: true
+    fail_msg: Inventory must match the reviewed configuration and use SSH.
+
+- name: Prepare deterministic configuration and unit contents
+  ansible.builtin.set_fact:
+    k3s_config_content: "{{ (k3s_plan.config | to_nice_json) ~ '\n' }}"
+    k3s_unit_content: "{{ lookup('ansible.builtin.template', playbook_dir ~ '/../roles/k3s_install/templates/k3s.service.j2') }}"
+
+- name: Read only the explicitly mapped Doppler-injected token
+  ansible.builtin.set_fact:
+    k3s_runtime_token: "{{ lookup('ansible.builtin.env', k3s_plan.token_env) }}"
+  no_log: true
+
+- name: Require a nonempty token without printing its value
+  ansible.builtin.assert:
+    that:
+      - k3s_runtime_token is string
+      - k3s_runtime_token | length >= 32
+      - k3s_runtime_token | length <= 1024
+      - "'\n' not in k3s_runtime_token"
+      - "'\r' not in k3s_runtime_token"
+    quiet: true
+  no_log: true
+
+- name: Require the CA-pinned secure token format for joining nodes
+  ansible.builtin.assert:
+    that: k3s_runtime_token is match('^K10[0-9a-f]{64}::[^\s]+$')
+    quiet: true
+  no_log: true
+  when: k3s_plan.config.server is defined
+
+- name: Reject agent-only credentials for control-plane joins
+  ansible.builtin.assert:
+    that: k3s_runtime_token is match('^K10[0-9a-f]{64}::server:[^\s]+$')
+    quiet: true
+  no_log: true
+  when: k3s_plan.node.role == 'server' and k3s_plan.config.server is defined
+
+- name: Require a short initial server token for the newly generated CA
+  ansible.builtin.assert:
+    that:
+      - not k3s_runtime_token.startswith('K10')
+      - k3s_runtime_token is match('^[a-zA-Z0-9_-]{32,1024}$')
+    quiet: true
+  no_log: true
+  when: k3s_plan.node.role == 'server' and k3s_plan.config.server is not defined

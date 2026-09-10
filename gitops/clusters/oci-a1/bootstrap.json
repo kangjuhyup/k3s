@@ -1,0 +1,20 @@
+{
+  "reviewed": true,
+  "repo_url": "https://github.com/kangjuhyup/k3s.git",
+  "revision": "main",
+  "kube_version": "1.36.4",
+  "auth": {
+    "mode": "public",
+    "username_env": "ARGOCD_GIT_USERNAME",
+    "password_env": "ARGOCD_GIT_TOKEN"
+  },
+  "doppler": {
+    "project": "infrastructure",
+    "config": "prd"
+  },
+  "secret_env": {
+    "admin_password_hash": "ARGOCD_ADMIN_PASSWORD_HASH",
+    "server_secretkey": "ARGOCD_SERVER_SECRETKEY",
+    "redis_auth": "ARGOCD_REDIS_AUTH"
+  }
+}

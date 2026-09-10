@@ -1,0 +1,61 @@
+---
+- name: Verify all declared nodes from the server without Kubernetes writes
+  hosts: k3s_bootstrap
+  gather_facts: false
+  become: true
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Validate local inputs and token mapping
+      ansible.builtin.import_tasks: tasks/validate-input.yml
+  tasks:
+    - name: Verify API and server readiness
+      ansible.builtin.include_role:
+        name: k3s_verify
+    - name: Wait for each explicitly declared node
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s
+          - kubectl
+          - --kubeconfig=/etc/rancher/k3s/k3s.yaml
+          - --context=default
+          - --request-timeout=190s
+          - wait
+          - --for=condition=Ready
+          - "node/{{ item }}"
+          - --timeout=180s
+      loop: "{{ k3s_config.nodes.keys() | list | sort }}"
+      changed_when: false
+      register: k3s_node_ready
+      until: k3s_node_ready.rc == 0
+      retries: 3
+      delay: 5
+    - name: Read only expected node version architecture and internal addresses
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s
+          - kubectl
+          - --kubeconfig=/etc/rancher/k3s/k3s.yaml
+          - --context=default
+          - --request-timeout=10s
+          - get
+          - node
+          - "{{ item }}"
+          - '-o=jsonpath={.status.nodeInfo.kubeletVersion} {.status.nodeInfo.architecture} {.status.addresses[?(@.type=="InternalIP")].address}'
+      loop: "{{ k3s_config.nodes.keys() | list | sort }}"
+      changed_when: false
+      register: k3s_node_identity
+      failed_when: k3s_node_identity.stdout != k3s_config.version ~ ' arm64 ' ~ k3s_config.nodes[item].node_ip
+    - name: Wait for CoreDNS deployment readiness
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s
+          - kubectl
+          - --kubeconfig=/etc/rancher/k3s/k3s.yaml
+          - --context=default
+          - --namespace=kube-system
+          - --request-timeout=190s
+          - rollout
+          - status
+          - deployment/coredns
+          - --timeout=180s
+      changed_when: false

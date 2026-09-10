@@ -1,0 +1,26 @@
+---
+- name: Join selected control-plane servers to the existing embedded etcd cluster
+  hosts: k3s_joining_servers
+  gather_facts: false
+  become: true
+  any_errors_fatal: true
+  serial: 1
+  pre_tasks:
+    - name: Require an explicit etcd server join outside check mode
+      ansible.builtin.assert:
+        that:
+          - not ansible_check_mode
+          - k3s_config.datastore == 'etcd'
+          - inventory_hostname != k3s_config.bootstrap_server
+        fail_msg: Use preflight for inspection; join only new server hosts after the bootstrap is healthy.
+    - name: Validate local inputs and secure server join token
+      ansible.builtin.import_tasks: tasks/validate-input.yml
+    - name: Require the existing registration endpoint before creating local state
+      ansible.builtin.wait_for:
+        host: "{{ k3s_config.endpoint | urlsplit('hostname') }}"
+        port: 6443
+        timeout: 20
+  roles:
+    - k3s_preflight
+    - host_prepare
+    - k3s_server

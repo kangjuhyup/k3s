@@ -1,0 +1,47 @@
+# Local outputs, generated inventories and private working files
+/.local/
+/artifacts/
+.DS_Store
+*.log
+*.retry
+
+# Environment values belong in Doppler; examples contain names only
+.env
+.env.*
+!.env.example
+.doppler/
+.oci/
+.ssh/
+.kube/
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# Terraform caches, state, saved plans and local variable values
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+tfplan
+tfplan.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local execution environments; .terraform.lock.hcl remains tracked
+.venv/
+__pycache__/
+*.pyc
+.ansible/

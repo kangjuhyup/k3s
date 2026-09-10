@@ -1,0 +1,9 @@
+{
+  "replicaCount": 1,
+  "autoscaling": {"enabled": false},
+  "annotations": {"argocd.argoproj.io/sync-wave": "20"},
+  "nodeSelector": {"kubernetes.io/os": "linux", "kubernetes.io/arch": "arm64"},
+  "service": {"type": "ClusterIP"},
+  "resources": {"requests": {"cpu": "100m", "memory": "128Mi"}, "limits": {"memory": "512Mi"}},
+  "podDisruptionBudget": {}
+}

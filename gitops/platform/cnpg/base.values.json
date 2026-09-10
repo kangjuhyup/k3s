@@ -1,0 +1,9 @@
+{
+  "fullnameOverride": "cnpg-controller-manager",
+  "replicaCount": 1,
+  "image": {"tag": "1.30.0@sha256:a2701eb97cdd2a34b1fdb2cb51987f544b706e40bec72ae7146cd8580efefebb"},
+  "resources": {"requests": {"cpu": "100m", "memory": "256Mi"}, "limits": {"memory": "512Mi"}},
+  "nodeSelector": {"kubernetes.io/os": "linux", "kubernetes.io/arch": "arm64"},
+  "rbac": {"aggregateClusterRoles": false},
+  "monitoring": {"podMonitorEnabled": false, "grafanaDashboard": {"create": false}}
+}

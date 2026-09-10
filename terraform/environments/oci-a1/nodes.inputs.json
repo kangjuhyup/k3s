@@ -1,0 +1,53 @@
+{
+  "oci_region": {
+    "$env": "OCI_REGION"
+  },
+  "adoption_reviewed": true,
+  "nodes": {
+    "a1-server-1": {
+      "existing_instance_ocid": {
+        "$env": "A1_INSTANCE_OCID"
+      },
+      "compartment_id": {
+        "$env": "A1_COMPARTMENT_OCID"
+      },
+      "availability_domain": {
+        "$env": "A1_AVAILABILITY_DOMAIN"
+      },
+      "display_name": {
+        "$env": "A1_DISPLAY_NAME"
+      },
+      "role": "server",
+      "ocpus": 4,
+      "memory_in_gbs": 24,
+      "subnet_id": {
+        "$env": "A1_SUBNET_OCID"
+      },
+      "assign_public_ip": true,
+      "source_type": "image",
+      "source_id": {
+        "$env": "A1_SOURCE_OCID"
+      },
+      "boot_volume_size_in_gbs": 47,
+      "boot_volume_vpus_per_gb": 10,
+      "fault_domain": "FAULT-DOMAIN-3",
+      "hostname_label": {
+        "$env": "A1_HOSTNAME_LABEL"
+      },
+      "private_ip": {
+        "$env": "A1_PRIVATE_IP"
+      },
+      "nsg_ids": {
+        "$env_json": "A1_NSG_IDS_JSON"
+      },
+      "skip_source_dest_check": true,
+      "freeform_tags": {},
+      "defined_tags": {
+        "Oracle-Tags.CreatedBy": {
+          "$env": "A1_CREATED_BY"
+        },
+        "Oracle-Tags.CreatedOn": "2023-07-20T07:07:47.347Z"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "version": "1.30.4",
+  "repository": "https://blob.istio.io/istio-release/charts",
+  "helm_version": "v4.2.4",
+  "kubernetes_min_minor": 32,
+  "kubernetes_max_minor": 36,
+  "verified_at": "2026-09-09",
+  "charts": {
+    "base": "d3532767f9f2042ad1a1f7ca060c2b734762c8d1bcd57fa0244482359146a5f1",
+    "istiod": "66ad8344e2ef16745aa425dc6609570b42536ecdf1ab5ca04a90abf1bc577344",
+    "gateway": "b662db852bfec2994725eb478c2e89fe6e73729aeb7ab90352d8042928fa20ce"
+  },
+  "images": {
+    "pilot": "docker.io/istio/pilot:1.30.4@sha256:c236c1df5cc127fe193e5a17d8ece9cdd0dc17c5d89b4e20baf01d464f029dce",
+    "proxyv2": "docker.io/istio/proxyv2:1.30.4@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9"
+  }
+}

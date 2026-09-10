@@ -1,0 +1,94 @@
+---
+- name: Change only the reviewed backup policy without deleting existing snapshots
+  hosts: k3s_servers
+  become: true
+  gather_facts: false
+  serial: 1
+  any_errors_fatal: true
+  tasks:
+    - name: Require a real explicit backup policy change
+      ansible.builtin.assert:
+        that:
+          - not ansible_check_mode
+          - k3s_config.backup is defined
+          - k3s_config.datastore == 'etcd'
+        quiet: true
+    - name: Validate desired input and prepare expected artifacts
+      ansible.builtin.import_tasks: tasks/validate-input.yml
+    - name: Retain desired contract
+      ansible.builtin.set_fact:
+        backup_desired_input: "{{ k3s_config }}"
+        backup_desired_plan: "{{ k3s_plan }}"
+        backup_desired_content: "{{ k3s_config_content }}"
+        backup_desired_unit: "{{ k3s_unit_content }}"
+        backup_previous_input: >-
+          {{ (k3s_config | dict2items | rejectattr('key', 'equalto', 'backup') | items2dict)
+             | combine({'backup': previous_backup} if previous_backup | default(none) is not none else {}) }}
+    - name: Render previous contract
+      ansible.builtin.set_fact:
+        backup_previous_plan: "{{ backup_previous_input | k3s_render_node(inventory_hostname) }}"
+    - name: Read installation contract marker
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/ansible-install-complete
+      register: backup_marker
+    - name: Require exact previous or desired configuration
+      ansible.builtin.assert:
+        that: backup_marker.content | b64decode | trim in [backup_previous_plan.fingerprint, backup_desired_plan.fingerprint]
+        quiet: true
+    - name: Select installed contract
+      ansible.builtin.set_fact:
+        backup_already_configured: "{{ backup_marker.content | b64decode | trim == backup_desired_plan.fingerprint }}"
+    - name: Prepare existing contract for full preflight
+      ansible.builtin.set_fact:
+        k3s_config: "{{ backup_desired_input if backup_already_configured else backup_previous_input }}"
+        k3s_plan: "{{ backup_desired_plan if backup_already_configured else backup_previous_plan }}"
+    - name: Render installed config and unit
+      ansible.builtin.set_fact:
+        k3s_config_content: "{{ (k3s_plan.config | to_nice_json) ~ '\n' }}"
+        k3s_unit_content: "{{ lookup('ansible.builtin.template', playbook_dir ~ '/../roles/k3s_install/templates/k3s.service.j2') }}"
+    - name: Reject drift before making changes
+      ansible.builtin.include_role:
+        name: k3s_preflight
+    - name: Verify health before a possible restart
+      ansible.builtin.include_role:
+        name: k3s_verify
+    - name: Restore desired contract
+      ansible.builtin.set_fact:
+        k3s_config: "{{ backup_desired_input }}"
+        k3s_plan: "{{ backup_desired_plan }}"
+        k3s_config_content: "{{ backup_desired_content }}"
+        k3s_unit_content: "{{ backup_desired_unit }}"
+    - name: Deliver credentials only if explicitly enabling remote backup
+      ansible.builtin.import_tasks: tasks/backup-credentials.yml
+    - name: Write reviewed backup configuration
+      ansible.builtin.copy:
+        content: "{{ k3s_config_content }}"
+        dest: /etc/rancher/k3s/config.yaml
+        owner: root
+        group: root
+        mode: '0600'
+      register: backup_config_result
+    - name: Write reviewed unit with conditional credential reference
+      ansible.builtin.copy:
+        content: "{{ k3s_unit_content }}"
+        dest: /etc/systemd/system/k3s.service
+        owner: root
+        group: root
+        mode: '0644'
+      register: backup_unit_result
+    - name: Restart only when backup policy or credentials changed
+      ansible.builtin.systemd_service:
+        name: k3s
+        state: restarted
+        daemon_reload: "{{ backup_unit_result.changed }}"
+      when: backup_config_result.changed or backup_unit_result.changed or backup_credentials_result.changed | default(false)
+    - name: Verify health after applying backup policy
+      ansible.builtin.include_role:
+        name: k3s_verify
+    - name: Record verified desired contract
+      ansible.builtin.copy:
+        content: "{{ k3s_plan.fingerprint }}\n"
+        dest: /etc/rancher/k3s/ansible-install-complete
+        owner: root
+        group: root
+        mode: '0600'

@@ -1,0 +1,47 @@
+{
+  "apiVersion": "argoproj.io/v1alpha1",
+  "kind": "Application",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "40"
+    },
+    "name": "postgresql",
+    "namespace": "argocd"
+  },
+  "spec": {
+    "destination": {
+      "namespace": "databases",
+      "server": "https://kubernetes.default.svc"
+    },
+    "ignoreDifferences": [
+      {
+        "group": "postgresql.cnpg.io",
+        "jsonPointers": [
+          "/spec/bootstrap"
+        ],
+        "kind": "Cluster",
+        "name": "shared-postgres",
+        "namespace": "databases"
+      }
+    ],
+    "project": "platform-postgresql",
+    "source": {
+      "path": "gitops/clusters/oci-a1/postgresql",
+      "repoURL": "https://github.com/kangjuhyup/k3s.git",
+      "targetRevision": "main"
+    },
+    "syncPolicy": {
+      "automated": {
+        "allowEmpty": false,
+        "enabled": true,
+        "prune": false,
+        "selfHeal": true
+      },
+      "syncOptions": [
+        "ServerSideApply=true",
+        "FailOnSharedResource=true",
+        "RespectIgnoreDifferences=true"
+      ]
+    }
+  }
+}

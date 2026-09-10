@@ -1,0 +1,27 @@
+{
+  "reviewed": true,
+  "network_reviewed": true,
+  "version": "v1.36.4+k3s1",
+  "sha256": "c920706346d5ad4e5cd3c7bf1bb09ce71ebe07fec829e513e40f1caf98aed8bb",
+  "datastore": "etcd",
+  "backup": {"enabled": false},
+  "bootstrap_server": "a1-server-1",
+  "pod_cidr": "10.42.0.0/16",
+  "service_cidr": "10.43.0.0/16",
+  "cluster_dns": "10.43.0.10",
+  "endpoint": {"$env": "K3S_API_ENDPOINT"},
+  "tls_sans": [{"$env": "A1_PRIVATE_IP"}, {"$env": "A1_PUBLIC_IP"}],
+  "servicelb": true,
+  "token_env": {"server": "K3S_SERVER_TOKEN", "agent": "K3S_AGENT_TOKEN", "server_join": "K3S_SERVER_JOIN_TOKEN"},
+  "nodes": {
+    "a1-server-1": {
+      "role": "server",
+      "ssh_host": {"$env": "A1_PUBLIC_IP"},
+      "ssh_user": "ubuntu",
+      "node_ip": {"$env": "A1_PRIVATE_IP"},
+      "flannel_iface": "enp0s6",
+      "os_distribution": "Ubuntu",
+      "os_version": "22.04"
+    }
+  }
+}

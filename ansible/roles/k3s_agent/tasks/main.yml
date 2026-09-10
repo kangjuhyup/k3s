@@ -1,0 +1,9 @@
+---
+- name: Require the explicitly selected agent role
+  ansible.builtin.assert:
+    that: k3s_plan.node.role == 'agent'
+    quiet: true
+
+- name: Install agent without delegating to the server
+  ansible.builtin.include_role:
+    name: k3s_install

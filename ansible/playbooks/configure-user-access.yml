@@ -1,0 +1,14 @@
+---
+- name: Refresh local administrator access without restarting K3s
+  hosts: k3s_servers
+  become: true
+  gather_facts: false
+  serial: 1
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Validate the reviewed node and existing token
+      ansible.builtin.import_tasks: tasks/validate-input.yml
+  roles:
+    - k3s_preflight
+    - k3s_verify
+    - k3s_user_access

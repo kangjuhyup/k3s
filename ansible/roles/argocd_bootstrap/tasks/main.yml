@@ -1,0 +1,127 @@
+---
+- name: Require explicit controller tools and committed source revision
+  ansible.builtin.assert:
+    that:
+      - not ansible_check_mode
+      - argocd_controller_python is defined
+      - argocd_helm_binary is defined
+      - argocd_chart_archive is defined
+      - argocd_expected_revision is defined
+      - argocd_expected_revision is match('^[0-9a-f]{40}$')
+      - inventory_hostname in groups['k3s_servers']
+      - groups['k3s_servers'] | length == 1
+      - ansible_connection | default('ssh') == 'ssh'
+    quiet: true
+    fail_msg: Bootstrap requires reviewed server inventory, local tools and an exact committed Git SHA; check mode is not deployment verification.
+
+- name: Prepare public bundle locally from the clean reviewed Git checkout
+  ansible.builtin.command:
+    argv:
+      - "{{ argocd_controller_python }}"
+      - "{{ playbook_dir }}/../../scripts/argocd_bundle.py"
+      - --repo-root
+      - "{{ playbook_dir }}/../.."
+      - --helm
+      - "{{ argocd_helm_binary }}"
+      - --chart
+      - "{{ argocd_chart_archive }}"
+      - --expected-revision
+      - "{{ argocd_expected_revision }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  register: argocd_bootstrap_bundle_result
+  no_log: true
+
+- name: Parse validated public bundle and server connection contract
+  ansible.builtin.set_fact:
+    argocd_bootstrap_bundle: "{{ argocd_bootstrap_bundle_result.stdout | from_json }}"
+    argocd_bootstrap_node: "{{ k3s_config | k3s_render_node(inventory_hostname) }}"
+  no_log: true
+
+- name: Verify remote Git branch SHA locally before any SSH or cluster mutation
+  ansible.builtin.command:
+    argv:
+      - "{{ argocd_controller_python }}"
+      - "{{ playbook_dir }}/../../scripts/argocd_remote_check.py"
+      - --repo-root
+      - "{{ playbook_dir }}/../.."
+      - --expected-revision
+      - "{{ argocd_expected_revision }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  no_log: true
+
+- name: Require SSH target to match the reviewed server
+  ansible.builtin.assert:
+    that:
+      - argocd_bootstrap_node.node.role == 'server'
+      - ansible_host == argocd_bootstrap_node.node.ssh_host
+      - ansible_user == argocd_bootstrap_node.node.ssh_user
+    quiet: true
+
+- name: Inspect first-stage completion before installing bootstrap helper
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/ansible-install-complete
+    follow: false
+  register: argocd_bootstrap_k3s_marker
+
+- name: Require first-stage K3s installation ownership
+  ansible.builtin.assert:
+    that:
+      - argocd_bootstrap_k3s_marker.stat.isreg | default(false)
+      - not argocd_bootstrap_k3s_marker.stat.islnk | default(true)
+      - argocd_bootstrap_k3s_marker.stat.uid | default(-1) == 0
+    quiet: true
+
+- name: Prepare root-owned bootstrap helper directory
+  ansible.builtin.file:
+    path: /usr/local/libexec/infrastructure
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Copy the checked bootstrap helper without installing extra remote libraries
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../scripts/argocd_bootstrap_runtime.py"
+    dest: /usr/local/libexec/infrastructure/argocd_bootstrap_runtime.py
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Map only required Doppler-injected values without logging them
+  ansible.builtin.set_fact:
+    argocd_bootstrap_secrets:
+      admin_password_hash: "{{ lookup('ansible.builtin.env', argocd_bootstrap_bundle.config.secret_env.admin_password_hash) }}"
+      server_secretkey: "{{ lookup('ansible.builtin.env', argocd_bootstrap_bundle.config.secret_env.server_secretkey) }}"
+      redis_auth: "{{ lookup('ansible.builtin.env', argocd_bootstrap_bundle.config.secret_env.redis_auth) }}"
+      git_username: >-
+        {{ lookup('ansible.builtin.env', argocd_bootstrap_bundle.config.auth.username_env)
+           if argocd_bootstrap_bundle.config.auth.mode == 'https-token' else '' }}
+      git_password: >-
+        {{ lookup('ansible.builtin.env', argocd_bootstrap_bundle.config.auth.password_env)
+           if argocd_bootstrap_bundle.config.auth.mode == 'https-token' else '' }}
+  no_log: true
+
+- name: Seed only a fresh namespace or verify existing GitOps handoff without overwrites
+  ansible.builtin.command:
+    argv: [/usr/bin/python3, /usr/local/libexec/infrastructure/argocd_bootstrap_runtime.py]
+    stdin: "{{ {'bundle': argocd_bootstrap_bundle, 'secrets': argocd_bootstrap_secrets} | to_json }}"
+    stdin_add_newline: false
+  register: argocd_bootstrap_result
+  changed_when: argocd_bootstrap_result.rc == 0 and (argocd_bootstrap_result.stdout | from_json).changed
+  failed_when: false
+  no_log: true
+  diff: false
+
+- name: Require successful GitOps handoff
+  ansible.builtin.assert:
+    that: argocd_bootstrap_result.rc == 0
+    quiet: true
+    fail_msg: Bootstrap or handoff failed. Inspect namespace ownership and root/Argo CD sync status; no automatic overwrite, rollback or deletion was attempted.
+
+- name: Report verified non-secret handoff status
+  ansible.builtin.debug:
+    msg: "Argo CD root and self-management are Synced/Healthy at the reviewed Git SHA. Actual admin login is a separate verification."

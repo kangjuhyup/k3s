@@ -1,0 +1,35 @@
+{
+  "apiVersion": "argoproj.io/v1alpha1",
+  "kind": "Application",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "30"
+    },
+    "name": "doppler",
+    "namespace": "argocd"
+  },
+  "spec": {
+    "destination": {
+      "namespace": "doppler-operator-system",
+      "server": "https://kubernetes.default.svc"
+    },
+    "project": "platform-doppler",
+    "source": {
+      "path": "gitops/clusters/oci-a1/doppler",
+      "repoURL": "https://github.com/kangjuhyup/k3s.git",
+      "targetRevision": "main"
+    },
+    "syncPolicy": {
+      "automated": {
+        "allowEmpty": false,
+        "enabled": true,
+        "prune": false,
+        "selfHeal": true
+      },
+      "syncOptions": [
+        "ServerSideApply=true",
+        "FailOnSharedResource=true"
+      ]
+    }
+  }
+}

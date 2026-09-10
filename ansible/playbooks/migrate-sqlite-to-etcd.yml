@@ -1,0 +1,269 @@
+---
+# Official conversion: https://docs.k3s.io/datastore/ha-embedded#existing-single-node-clusters
+- name: Convert the existing single SQLite server to embedded etcd without replacing its identity
+  hosts: k3s_servers
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+  tasks:
+    - name: Require a reviewed single bootstrap server for datastore conversion
+      ansible.builtin.assert:
+        that:
+          - not ansible_check_mode
+          - k3s_config.datastore == 'etcd'
+          - inventory_hostname == k3s_config.bootstrap_server
+          - groups['k3s_servers'] == [k3s_config.bootstrap_server]
+          - groups['k3s_agents'] | default([]) | length == 0
+          - k3s_config.nodes | length == 1
+        quiet: true
+        fail_msg: Migrate only the existing single bootstrap server before adding more nodes; check mode cannot verify conversion.
+
+    - name: Validate desired inputs and preserve the existing supplied bootstrap token
+      ansible.builtin.import_tasks: tasks/validate-input.yml
+
+    - name: Retain the desired etcd installation contract
+      ansible.builtin.set_fact:
+        migration_desired_config: "{{ k3s_config }}"
+        migration_desired_plan: "{{ k3s_plan }}"
+        migration_desired_content: "{{ k3s_config_content }}"
+
+    - name: Derive the unchanged prior SQLite input contract
+      ansible.builtin.set_fact:
+        migration_sqlite_config: >-
+          {{ (k3s_config | dict2items | rejectattr('key', 'equalto', 'bootstrap_server') | items2dict)
+             | combine({'datastore': 'sqlite', 'token_env':
+               (k3s_config.token_env | dict2items | rejectattr('key', 'equalto', 'server_join') | items2dict)}) }}
+
+    - name: Render the prior SQLite fingerprint without changing any other input
+      ansible.builtin.set_fact:
+        migration_sqlite_plan: "{{ migration_sqlite_config | k3s_render_node(inventory_hostname) }}"
+
+    - name: Inspect the existing ownership marker
+      ansible.builtin.stat:
+        path: /etc/rancher/k3s/ansible-install-complete
+        follow: false
+      register: migration_marker
+
+    - name: Require an existing owned installation
+      ansible.builtin.assert:
+        that:
+          - migration_marker.stat.isreg | default(false)
+          - not migration_marker.stat.islnk | default(true)
+          - migration_marker.stat.uid | default(-1) == 0
+        quiet: true
+
+    - name: Read the existing non-secret ownership fingerprint
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/ansible-install-complete
+      register: migration_marker_content
+
+    - name: Require either the exact previous or completed desired installation
+      ansible.builtin.assert:
+        that:
+          - migration_marker_content.content | b64decode | trim in [migration_sqlite_plan.fingerprint, migration_desired_plan.fingerprint]
+        quiet: true
+        fail_msg: Existing configuration is not the exact migration source or completed target; inspect drift or a partial conversion.
+
+    - name: Select the installed contract for full artifact verification
+      ansible.builtin.set_fact:
+        migration_completed: "{{ migration_marker_content.content | b64decode | trim == migration_desired_plan.fingerprint }}"
+
+    - name: Verify the exact contract currently installed
+      ansible.builtin.set_fact:
+        k3s_config: "{{ migration_desired_config if migration_completed else migration_sqlite_config }}"
+        k3s_plan: "{{ migration_desired_plan if migration_completed else migration_sqlite_plan }}"
+        k3s_config_content: "{{ migration_desired_content if migration_completed else ((migration_sqlite_plan.config | to_nice_json) ~ '\n') }}"
+
+    - name: Require an independently recovered original node UID for verification-only recovery
+      ansible.builtin.assert:
+        that:
+          - not migration_completed
+          - migration_original_node_uid | default('') is match('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+        quiet: true
+      when: migration_finalize_only | default(false) | bool
+
+    - name: Verify converted artifacts against the original marker without restarting
+      ansible.builtin.set_fact:
+        k3s_config: "{{ migration_desired_config }}"
+        k3s_plan: "{{ migration_desired_plan | combine({'fingerprint': migration_sqlite_plan.fingerprint}) }}"
+        k3s_config_content: "{{ migration_desired_content }}"
+      when: migration_finalize_only | default(false) | bool
+
+    - name: Verify host ownership, binary, unit, configuration, token and persistent state
+      ansible.builtin.include_role:
+        name: k3s_preflight
+
+    - name: Confirm current API and node readiness before any service change
+      ansible.builtin.include_role:
+        name: k3s_verify
+
+    - name: Read actual cluster node names before conversion
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s
+          - kubectl
+          - --kubeconfig=/etc/rancher/k3s/k3s.yaml
+          - --context=default
+          - --request-timeout=15s
+          - get
+          - nodes
+          - -o=jsonpath={.items[*].metadata.name}
+      changed_when: false
+      register: migration_actual_nodes
+
+    - name: Require only the selected bootstrap node in the live cluster
+      ansible.builtin.assert:
+        that: migration_actual_nodes.stdout.split() == [inventory_hostname]
+        quiet: true
+
+    - name: Read the existing node identity before conversion
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s
+          - kubectl
+          - --kubeconfig=/etc/rancher/k3s/k3s.yaml
+          - --context=default
+          - --request-timeout=15s
+          - get
+          - node
+          - "{{ inventory_hostname }}"
+          - -o=jsonpath={.metadata.uid}
+      changed_when: false
+      register: migration_node_identity_before
+
+    - name: Inspect existing etcd state before conversion
+      ansible.builtin.stat:
+        path: /var/lib/rancher/k3s/server/db/etcd
+        follow: false
+      register: migration_existing_etcd
+
+    - name: Reject a partial or externally initialized datastore migration
+      ansible.builtin.assert:
+        that: not migration_existing_etcd.stat.exists
+        quiet: true
+        fail_msg: etcd data exists while the source marker remains SQLite; investigate the partial conversion without restarting or deleting data.
+      when: not migration_completed and not (migration_finalize_only | default(false) | bool)
+
+    - name: Set the protected cold backup location
+      ansible.builtin.set_fact:
+        migration_backup_path: "/var/backups/k3s-migrations/sqlite-{{ migration_sqlite_plan.fingerprint }}.tar.gz"
+
+    - name: Convert the verified SQLite source exactly once
+      when: not migration_completed and not (migration_finalize_only | default(false) | bool)
+      block:
+        - name: Inspect backup paths before creating protected files
+          ansible.builtin.stat:
+            path: "{{ item }}"
+            follow: false
+          loop:
+            - /var/backups/k3s-migrations
+            - "{{ migration_backup_path }}"
+          register: migration_backup_paths
+
+        - name: Reject redirected backup directories or an interrupted previous backup
+          ansible.builtin.assert:
+            that:
+              - not migration_backup_paths.results[0].stat.islnk | default(false)
+              - not migration_backup_paths.results[1].stat.exists
+            quiet: true
+
+        - name: Create a root-only migration backup directory
+          ansible.builtin.file:
+            path: /var/backups/k3s-migrations
+            state: directory
+            owner: root
+            group: root
+            mode: '0700'
+
+        - name: Stop K3s for a consistent SQLite cold backup
+          ansible.builtin.systemd_service:
+            name: k3s
+            state: stopped
+
+        - name: Preserve SQLite, server identity, encryption keys and host configuration
+          ansible.builtin.command:
+            argv:
+              - tar
+              - -czf
+              - "{{ migration_backup_path }}"
+              - -C
+              - /
+              - etc/rancher/k3s
+              - var/lib/rancher/k3s/server
+          changed_when: true
+          no_log: true
+
+        - name: Protect the backup archive
+          ansible.builtin.file:
+            path: "{{ migration_backup_path }}"
+            owner: root
+            group: root
+            mode: '0600'
+
+        - name: Verify the backup archive can be read
+          ansible.builtin.command:
+            argv: [tar, -tzf, "{{ migration_backup_path }}"]
+          changed_when: false
+          no_log: true
+
+        - name: Enable embedded etcd without changing the binary, unit or token
+          ansible.builtin.copy:
+            content: "{{ migration_desired_content }}"
+            dest: /etc/rancher/k3s/config.yaml
+            owner: root
+            group: root
+            mode: '0600'
+
+        - name: Start K3s to perform the supported datastore conversion
+          ansible.builtin.systemd_service:
+            name: k3s
+            state: started
+
+      rescue:
+        - name: Stop on an incomplete conversion without destructive rollback or blind restart
+          ansible.builtin.fail:
+            msg: "Conversion did not complete. Inspect service and datastore state; protected backup path is {{ migration_backup_path }}. No automatic rollback or data removal is performed."
+
+    - name: Select desired etcd contract for post-conversion verification
+      ansible.builtin.set_fact:
+        k3s_config: "{{ migration_desired_config }}"
+        k3s_plan: "{{ migration_desired_plan }}"
+        k3s_config_content: "{{ migration_desired_content }}"
+
+    - name: Verify etcd state, API and Node Ready
+      ansible.builtin.include_role:
+        name: k3s_verify
+
+    - name: Read the node identity after datastore verification
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s
+          - kubectl
+          - --kubeconfig=/etc/rancher/k3s/k3s.yaml
+          - --context=default
+          - --request-timeout=15s
+          - get
+          - node
+          - "{{ inventory_hostname }}"
+          - -o=jsonpath={.metadata.uid}
+      changed_when: false
+      register: migration_node_identity_after
+
+    - name: Require the same node identity after conversion
+      ansible.builtin.assert:
+        that:
+          - migration_node_identity_before.stdout | length > 0
+          - migration_node_identity_before.stdout == migration_node_identity_after.stdout
+          - not (migration_finalize_only | default(false) | bool) or migration_node_identity_after.stdout == migration_original_node_uid
+        quiet: true
+        fail_msg: Node identity changed; do not mark the migration complete.
+
+    - name: Record the desired contract only after successful datastore verification
+      ansible.builtin.copy:
+        content: "{{ migration_desired_plan.fingerprint }}\n"
+        dest: /etc/rancher/k3s/ansible-install-complete
+        owner: root
+        group: root
+        mode: '0600'
+      when: not migration_completed

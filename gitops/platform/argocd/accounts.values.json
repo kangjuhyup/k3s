@@ -1,0 +1,14 @@
+{
+  "configs": {
+    "cm": {
+      "admin.enabled": "true",
+      "users.anonymous.enabled": "false"
+    },
+    "rbac": {
+      "policy.csv": "",
+      "policy.default": "role:authenticated",
+      "policy.matchMode": "glob",
+      "scopes": "[]"
+    }
+  }
+}
