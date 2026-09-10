@@ -6,7 +6,8 @@ from test_argocd_gitops import fixture, load
 class RedisTests(unittest.TestCase):
     def setUp(self):
         self.module = load("redis_gitops")
-        self.objects = self.module.render(fixture(), {"enabled": True, "credentials_ready_reviewed": True})
+        self.objects = self.module.render(fixture(), {"enabled": True, "credentials_ready_reviewed": True,
+                                                   "mtls_enabled": True, "tls_revision": 1})
 
     def test_two_persistent_instances_each_have_256_mib_limit(self):
         states = [o for o in self.objects.values() if o.get("kind") == "StatefulSet"]
@@ -40,3 +41,11 @@ class RedisTests(unittest.TestCase):
         self.assertNotIn("--user", self.module.HEALTH)
         self.assertIn("AUTH %s %s", self.module.HEALTH)
         self.assertIn("INFO server", self.module.HEALTH)
+        for directive in ["port 0", "tls-port 6379", "tls-auth-clients yes", "tls-replication yes"]:
+            self.assertIn(directive, self.module.CONFIG)
+        for obj in self.objects.values():
+            if obj.get("kind") == "StatefulSet":
+                pod = obj["spec"]["template"]["spec"]
+                tls = next(v for v in pod["volumes"] if v["name"] == "tls")
+                self.assertEqual(tls["secret"]["secretName"], obj["metadata"]["name"] + "-tls")
+                self.assertNotIn("ca-key", str(pod))

@@ -1,4 +1,6 @@
 {
   "enabled": true,
-  "credentials_ready_reviewed": true
+  "credentials_ready_reviewed": true,
+  "mtls_enabled": true,
+  "tls_revision": 1
 }

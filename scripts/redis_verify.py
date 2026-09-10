@@ -8,7 +8,9 @@ import re
 import secrets
 import selectors
 import socket
+import ssl
 import subprocess
+import tempfile
 import time
 from doppler_runtime import Cluster
 
@@ -18,8 +20,14 @@ class RedisError(Exception):
 
 
 class Client:
-    def __init__(self, port):
+    def __init__(self, port, tls=None):
         self.socket = socket.create_connection(("127.0.0.1", port), timeout=10)
+        if tls:
+            try:
+                self.socket = tls[0].wrap_socket(self.socket, server_hostname=tls[1])
+            except Exception:
+                self.socket.close()
+                raise
         self.stream = self.socket.makefile("rb")
 
     def close(self):
@@ -56,7 +64,7 @@ class Client:
 
 
 @contextlib.contextmanager
-def forwarded(cluster, name):
+def forwarded(cluster, name, tls=None):
     process = subprocess.Popen(cluster.prefix + ["-n", "databases", "port-forward", "service/" + name,
         "--address=127.0.0.1", ":6379"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
         env=cluster.environment)
@@ -66,7 +74,7 @@ def forwarded(cluster, name):
             assert selector.select(timeout=20), "Port-forward not ready"
             match = re.search(r"127\.0\.0\.1:(\d+)", process.stdout.readline())
             assert match, "Port-forward failed"
-        client = Client(int(match.group(1)))
+        client = Client(int(match.group(1)), tls)
         try:
             yield client
         finally:
@@ -97,18 +105,71 @@ def denied(client, code, *command):
     raise AssertionError("Forbidden operation accepted")
 
 
+@contextlib.contextmanager
+def tls_contexts():
+    # ssl requires PEM paths. Generated runtime copies are owner-only and removed on exit.
+    import os
+    from redis_pki import new_ca, leaf, pem
+    ca = private("infrastructure", "REDIS_TLS_CA_CERT")
+    with tempfile.TemporaryDirectory(prefix="redis-mtls-") as directory:
+        def context(label, cert=None, key=None, trusted=True):
+            ctx = ssl.create_default_context(cadata=ca) if trusted else ssl.create_default_context()
+            ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+            if cert:
+                paths = []
+                for suffix, value in [("crt", cert), ("key", key)]:
+                    path = Path(directory) / (label + "." + suffix)
+                    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                    with os.fdopen(fd, "w") as stream:
+                        stream.write(value)
+                    paths.append(str(path))
+                ctx.load_cert_chain(*paths)
+            return ctx
+        app_cert, app_key = [private("auth", k) for k in ["REDIS_TLS_CERT", "REDIS_TLS_KEY"]]
+        ops_cert, ops_key = [private("infrastructure", k) for k in ["REDIS_OPERATIONS_TLS_CERT", "REDIS_OPERATIONS_TLS_KEY"]]
+        rogue_key, rogue_ca = new_ca()
+        rogue = pem(leaf(rogue_key, rogue_ca))
+        yield {"app": context("app", app_cert, app_key), "ops": context("ops", ops_cert, ops_key),
+               "missing": context("missing"), "untrusted_server": context("untrusted", app_cert, app_key, False),
+               "untrusted_client": context("rogue", rogue["CERT"], rogue["KEY"])}
+
+
+def transport_denied(port, tls=None):
+    client = None
+    try:
+        client = Client(port, tls)
+        client.command("PING")
+    except (ssl.SSLError, OSError, RuntimeError):
+        return
+    finally:
+        if client:
+            client.close()
+    raise AssertionError("Forbidden transport accepted")
+
+
 def verify(run):
     cluster = Cluster(run)
     username, password, prefix = [private("auth", k) for k in ["REDIS_USERNAME", "REDIS_PASSWORD", "REDIS_KEY_PREFIX"]]
     admin, admin_password = [private("infrastructure", k) for k in ["REDIS_ADMIN_USERNAME", "REDIS_ADMIN_PASSWORD"]]
-    with forwarded(cluster, "shared-redis-master") as master, forwarded(cluster, "shared-redis-replica") as replica:
-        for client in [master, replica]:
+    master_host, replica_host = [private("infrastructure", k) for k in ["REDIS_HOST", "REDIS_REPLICA_HOST"]]
+    with tls_contexts() as contexts, forwarded(cluster, "shared-redis-master", (contexts["app"], master_host)) as master, \
+            forwarded(cluster, "shared-redis-replica", (contexts["app"], replica_host)) as replica:
+        for client, host in [(master, master_host), (replica, replica_host)]:
+            port = client.socket.getpeername()[1]
+            transport_denied(port)
+            for mode in ["missing", "untrusted_client", "untrusted_server"]:
+                transport_denied(port, (contexts[mode], host))
+            transport_denied(port, (contexts["app"], "wrong.example.invalid"))
+        for client, host in [(master, master_host), (replica, replica_host)]:
             denied(client, "NOAUTH", "PING")
-            assert client.command("AUTH", admin, admin_password) == "OK"
-            assert client.command("CONFIG", "GET", "maxmemory") == ["maxmemory", "134217728"]
-            assert client.command("CONFIG", "GET", "appendonly") == ["appendonly", "yes"]
-        assert "role:master" in master.command("INFO", "replication")
-        assert "master_link_status:up" in replica.command("INFO", "replication")
+            with contextlib.closing(Client(client.socket.getpeername()[1], (contexts["ops"], host))) as operator:
+                assert operator.command("AUTH", admin, admin_password) == "OK"
+                assert operator.command("CONFIG", "GET", "maxmemory") == ["maxmemory", "134217728"]
+                assert operator.command("CONFIG", "GET", "appendonly") == ["appendonly", "yes"]
+                for option, expected in [("port", "0"), ("tls-port", "6379"), ("tls-auth-clients", "yes"), ("tls-replication", "yes")]:
+                    assert operator.command("CONFIG", "GET", option) == [option, expected]
+                expected = "role:master" if client is master else "master_link_status:up"
+                assert expected in operator.command("INFO", "replication")
         for client in [master, replica]:
             assert client.command("AUTH", username, password) == "OK"
             assert client.command("PING") == "PONG"
@@ -129,7 +190,8 @@ def verify(run):
             master.command("DEL", key)
     print(json.dumps({"authenticated_ping": True, "master_to_replica": True, "replica_read_only": True,
         "unauthenticated_denied": True, "foreign_keys_and_admin_denied": True, "maxmemory_bytes": 134217728,
-        "aof_enabled": True, "values_displayed": False}))
+        "aof_enabled": True, "mtls_verified": True, "plaintext_denied": True, "missing_and_untrusted_certificate_denied": True,
+        "server_hostname_verified": True, "values_displayed": False}))
 
 
 if __name__ == "__main__":

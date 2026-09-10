@@ -27,6 +27,8 @@ for account in /accounts/*; do
 done
 cp /private/probe-username /runtime/probe-username
 cp /private/probe-password /runtime/probe-password
+mkdir -p /runtime/tls
+cp /tls/ca.crt /tls/tls.crt /tls/tls.key /runtime/tls/
 cp /config/redis.conf /runtime/redis.conf
 if [ "$REDIS_ROLE" = replica ]; then
   host=$(cat /private/master-host); port=$(cat /private/port)
@@ -40,7 +42,13 @@ exec redis-server /runtime/redis.conf
 '''
 HEALTH = r'''set -eu
 probe() {
-  { printf 'AUTH %s %s\n' "$(cat /runtime/probe-username)" "$(cat /runtime/probe-password)"; printf '%s\n' "$1"; } | redis-cli --raw
+  # Existing plaintext Pods keep working while the GitOps TLS rollout replaces them.
+  set -- "$1"
+  if [ -f /runtime/tls/ca.crt ]; then
+    set -- "$1" --tls --cacert /runtime/tls/ca.crt --cert /runtime/tls/tls.crt --key /runtime/tls/tls.key
+  fi
+  command=$1; shift
+  { printf 'AUTH %s %s\n' "$(cat /runtime/probe-username)" "$(cat /runtime/probe-password)"; printf '%s\n' "$command"; } | redis-cli --raw "$@"
 }
 probe 'INFO server' | grep -q '^redis_version:'
 if [ "${1:-}" = ready ] && [ "$REDIS_ROLE" = replica ]; then
@@ -49,7 +57,15 @@ fi
 '''
 CONFIG = '''bind 0.0.0.0
 protected-mode yes
-port 6379
+port 0
+tls-port 6379
+tls-auth-clients yes
+tls-replication yes
+tls-cert-file /runtime/tls/tls.crt
+tls-key-file /runtime/tls/tls.key
+tls-ca-cert-file /runtime/tls/ca.crt
+tls-protocols "TLSv1.2 TLSv1.3"
+tls-session-cache-size 128
 daemonize no
 loglevel warning
 dir /data
@@ -74,7 +90,9 @@ save ""
 
 
 def render(bootstrap, config):
-    if config != {"enabled": True, "credentials_ready_reviewed": True}:
+    if (set(config) != {"enabled", "credentials_ready_reviewed", "mtls_enabled", "tls_revision"}
+            or any(config[k] is not True for k in ["enabled", "credentials_ready_reviewed", "mtls_enabled"])
+            or type(config["tls_revision"]) is not int or config["tls_revision"] < 1):
         raise ValueError("Redis requires reviewed credential delivery")
     namespace = "databases"
     destination = {"server": "https://kubernetes.default.svc", "namespace": namespace}
@@ -110,7 +128,8 @@ def render(bootstrap, config):
         statefulset = obj("apps/v1", "StatefulSet", name, spec={
             "serviceName": name + "-headless", "replicas": 1, "selector": {"matchLabels": labels},
             "persistentVolumeClaimRetentionPolicy": {"whenDeleted": "Retain", "whenScaled": "Retain"},
-            "template": {"metadata": {"labels": labels, "annotations": {"sidecar.istio.io/inject": "false"}}, "spec": {
+            "template": {"metadata": {"labels": labels, "annotations": {"sidecar.istio.io/inject": "false",
+                "infra.oci-a1.example/tls-revision": str(config["tls_revision"])}}, "spec": {
                 "automountServiceAccountToken": False, "terminationGracePeriodSeconds": 60,
                 "securityContext": {"runAsNonRoot": True, "runAsUser": 999, "runAsGroup": 1000,
                     "fsGroup": 1000, "fsGroupChangePolicy": "OnRootMismatch", "seccompProfile": {"type": "RuntimeDefault"}},
@@ -122,11 +141,12 @@ def render(bootstrap, config):
                     "readinessProbe": {**probe, "exec": {"command": ["sh", "/config/health.sh", "ready"]}},
                     "volumeMounts": [{"name": n, "mountPath": p, "readOnly": ro} for n, p, ro in [
                         ("data", "/data", False), ("runtime", "/runtime", False), ("config", "/config", True),
-                        ("private", "/private", True), ("auth-account", "/accounts/auth", True)]]}],
+                        ("private", "/private", True), ("auth-account", "/accounts/auth", True), ("tls", "/tls", True)]]}],
                 "volumes": [{"name": "runtime", "emptyDir": {"medium": "Memory", "sizeLimit": "1Mi"}},
                     {"name": "config", "configMap": {"name": "shared-redis-config"}},
                     {"name": "private", "secret": {"secretName": "shared-redis-private", "defaultMode": 288}},
-                    {"name": "auth-account", "secret": {"secretName": "auth-redis-credentials", "defaultMode": 288}}]}},
+                    {"name": "auth-account", "secret": {"secretName": "auth-redis-credentials", "defaultMode": 288}},
+                    {"name": "tls", "secret": {"secretName": name + "-tls", "defaultMode": 288}}]}},
             "volumeClaimTemplates": [{"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "data"}, "spec": {"accessModes": ["ReadWriteOnce"],
                 "storageClassName": "local-path", "resources": {"requests": {"storage": "1Gi"}}}}]})
         statefulset["metadata"]["annotations"] = {"argocd.argoproj.io/sync-wave": "10" if role == "master" else "20",

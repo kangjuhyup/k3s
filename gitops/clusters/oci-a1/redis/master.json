@@ -25,6 +25,7 @@
     "template": {
       "metadata": {
         "annotations": {
+          "infra.oci-a1.example/tls-revision": "1",
           "sidecar.istio.io/inject": "false"
         },
         "labels": {
@@ -130,6 +131,11 @@
                 "mountPath": "/accounts/auth",
                 "name": "auth-account",
                 "readOnly": true
+              },
+              {
+                "mountPath": "/tls",
+                "name": "tls",
+                "readOnly": true
               }
             ]
           }
@@ -171,6 +177,13 @@
             "secret": {
               "defaultMode": 288,
               "secretName": "auth-redis-credentials"
+            }
+          },
+          {
+            "name": "tls",
+            "secret": {
+              "defaultMode": 288,
+              "secretName": "shared-redis-master-tls"
             }
           }
         ]
