@@ -26,6 +26,7 @@ Argo CD는 API replicas를 조정하지 않으며 UI·워커는 HPA 대상이 �
 
 UI는 `https://auth.rvkang.app/`, API는 같은 호스트의 `/admin/`, `/auth/`, `/t/`,
 `/interaction-assets/`를 원본 경로 그대로 전달한다. 공개 `/health`, `/ready`는 노출하지 않는다.
+인증 backend 응답에는 ingress에서 `Cache-Control: no-store`를 설정한다.
 UI nginx는 비루트 UID 101, 포트 8080, 읽기 전용 루트와 제한된 `/tmp`를 사용한다.
 TLS는 Istio에서 종료하고 내부 HTTP로 전달한다. Namespace의 sidecar는 최소 리소스를 위해
 비활성화했으며 앱 구간 mTLS라고 표현하지 않는다. Redis 자체 mTLS는 별개로 필수다.

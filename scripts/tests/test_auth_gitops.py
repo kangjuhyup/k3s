@@ -90,6 +90,7 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(routes[0]["redirect"]["scheme"], "https")
         self.assertIn("/t/", [m["uri"]["prefix"] for m in routes[1]["match"]])
         self.assertNotIn("rewrite", routes[1])
+        self.assertEqual(routes[1]["headers"]["response"]["set"]["cache-control"], "no-store")
         self.assertEqual(routes[-1]["route"][0]["destination"]["host"], "auth-ui.auth.svc.cluster.local")
 
     def test_every_declared_resource_fits_project_permissions(self):

@@ -31,6 +31,10 @@ spec:
     - port: 443
       uri:
         prefix: /interaction-assets/
+    headers:
+      response:
+        set:
+          cache-control: no-store
     route:
     - destination:
         host: auth-service.auth.svc.cluster.local
