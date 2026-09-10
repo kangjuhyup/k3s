@@ -43,6 +43,7 @@ class ArgoCDPublicIngressTests(unittest.TestCase):
         files = self.render()
         certificate = files[self.public.PATH + "/certificate.json"]
         self.assertEqual(certificate["spec"]["secretName"], "argocd-server-tls")
+        self.assertEqual(certificate["spec"]["secretTemplate"]["labels"], {"app.kubernetes.io/part-of": "argocd"})
         self.assertEqual(certificate["spec"]["dnsNames"], ["argo.example.invalid"])
         self.assertEqual(certificate["spec"]["privateKey"]["rotationPolicy"], "Always")
         self.assertLess(int(certificate["metadata"]["annotations"]["argocd.argoproj.io/sync-wave"]),

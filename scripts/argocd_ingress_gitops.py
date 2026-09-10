@@ -60,6 +60,7 @@ def add(root, bootstrap, config, files, read, expose_gateway):
             "apiTokenSecretRef": {"name": TOKEN_SECRET, "key": "api-token"}}}}]}}, 0)
     resource("certificate.json", "cert-manager.io/v1", "Certificate", "argocd-server", "argocd", {
         "secretName": "argocd-server-tls", "dnsNames": [host],
+        "secretTemplate": {"labels": {"app.kubernetes.io/part-of": "argocd"}},
         "issuerRef": {"name": ISSUER, "kind": "ClusterIssuer", "group": "cert-manager.io"},
         "privateKey": {"rotationPolicy": "Always", "algorithm": "RSA", "size": 2048}}, 10)
     resource("gateway.json", "networking.istio.io/v1", "Gateway", "argocd-public", "istio-system", {
