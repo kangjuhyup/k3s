@@ -8,6 +8,42 @@ from test_argocd_gitops import ROOT, fixture, load
 
 
 class MonitoringTests(unittest.TestCase):
+    def test_public_grafana_waits_for_tls_and_routes_only_its_host(self):
+        m = load("monitoring_gitops")
+        host = "grafana.example.invalid"
+        files = m.render(fixture(), {"enabled": True, "credentials_ready_reviewed": True, "public_host": host})
+        cert = files[m.PATH + "/grafana-certificate.json"]
+        gateway = files[m.PATH + "/grafana-gateway.json"]
+        self.assertEqual(cert["metadata"]["namespace"], "istio-system")
+        self.assertEqual(cert["spec"]["dnsNames"], [host])
+        self.assertEqual(gateway["spec"]["servers"][1]["tls"]["credentialName"], cert["spec"]["secretName"])
+        self.assertLess(int(cert["metadata"]["annotations"]["argocd.argoproj.io/sync-wave"]),
+                        int(gateway["metadata"]["annotations"]["argocd.argoproj.io/sync-wave"]))
+        route = files[m.PATH + "/grafana-route.json"]["spec"]
+        self.assertEqual(route["hosts"], [host])
+        self.assertEqual(route["http"][1]["route"][0]["destination"], {
+            "host": "monitoring-grafana.monitoring.svc.cluster.local", "port": {"number": 80}})
+        ini = files[m.PUBLIC_VALUES]["grafana"]["grafana.ini"]
+        self.assertEqual(ini["server"]["root_url"], "https://" + host)
+        self.assertTrue(ini["security"]["cookie_secure"])
+        self.assertEqual(files[m.PATH + "/namespace.json"]["metadata"]["labels"]["istio-injection"], "disabled")
+        self.assertFalse(any(o.get("kind") == "Secret" for o in files.values()))
+
+    def test_public_grafana_rejects_invalid_domains_and_disabled_stack(self):
+        m = load("monitoring_gitops")
+        for host in ("*.example.invalid", "https://grafana.example.invalid", "", 123):
+            with self.subTest(host=host), self.assertRaises(ValueError):
+                m.render(fixture(), {"enabled": True, "credentials_ready_reviewed": True, "public_host": host})
+        with self.assertRaises(ValueError):
+            m.render(fixture(), {"enabled": False, "credentials_ready_reviewed": False, "public_host": "grafana.example.invalid"})
+
+    def test_public_grafana_is_covered_by_shared_dns_issuer(self):
+        files = load("argocd_gitops").render_repository(ROOT)
+        cert = files["gitops/clusters/oci-a1/monitoring/grafana-certificate.json"]
+        issuer = files["gitops/clusters/oci-a1/argocd-ingress/issuer.json"]
+        self.assertEqual(cert["spec"]["issuerRef"]["name"], issuer["metadata"]["name"])
+        self.assertIn(cert["spec"]["dnsNames"][0], issuer["spec"]["acme"]["solvers"][0]["selector"]["dnsNames"])
+
     def test_namespace_can_precede_secret_delivery_without_starting_consumers(self):
         m = load("monitoring_gitops")
         files = m.render(fixture(), {"enabled": False, "credentials_ready_reviewed": False})
@@ -62,11 +98,16 @@ class MonitoringTests(unittest.TestCase):
         m = load("monitoring_gitops")
         p = subprocess.run([os.environ["HELM_TEST_BINARY"], "template", "monitoring", os.environ["MONITORING_TEST_CHART"],
                             "--namespace", "monitoring", "--kube-version", "1.36.4", "--include-crds", "--skip-tests",
-                            "-f", str(ROOT / m.VALUES)], capture_output=True, text=True, check=True)
+                            "-f", str(ROOT / m.VALUES), "-f", str(ROOT / m.PUBLIC_VALUES)], capture_output=True, text=True, check=True)
         class Loader(yaml.SafeLoader):
             pass
         Loader.add_constructor("tag:yaml.org,2002:value", lambda loader, node: loader.construct_scalar(node))
         docs = [d for d in yaml.load_all(p.stdout, Loader=Loader) if d]
+        grafana_config = next(d for d in docs if d["kind"] == "ConfigMap" and d["metadata"]["name"] == "monitoring-grafana")
+        public_host = json.loads((ROOT / m.SETTINGS).read_text())["public_host"]
+        self.assertIn("root_url = https://" + public_host, grafana_config["data"]["grafana.ini"])
+        self.assertIn("cookie_secure = true", grafana_config["data"]["grafana.ini"])
+        self.assertIn("[auth.anonymous]\nenabled = false", grafana_config["data"]["grafana.ini"])
         project = m.render(fixture(), {"enabled": True, "credentials_ready_reviewed": True})[m.ROOT + "/monitoring-project.json"]["spec"]
         allowed = {(r["group"], r["kind"]) for key in ("clusterResourceWhitelist", "namespaceResourceWhitelist") for r in project[key]}
         for d in docs:

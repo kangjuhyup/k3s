@@ -1,0 +1,52 @@
+{
+  "apiVersion": "networking.istio.io/v1",
+  "kind": "VirtualService",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "10"
+    },
+    "name": "grafana-public",
+    "namespace": "istio-system"
+  },
+  "spec": {
+    "exportTo": [
+      "."
+    ],
+    "gateways": [
+      "grafana-public"
+    ],
+    "hosts": [
+      "grafana.rvkang.app"
+    ],
+    "http": [
+      {
+        "match": [
+          {
+            "port": 80
+          }
+        ],
+        "redirect": {
+          "port": 443,
+          "scheme": "https"
+        }
+      },
+      {
+        "match": [
+          {
+            "port": 443
+          }
+        ],
+        "route": [
+          {
+            "destination": {
+              "host": "monitoring-grafana.monitoring.svc.cluster.local",
+              "port": {
+                "number": 80
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

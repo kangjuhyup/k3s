@@ -52,11 +52,20 @@ def add(root, bootstrap, config, files, read, expose_gateway):
         files[PATH + "/" + filename] = {"apiVersion": api, "kind": kind, "metadata": metadata, "spec": spec}
         resources.append(filename)
 
+    # Share the existing DNS account with the explicitly configured Grafana host.
+    dns_names = [host]
+    monitoring_path = root / "gitops/clusters/oci-a1/monitoring.json"
+    if monitoring_path.exists():
+        monitoring = read(monitoring_path)
+        grafana_host = monitoring.get("public_host")
+        if grafana_host:
+            require(monitoring["enabled"] and grafana_host.endswith("." + zone) and grafana_host != host)
+            dns_names.append(grafana_host)
     # Account registration needs no personal email; cert-manager owns the account key.
     resource("issuer.json", "cert-manager.io/v1", "ClusterIssuer", ISSUER, None, {"acme": {
         "server": "https://acme-v02.api.letsencrypt.org/directory",
         "privateKeySecretRef": {"name": "argocd-acme-account"},
-        "solvers": [{"selector": {"dnsNames": [host]}, "dns01": {"cloudflare": {
+        "solvers": [{"selector": {"dnsNames": dns_names}, "dns01": {"cloudflare": {
             "apiTokenSecretRef": {"name": TOKEN_SECRET, "key": "api-token"}}}}]}}, 0)
     resource("certificate.json", "cert-manager.io/v1", "Certificate", "argocd-server", "argocd", {
         "secretName": "argocd-server-tls", "dnsNames": [host],

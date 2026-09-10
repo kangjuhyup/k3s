@@ -1,4 +1,5 @@
 {
   "enabled": true,
-  "credentials_ready_reviewed": true
+  "credentials_ready_reviewed": true,
+  "public_host": "grafana.rvkang.app"
 }

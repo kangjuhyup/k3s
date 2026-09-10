@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
 """Monitoring namespace first, then pinned stack after Doppler delivery is verified."""
+import re
+
 SETTINGS = "gitops/clusters/oci-a1/monitoring.json"
 PATH = "gitops/clusters/oci-a1/monitoring"
 ROOT = "gitops/clusters/oci-a1/root"
 VALUES = "gitops/platform/monitoring/base.values.json"
 REPOSITORY = "https://prometheus-community.github.io/helm-charts"
 VERSION = "90.0.0"
+PUBLIC_VALUES = "gitops/clusters/oci-a1/grafana-public.values.json"
 
 
 def render(bootstrap, config):
-    if (not isinstance(config, dict) or set(config) != {"enabled", "credentials_ready_reviewed"}
-            or any(type(v) is not bool for v in config.values())
+    if (not isinstance(config, dict) or not {"enabled", "credentials_ready_reviewed"}.issubset(config)
+            or set(config) - {"enabled", "credentials_ready_reviewed", "public_host"}
+            or any(type(config[k]) is not bool for k in ("enabled", "credentials_ready_reviewed"))
             or (config["enabled"] and not config["credentials_ready_reviewed"])):
         raise ValueError("Monitoring requires reviewed secret delivery; values suppressed")
+    host = config.get("public_host")
+    if host is not None and (not config["enabled"] or not isinstance(host, str) or len(host) > 253
+            or "." not in host or not all(re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label)
+                                        for label in host.split("."))):
+        raise ValueError("Invalid Grafana public domain; values suppressed")
     destination = {"server": "https://kubernetes.default.svc", "namespace": "monitoring"}
     git = {"repoURL": bootstrap["repo_url"], "targetRevision": bootstrap["revision"], "path": PATH}
     spec = {"project": "platform-monitoring", "destination": destination,
@@ -104,5 +113,40 @@ def render(bootstrap, config):
                  "annotations": {"summary": "PostgreSQL monitoring connection failed"}}
             ]}]}}
         resources.append("database-rules.json")
+    if host:
+        project["destinations"].append(dict(destination, namespace="istio-system"))
+        project["namespaceResourceWhitelist"] += [{"group": "cert-manager.io", "kind": "Certificate"}] + [
+            {"group": "networking.istio.io", "kind": kind} for kind in ("Gateway", "VirtualService", "DestinationRule")]
+        spec["sources"][0]["helm"]["valueFiles"].append("$values/" + PUBLIC_VALUES)
+        files[PUBLIC_VALUES] = {"grafana": {"grafana.ini": {
+            "server": {"domain": host, "root_url": "https://" + host},
+            "security": {"cookie_secure": True}}}}
+
+        def public_resource(filename, api, kind, body, wave):
+            files[PATH + "/" + filename] = {"apiVersion": api, "kind": kind,
+                "metadata": {"name": "grafana-public", "namespace": "istio-system",
+                    "annotations": {"argocd.argoproj.io/sync-wave": str(wave)}}, "spec": body}
+            resources.append(filename)
+
+        public_resource("grafana-certificate.json", "cert-manager.io/v1", "Certificate", {
+            "secretName": "grafana-public-tls", "dnsNames": [host],
+            "issuerRef": {"name": "argocd-cloudflare", "kind": "ClusterIssuer", "group": "cert-manager.io"},
+            "privateKey": {"rotationPolicy": "Always", "algorithm": "RSA", "size": 2048}}, -10)
+        public_resource("grafana-gateway.json", "networking.istio.io/v1", "Gateway", {
+            "selector": {"app": "istio-ingress"}, "servers": [
+                {"port": {"number": 80, "name": "http-grafana", "protocol": "HTTP"},
+                 "hosts": ["./" + host], "tls": {"httpsRedirect": True}},
+                {"port": {"number": 443, "name": "https-grafana", "protocol": "HTTPS"},
+                 "hosts": ["./" + host], "tls": {"mode": "SIMPLE", "credentialName": "grafana-public-tls",
+                                                "minProtocolVersion": "TLSV1_2"}}]}, 10)
+        public_resource("grafana-route.json", "networking.istio.io/v1", "VirtualService", {
+            "hosts": [host], "gateways": ["grafana-public"], "exportTo": ["."], "http": [
+                {"match": [{"port": 80}], "redirect": {"scheme": "https", "port": 443}},
+                {"match": [{"port": 443}], "route": [{"destination": {
+                    "host": "monitoring-grafana.monitoring.svc.cluster.local", "port": {"number": 80}}}]}]}, 10)
+        public_resource("grafana-destination.json", "networking.istio.io/v1", "DestinationRule", {
+            "host": "monitoring-grafana.monitoring.svc.cluster.local", "exportTo": ["."],
+            "workloadSelector": {"matchLabels": {"app": "istio-ingress"}},
+            "trafficPolicy": {"tls": {"mode": "DISABLE"}}}, 10)
     files[PATH + "/kustomization.yaml"] = {"apiVersion": "kustomize.config.k8s.io/v1beta1", "kind": "Kustomization", "resources": resources}
     return files

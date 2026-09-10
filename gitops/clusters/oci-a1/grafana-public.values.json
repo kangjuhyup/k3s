@@ -1,0 +1,13 @@
+{
+  "grafana": {
+    "grafana.ini": {
+      "security": {
+        "cookie_secure": true
+      },
+      "server": {
+        "domain": "grafana.rvkang.app",
+        "root_url": "https://grafana.rvkang.app"
+      }
+    }
+  }
+}

@@ -43,6 +43,10 @@
       {
         "namespace": "kube-system",
         "server": "https://kubernetes.default.svc"
+      },
+      {
+        "namespace": "istio-system",
+        "server": "https://kubernetes.default.svc"
       }
     ],
     "namespaceResourceWhitelist": [
@@ -105,6 +109,22 @@
       {
         "group": "monitoring.coreos.com",
         "kind": "PrometheusRule"
+      },
+      {
+        "group": "cert-manager.io",
+        "kind": "Certificate"
+      },
+      {
+        "group": "networking.istio.io",
+        "kind": "Gateway"
+      },
+      {
+        "group": "networking.istio.io",
+        "kind": "VirtualService"
+      },
+      {
+        "group": "networking.istio.io",
+        "kind": "DestinationRule"
       }
     ],
     "sourceRepos": [

@@ -7,6 +7,10 @@
     "redis-metrics-master.json",
     "redis-metrics-replica.json",
     "redis-podmonitor.json",
-    "database-rules.json"
+    "database-rules.json",
+    "grafana-certificate.json",
+    "grafana-gateway.json",
+    "grafana-route.json",
+    "grafana-destination.json"
   ]
 }

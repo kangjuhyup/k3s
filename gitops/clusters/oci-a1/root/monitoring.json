@@ -38,7 +38,8 @@
           "releaseName": "monitoring",
           "skipTests": true,
           "valueFiles": [
-            "$values/gitops/platform/monitoring/base.values.json"
+            "$values/gitops/platform/monitoring/base.values.json",
+            "$values/gitops/clusters/oci-a1/grafana-public.values.json"
           ]
         },
         "repoURL": "https://prometheus-community.github.io/helm-charts",

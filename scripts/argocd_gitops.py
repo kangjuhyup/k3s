@@ -368,6 +368,12 @@ def render_repository(root):
     if public_path.exists():
         public.add(root, config, read_json(public_path), files, read_json, expose_gateway)
     require(not (root / ROOT_PATH / "argocd-ingress.json").exists() or ROOT_PATH + "/argocd-ingress.json" in files)
+    if monitoring_path.exists() and read_json(monitoring_path).get("public_host"):
+        require(ROOT_PATH + "/argocd-ingress.json" in files)
+    previous_monitoring_resources = root / monitoring.PATH / "kustomization.yaml"
+    if previous_monitoring_resources.exists():
+        require(set(read_json(previous_monitoring_resources)["resources"]).issubset(
+            files[monitoring.PATH + "/kustomization.yaml"]["resources"]))
     old_kustomization = root / ISTIO_MANIFEST_PATH / "kustomization.yaml"
     if old_kustomization.exists():
         # prune=false is not uninstall: refuse to silently leave old public routes active.

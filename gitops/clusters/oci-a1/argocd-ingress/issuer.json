@@ -25,7 +25,8 @@
           },
           "selector": {
             "dnsNames": [
-              "argo.rvkang.app"
+              "argo.rvkang.app",
+              "grafana.rvkang.app"
             ]
           }
         }

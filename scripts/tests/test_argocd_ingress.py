@@ -22,6 +22,8 @@ class ArgoCDPublicIngressTests(unittest.TestCase):
             relative = str(path.relative_to(ROOT))
             if overrides and relative in overrides:
                 return overrides[relative]
+            if relative == "gitops/clusters/oci-a1/monitoring.json":
+                return {"enabled": True, "credentials_ready_reviewed": True}
             return self.gitops.read_json(path)
         self.public.add(ROOT, fixture(), config or self.config, files, read, self.gitops.expose_gateway)
         return files
