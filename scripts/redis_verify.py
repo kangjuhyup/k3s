@@ -139,7 +139,7 @@ def transport_denied(port, tls=None):
     try:
         client = Client(port, tls)
         client.command("PING")
-    except (ssl.SSLError, OSError, RuntimeError):
+    except (ssl.SSLError, ConnectionResetError, RuntimeError):
         return
     finally:
         if client:
@@ -154,12 +154,6 @@ def verify(run):
     master_host, replica_host = [private("infrastructure", k) for k in ["REDIS_HOST", "REDIS_REPLICA_HOST"]]
     with tls_contexts() as contexts, forwarded(cluster, "shared-redis-master", (contexts["app"], master_host)) as master, \
             forwarded(cluster, "shared-redis-replica", (contexts["app"], replica_host)) as replica:
-        for client, host in [(master, master_host), (replica, replica_host)]:
-            port = client.socket.getpeername()[1]
-            transport_denied(port)
-            for mode in ["missing", "untrusted_client", "untrusted_server"]:
-                transport_denied(port, (contexts[mode], host))
-            transport_denied(port, (contexts["app"], "wrong.example.invalid"))
         for client, host in [(master, master_host), (replica, replica_host)]:
             denied(client, "NOAUTH", "PING")
             with contextlib.closing(Client(client.socket.getpeername()[1], (contexts["ops"], host))) as operator:
@@ -188,6 +182,17 @@ def verify(run):
             denied(replica, "READONLY", "SET", key, "forbidden")
         finally:
             master.command("DEL", key)
+        # A rejected stream can close a kubectl forward. Isolate every negative case,
+        # and prove that same forward accepts a valid mTLS client immediately first.
+        for role, host in [("master", master_host), ("replica", replica_host)]:
+            for mode in ["plaintext", "missing", "untrusted_client", "untrusted_server", "wrong_hostname"]:
+                with forwarded(cluster, "shared-redis-" + role, (contexts["app"], host)) as control:
+                    assert control.command("AUTH", username, password) == "OK"
+                    assert control.command("PING") == "PONG"
+                    candidate = None if mode == "plaintext" else (
+                        contexts["app"] if mode == "wrong_hostname" else contexts[mode],
+                        "wrong.example.invalid" if mode == "wrong_hostname" else host)
+                    transport_denied(control.socket.getpeername()[1], candidate)
     print(json.dumps({"authenticated_ping": True, "master_to_replica": True, "replica_read_only": True,
         "unauthenticated_denied": True, "foreign_keys_and_admin_denied": True, "maxmemory_bytes": 134217728,
         "aof_enabled": True, "mtls_verified": True, "plaintext_denied": True, "missing_and_untrusted_certificate_denied": True,
