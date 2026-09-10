@@ -1,0 +1,29 @@
+---
+- name: Permit the reviewed ServiceLB HTTP and HTTPS entrypoints
+  hosts: k3s_servers
+  become: true
+  gather_facts: false
+  serial: 1
+  tasks:
+    - name: Require ServiceLB and reviewed network configuration
+      ansible.builtin.assert:
+        that:
+          - k3s_config.servicelb | bool
+          - k3s_config.network_reviewed | bool
+        fail_msg: Public ingress requires the reviewed ServiceLB inventory.
+
+    - name: Read host firewall status
+      ansible.builtin.command:
+        argv: [/usr/sbin/ufw, status]
+      register: ingress_ufw_status
+      changed_when: false
+      check_mode: false
+      no_log: true
+
+    - name: Permit HTTP redirect and HTTPS through an active UFW firewall
+      ansible.builtin.command:
+        argv: [/usr/sbin/ufw, allow, "{{ item }}/tcp", comment, k3s-public-ingress]
+      loop: ['80', '443']
+      register: ingress_ufw_allow
+      changed_when: "'Rule added' in ingress_ufw_allow.stdout or 'Rules updated' in ingress_ufw_allow.stdout"
+      when: "'Status: active' in ingress_ufw_status.stdout"
