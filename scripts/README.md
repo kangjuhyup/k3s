@@ -29,4 +29,4 @@ Istio native 테스트는 `HELM_TEST_BINARY`, `ISTIO_TEST_CHART_DIR`, `ARGOCD_TE
 
 [cert_manager_gitops.py](cert_manager_gitops.py)는 고정 Helm source·AppProject·namespace를 기존 root에 연결한다. [cert_manager_validate.py](cert_manager_validate.py)는 로컬 archive checksum·Helm version·CRD·ARM64 이미지·webhook·리소스 권한을 검사한다. native 테스트에는 `CERT_MANAGER_TEST_CHART`와 기존 `HELM_TEST_BINARY`를 전달한다.
 
-이 단계는 발급·갱신 실행기가 아니다. DNS provider별 Issuer·Certificate 코드는 아직 없고 [정확한 구현 상태](../docs/runbooks/tls-automatic.md)를 따른다.
+공통 설치 검증기는 발급·갱신 실행기가 아니다. [argocd_ingress_gitops.py](argocd_ingress_gitops.py)는 Cloudflare DNS-01 ClusterIssuer·Certificate와 Argo CD TLS passthrough를 생성하며 기존 root 생성기에서 호출한다. [공개 도메인 절차](../docs/runbooks/argocd-public-domain.md)에 입력·소유권·외부 준비 사항과 검증 범위를 정리했다.

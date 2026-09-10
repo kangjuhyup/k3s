@@ -1,0 +1,57 @@
+{
+  "apiVersion": "networking.istio.io/v1",
+  "kind": "VirtualService",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "20"
+    },
+    "name": "argocd-public",
+    "namespace": "istio-system"
+  },
+  "spec": {
+    "exportTo": [
+      "."
+    ],
+    "gateways": [
+      "argocd-public"
+    ],
+    "hosts": [
+      "argo.rvkang.app"
+    ],
+    "http": [
+      {
+        "match": [
+          {
+            "port": 80
+          }
+        ],
+        "redirect": {
+          "port": 443,
+          "scheme": "https"
+        }
+      }
+    ],
+    "tls": [
+      {
+        "match": [
+          {
+            "port": 443,
+            "sniHosts": [
+              "argo.rvkang.app"
+            ]
+          }
+        ],
+        "route": [
+          {
+            "destination": {
+              "host": "argocd-server.argocd.svc.cluster.local",
+              "port": {
+                "number": 443
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

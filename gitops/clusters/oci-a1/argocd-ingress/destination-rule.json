@@ -1,0 +1,27 @@
+{
+  "apiVersion": "networking.istio.io/v1",
+  "kind": "DestinationRule",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "20"
+    },
+    "name": "argocd-public",
+    "namespace": "istio-system"
+  },
+  "spec": {
+    "exportTo": [
+      "."
+    ],
+    "host": "argocd-server.argocd.svc.cluster.local",
+    "trafficPolicy": {
+      "tls": {
+        "mode": "DISABLE"
+      }
+    },
+    "workloadSelector": {
+      "matchLabels": {
+        "app": "istio-ingress"
+      }
+    }
+  }
+}

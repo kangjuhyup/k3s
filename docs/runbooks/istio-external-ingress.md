@@ -1,5 +1,7 @@
 # 외부 도메인 · TLS · ServiceLB · 내부 mTLS
 
+이 문서는 일반 앱의 gateway TLS 종료·sidecar mTLS 경로를 설명한다. Argo CD는 [별도 공개 도메인 경로](argocd-public-domain.md)로 기존 서버 HTTPS를 유지한다. Argo CD 전용 설정만으로도 공통 ServiceLB overlay를 생성하므로 `ingress.json` 비활성이 전체 외부 노출 비활성을 뜻하지 않는다.
+
 사용자 선택: **외부 노출은 K3s ServiceLB**, 실제 도메인·인증서·서비스 값은 나중에 입력한다. OCI LB/NLB, NodePort 노출, 호스트 NAT 규칙을 추가하지 않는다. 코드 준비만 했으며 SSH·OCI 변경·실제 배포·DNS 변경은 수행하지 않았다.
 
 ## 통신 경계

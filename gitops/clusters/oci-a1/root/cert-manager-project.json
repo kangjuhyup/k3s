@@ -5,7 +5,7 @@
     "annotations": {
       "argocd.argoproj.io/sync-wave": "-10"
     },
-    "name": "platform-doppler",
+    "name": "platform-cert-manager",
     "namespace": "argocd"
   },
   "spec": {
@@ -25,24 +25,20 @@
       {
         "group": "rbac.authorization.k8s.io",
         "kind": "ClusterRoleBinding"
+      },
+      {
+        "group": "admissionregistration.k8s.io",
+        "kind": "MutatingWebhookConfiguration"
+      },
+      {
+        "group": "admissionregistration.k8s.io",
+        "kind": "ValidatingWebhookConfiguration"
       }
     ],
-    "description": "Administrator-only secret delivery controller; Secret data is not Git-owned",
+    "description": "Administrator-only certificate controller and admission; no Git-owned Secret data",
     "destinations": [
       {
-        "namespace": "doppler-operator-system",
-        "server": "https://kubernetes.default.svc"
-      },
-      {
         "namespace": "cert-manager",
-        "server": "https://kubernetes.default.svc"
-      },
-      {
-        "namespace": "databases",
-        "server": "https://kubernetes.default.svc"
-      },
-      {
-        "namespace": "monitoring",
         "server": "https://kubernetes.default.svc"
       }
     ],
@@ -50,6 +46,10 @@
       {
         "group": "",
         "kind": "ServiceAccount"
+      },
+      {
+        "group": "",
+        "kind": "Service"
       },
       {
         "group": "",
@@ -66,14 +66,11 @@
       {
         "group": "rbac.authorization.k8s.io",
         "kind": "RoleBinding"
-      },
-      {
-        "group": "secrets.doppler.com",
-        "kind": "DopplerSecret"
       }
     ],
     "sourceRepos": [
-      "https://github.com/kangjuhyup/k3s.git"
+      "https://github.com/kangjuhyup/k3s.git",
+      "https://charts.jetstack.io"
     ]
   }
 }

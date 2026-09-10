@@ -1,0 +1,21 @@
+{
+  "service": {
+    "allocateLoadBalancerNodePorts": false,
+    "externalTrafficPolicy": "Cluster",
+    "ports": [
+      {
+        "name": "http2",
+        "port": 80,
+        "protocol": "TCP",
+        "targetPort": 80
+      },
+      {
+        "name": "https",
+        "port": 443,
+        "protocol": "TCP",
+        "targetPort": 443
+      }
+    ],
+    "type": "LoadBalancer"
+  }
+}

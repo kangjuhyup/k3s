@@ -173,13 +173,7 @@ def add_ingress(files, settings):
     project["namespaceResourceWhitelist"] += [
         {"group": "networking.istio.io", "kind": kind} for kind in ["Gateway", "VirtualService", "DestinationRule"]] + [
         {"group": "security.istio.io", "kind": "PeerAuthentication"}]
-    source = files[ROOT_PATH + "/istio.json"]["spec"]["sources"][2]
-    source["helm"]["valueFiles"].append("$values/" + INGRESS_VALUES_PATH)
-    files[INGRESS_VALUES_PATH] = {"service": {
-        "type": "LoadBalancer", "allocateLoadBalancerNodePorts": False,
-        "externalTrafficPolicy": "Cluster", "ports": [
-            {"name": "http2", "port": 80, "protocol": "TCP", "targetPort": 80},
-            {"name": "https", "port": 443, "protocol": "TCP", "targetPort": 443}]}}
+    expose_gateway(files)
 
     def add(name, obj, namespace=None, wave="30"):
         meta = obj.setdefault("metadata", {})
@@ -218,6 +212,18 @@ def add_ingress(files, settings):
                  "route": [{"destination": {"host": backend, "port": {"number": route["backend_port"]}}}]}]}},
             "istio-system", "40")
     files[ISTIO_MANIFEST_PATH + "/kustomization.yaml"]["resources"].sort()
+
+
+def expose_gateway(files):
+    source = files[ROOT_PATH + "/istio.json"]["spec"]["sources"][2]
+    reference = "$values/" + INGRESS_VALUES_PATH
+    if reference not in source["helm"]["valueFiles"]:
+        source["helm"]["valueFiles"].append(reference)
+    files[INGRESS_VALUES_PATH] = {"service": {
+        "type": "LoadBalancer", "allocateLoadBalancerNodePorts": False,
+        "externalTrafficPolicy": "Cluster", "ports": [
+            {"name": "http2", "port": 80, "protocol": "TCP", "targetPort": 80},
+            {"name": "https", "port": 443, "protocol": "TCP", "targetPort": 443}]}}
 
 
 def render(config, istio=None, ingress=None):
@@ -355,6 +361,13 @@ def render_repository(root):
         if ROOT_PATH + "/" + name in additions:
             files[ROOT_PATH + "/kustomization.yaml"]["resources"].append(name)
     files[ROOT_PATH + "/kustomization.yaml"]["resources"].sort()
+    public_spec = importlib.util.spec_from_file_location("argocd_ingress_gitops", Path(__file__).with_name("argocd_ingress_gitops.py"))
+    public = importlib.util.module_from_spec(public_spec)
+    public_spec.loader.exec_module(public)
+    public_path = root / public.SETTINGS
+    if public_path.exists():
+        public.add(root, config, read_json(public_path), files, read_json, expose_gateway)
+    require(not (root / ROOT_PATH / "argocd-ingress.json").exists() or ROOT_PATH + "/argocd-ingress.json" in files)
     old_kustomization = root / ISTIO_MANIFEST_PATH / "kustomization.yaml"
     if old_kustomization.exists():
         # prune=false is not uninstall: refuse to silently leave old public routes active.

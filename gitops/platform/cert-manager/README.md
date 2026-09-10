@@ -1,10 +1,10 @@
 # cert-manager: 자동 TLS 발급·갱신 기반
 
-사용자 선택은 외부 TLS 인증서 자동 발급·갱신이다. **현재 이 경로에는 공통 설치 코드만 준비했다.** DNS 업체가 아직 확인되지 않아 ACME Issuer·DNS 인증 매핑·Certificate 선언은 다음 작업으로 남아 있다. Operator 설치만으로 인증서가 발급되지 않는다. 기본 비활성이며 실제 배포·인증서 발급을 하지 않았다.
+사용자 선택은 외부 TLS 인증서 자동 발급·갱신이다. 공통 설치와 함께 [Argo CD 공개 도메인](../../../docs/runbooks/argocd-public-domain.md)의 Cloudflare DNS-01 ClusterIssuer·Certificate 및 Doppler 토큰 매핑을 준비했다. 환경 입력에서 설치를 활성화했으며 실제 배포·인증서 발급은 아직 검증하지 않았다. 토큰·DNS 준비 없이 설치만으로 연결이 완료되지 않는다.
 
 - [base.values.json](base.values.json): controller/webhook/cainjector 각 1 replica, ARM64/Linux, image digest, 요청량 합계 200m CPU / 320Mi RAM.
 - [versions.json](versions.json): chart `v1.21.1`, SHA256, Helm `v4.2.4`, Kubernetes 지원 범위 `1.33~1.36`.
-- [환경 입력](../../clusters/oci-a1/cert-manager.json): `enabled`, `reviewed` 두 boolean. 기본 false.
+- [환경 입력](../../clusters/oci-a1/cert-manager.json): `enabled`, `reviewed` 두 boolean. Argo CD 도메인 연결을 위해 true.
 - [생성기](../../../scripts/cert_manager_gitops.py): 기존 root 생성기에 연결한 Application·AppProject·namespace. 생성물은 Git 대상.
 - [로컬 검사](../../../scripts/cert_manager_validate.py): 공개 고정 chart만 렌더링. 실제 클러스터나 ACME/DNS에 접근하지 않음.
 

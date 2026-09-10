@@ -1,0 +1,69 @@
+{
+  "apiVersion": "argoproj.io/v1alpha1",
+  "kind": "Application",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "25"
+    },
+    "name": "cert-manager",
+    "namespace": "argocd"
+  },
+  "spec": {
+    "destination": {
+      "namespace": "cert-manager",
+      "server": "https://kubernetes.default.svc"
+    },
+    "ignoreDifferences": [
+      {
+        "group": "admissionregistration.k8s.io",
+        "jqPathExpressions": [
+          ".webhooks[]?.clientConfig.caBundle"
+        ],
+        "kind": "MutatingWebhookConfiguration",
+        "name": "cert-manager-webhook"
+      },
+      {
+        "group": "admissionregistration.k8s.io",
+        "jqPathExpressions": [
+          ".webhooks[]?.clientConfig.caBundle"
+        ],
+        "kind": "ValidatingWebhookConfiguration",
+        "name": "cert-manager-webhook"
+      }
+    ],
+    "project": "platform-cert-manager",
+    "sources": [
+      {
+        "chart": "cert-manager",
+        "helm": {
+          "kubeVersion": "1.36.4",
+          "releaseName": "cert-manager",
+          "valueFiles": [
+            "$values/gitops/platform/cert-manager/base.values.json"
+          ]
+        },
+        "repoURL": "https://charts.jetstack.io",
+        "targetRevision": "v1.21.1"
+      },
+      {
+        "path": "gitops/clusters/oci-a1/cert-manager",
+        "ref": "values",
+        "repoURL": "https://github.com/kangjuhyup/k3s.git",
+        "targetRevision": "main"
+      }
+    ],
+    "syncPolicy": {
+      "automated": {
+        "allowEmpty": false,
+        "enabled": true,
+        "prune": false,
+        "selfHeal": true
+      },
+      "syncOptions": [
+        "ServerSideApply=true",
+        "FailOnSharedResource=true",
+        "RespectIgnoreDifferences=true"
+      ]
+    }
+  }
+}

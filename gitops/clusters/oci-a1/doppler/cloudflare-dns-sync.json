@@ -1,0 +1,36 @@
+{
+  "apiVersion": "secrets.doppler.com/v1alpha1",
+  "kind": "DopplerSecret",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/sync-wave": "20"
+    },
+    "name": "cloudflare-dns",
+    "namespace": "doppler-operator-system"
+  },
+  "spec": {
+    "config": "prd",
+    "host": "https://api.doppler.com",
+    "managedSecret": {
+      "name": "cloudflare-dns-api-token",
+      "namespace": "cert-manager",
+      "type": "Opaque"
+    },
+    "processors": {
+      "CLOUDFLARE_DNS_API_TOKEN_": {
+        "asName": "api-token",
+        "type": "plain"
+      }
+    },
+    "project": "infrastructure",
+    "resyncSeconds": 120,
+    "secrets": [
+      "CLOUDFLARE_DNS_API_TOKEN_"
+    ],
+    "tokenSecret": {
+      "name": "doppler-auth-infrastructure-prd",
+      "namespace": "doppler-operator-system"
+    },
+    "verifyTLS": true
+  }
+}

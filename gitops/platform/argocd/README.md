@@ -1,5 +1,7 @@
 # Argo CD 자기관리
 
+[공개 도메인 연결](../../../docs/runbooks/argocd-public-domain.md): `argo.rvkang.app`을 Istio TLS passthrough로 연결하고 Cloudflare DNS-01로 인증서를 발급하는 GitOps 선언을 추가했다. 아래 bootstrap 설명과 별도로 공개 URL은 환경 values에서 설정한다. 실제 DNS·토큰 준비 및 배포 검증은 해당 절차를 따른다.
+
 Argo CD의 설치 원본과 설정을 둘 위치다. **개인 계정/RBAC용 Helm values 생성 코드**와 [2단계 bootstrap/자기관리 연결 코드](../../../docs/runbooks/argocd-bootstrap.md)를 준비했다. [base.values.json](base.values.json), [versions.json](versions.json)에 공식 chart·ARM64 image digest와 단일 노드 설정을 고정했다. 실제 Git 입력은 비어 있어 운영 Application 생성·설치는 하지 않았다.
 
 최초 seed는 [Ansible bootstrap](../../../ansible/roles/argocd_bootstrap/README.md), 일상적인 자기관리 변경은 [클러스터 Application](../../clusters/oci-a1/README.md)을 통해 수행한다. 두 경로가 동일 리소스를 계속 중복 관리하지 않도록 인계한다.

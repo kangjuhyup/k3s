@@ -17,7 +17,7 @@ class CertManagerTests(unittest.TestCase):
         self.module = load("cert_manager_gitops")
 
     def test_disabled_defaults_and_strict_inputs(self):
-        config = json.loads((ROOT / self.module.SETTINGS).read_text())
+        config = {"enabled": False, "reviewed": False}
         self.assertEqual(self.module.render(bootstrap(), config), {})
         for invalid in [{"enabled": True, "reviewed": False}, {"enabled": "yes", "reviewed": True},
                         {**fixture(), "token": "DO_NOT_DISPLAY"}]:

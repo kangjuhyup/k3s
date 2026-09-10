@@ -5,6 +5,12 @@
   "auth_ready_reviewed": true,
   "targets_ready_reviewed": true,
   "mappings": [{
+    "name": "cloudflare-dns", "project": "infrastructure", "config": "prd",
+    "token_secret": "doppler-auth-infrastructure-prd", "token_env": "DOPPLER_INFRASTRUCTURE_PRD_TOKEN",
+    "target_namespace": "cert-manager", "target_secret": "cloudflare-dns-api-token",
+    "type": "Opaque", "resync_seconds": 120,
+    "keys": {"CLOUDFLARE_DNS_API_TOKEN_": "api-token"}
+  }, {
     "name": "monitoring-redis", "project": "infrastructure", "config": "prd",
     "token_secret": "doppler-auth-infrastructure-prd", "token_env": "DOPPLER_INFRASTRUCTURE_PRD_TOKEN",
     "target_namespace": "monitoring", "target_secret": "redis-metrics",

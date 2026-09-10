@@ -3,6 +3,8 @@
   "kind": "Kustomization",
   "resources": [
     "../../../platform/doppler/install",
+    "cert-manager-role.json",
+    "cert-manager-binding.json",
     "databases-role.json",
     "databases-binding.json",
     "monitoring-role.json",
@@ -10,6 +12,7 @@
     "auth-postgres-sync.json",
     "auth-postgres-identity-sync.json",
     "auth-redis-sync.json",
+    "cloudflare-dns-sync.json",
     "monitoring-grafana-sync.json",
     "monitoring-redis-sync.json",
     "monitoring-slack-sync.json",

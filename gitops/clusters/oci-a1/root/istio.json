@@ -61,7 +61,8 @@
           "kubeVersion": "1.36.4",
           "releaseName": "istio-ingress",
           "valueFiles": [
-            "$values/gitops/platform/istio/gateway.values.json"
+            "$values/gitops/platform/istio/gateway.values.json",
+            "$values/gitops/clusters/oci-a1/ingress.values.json"
           ]
         },
         "repoURL": "https://blob.istio.io/istio-release/charts",
