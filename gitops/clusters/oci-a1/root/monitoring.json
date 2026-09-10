@@ -3,7 +3,7 @@
   "kind": "Application",
   "metadata": {
     "annotations": {
-      "argocd.argoproj.io/sync-wave": "25"
+      "argocd.argoproj.io/sync-wave": "60"
     },
     "name": "monitoring",
     "namespace": "argocd"
@@ -13,12 +13,44 @@
       "namespace": "monitoring",
       "server": "https://kubernetes.default.svc"
     },
+    "ignoreDifferences": [
+      {
+        "group": "admissionregistration.k8s.io",
+        "jqPathExpressions": [
+          ".webhooks[]?.clientConfig.caBundle"
+        ],
+        "kind": "MutatingWebhookConfiguration"
+      },
+      {
+        "group": "admissionregistration.k8s.io",
+        "jqPathExpressions": [
+          ".webhooks[]?.clientConfig.caBundle"
+        ],
+        "kind": "ValidatingWebhookConfiguration"
+      }
+    ],
     "project": "platform-monitoring",
-    "source": {
-      "path": "gitops/clusters/oci-a1/monitoring",
-      "repoURL": "https://github.com/kangjuhyup/k3s.git",
-      "targetRevision": "main"
-    },
+    "sources": [
+      {
+        "chart": "kube-prometheus-stack",
+        "helm": {
+          "kubeVersion": "1.36.4",
+          "releaseName": "monitoring",
+          "skipTests": true,
+          "valueFiles": [
+            "$values/gitops/platform/monitoring/base.values.json"
+          ]
+        },
+        "repoURL": "https://prometheus-community.github.io/helm-charts",
+        "targetRevision": "90.0.0"
+      },
+      {
+        "path": "gitops/clusters/oci-a1/monitoring",
+        "ref": "values",
+        "repoURL": "https://github.com/kangjuhyup/k3s.git",
+        "targetRevision": "main"
+      }
+    ],
     "syncPolicy": {
       "automated": {
         "allowEmpty": false,
