@@ -3,6 +3,10 @@
   "kind": "Kustomization",
   "resources": [
     "namespace.json",
-    "postgresql-podmonitor.json"
+    "postgresql-podmonitor.json",
+    "redis-metrics-master.json",
+    "redis-metrics-replica.json",
+    "redis-podmonitor.json",
+    "database-rules.json"
   ]
 }

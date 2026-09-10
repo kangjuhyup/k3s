@@ -22,6 +22,11 @@ Argo CD `monitoring` Application이 kube-prometheus-stack 90.0.0을 관리한다
 - Alertmanager: 메모리 최대 256Mi, PVC 1Gi, 복구 알림 포함 Slack 전달.
 - Grafana: 본체 메모리 최대 512Mi, sidecar 각각 128Mi, PVC 1Gi.
 - 노드·Kubernetes 워크로드·API·kubelet 및 CNPG 기본 메트릭을 수집한다.
+- Redis master/replica 수집기는 각각 최대 64Mi이며 기존 probe 계정 권한은
+  PING/INFO로 한정된다. 운영용 client 인증서로 mTLS를 검증하고 관리 비밀번호·CA 개인키는
+  전달하지 않는다. CONFIG/키 탐색은 비활성이고 인증·복제 연결·메모리 알림을 둔다.
+- Redis 인증서 만료 자동 경보·자동 갱신은 아직 포함하지 않는다. 기존 Redis
+  runbook의 PKI 검사와 갱신 절차를 계속 따른다.
 - K3s 별도 노출 설정이 필요한 etcd/controller-manager/scheduler/proxy 수집은 비활성이다.
 
 local-path PVC는 같은 노드의 디스크를 사용한다. 요청 용량은 디스크 쿼터가
@@ -46,3 +51,10 @@ kubectl --kubeconfig "$KUBECONFIG" --context "$K3S_CONTEXT" -n monitoring port-f
 Prometheus Targets에서 실제 수집 성공을, Alertmanager에서는 알림 전달 성공을
 검증한다. `Watchdog`, `InfoInhibitor`는 Slack 전송하지 않는다. 원복은 Git의
 검증된 설정으로 되돌려 수행하고 PVC 삭제나 직접 Helm 설치로 우회하지 않는다.
+
+`scripts/monitoring_verify.py --run-config <보호된 런타임 설정 경로>`는 기존
+Doppler/Redis 검증과 같은 kubectl·kubeconfig·context·api_server 설정을 사용한다.
+수집 대상, 필수 메트릭, Grafana 인증·익명 접근 거부·대시보드·데이터소스,
+Prometheus에서 Alertmanager로의 Watchdog 전달을 검증한다.
+`--send-test-alert`는 실제 Slack 테스트 알림 1건을 발생시키며 전송 성공 카운터를
+확인한 후 해제한다. 이 옵션은 알림 전송이 승인된 경우에만 사용한다.

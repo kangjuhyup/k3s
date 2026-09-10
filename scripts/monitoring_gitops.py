@@ -59,5 +59,50 @@ def render(bootstrap, config):
                      "selector": {"matchLabels": {"cnpg.io/cluster": "shared-postgres"}},
                      "podMetricsEndpoints": [{"port": "metrics", "interval": "30s"}]}}
         resources.append("postgresql-podmonitor.json")
+        for role in ["master", "replica"]:
+            name = "redis-metrics-" + role
+            labels = {"app.kubernetes.io/name": "redis-metrics", "redis-role": role}
+            def secret_env(name, key):
+                return {"name": name, "valueFrom": {"secretKeyRef": {"name": "redis-metrics", "key": key}}}
+            container = {"name": "exporter", "image": "docker.io/oliver006/redis_exporter:v1.91.1@sha256:c67a432dba6b4ae30f471e3c77cf14a289133bbeeb89abb0bb03e6092efb2836",
+                         "args": ["--config-command=-", "--log-level=fatal"],
+                         "env": [secret_env("REDIS_HOST", role + "-host"), secret_env("REDIS_PORT", "port"),
+                                 secret_env("REDIS_USER", "username"), secret_env("REDIS_PASSWORD", "password"),
+                                 {"name": "REDIS_ADDR", "value": "rediss://$(REDIS_HOST):$(REDIS_PORT)"},
+                                 {"name": "REDIS_EXPORTER_TLS_CA_CERT_FILE", "value": "/tls/ca.crt"},
+                                 {"name": "REDIS_EXPORTER_TLS_CLIENT_CERT_FILE", "value": "/tls/tls.crt"},
+                                 {"name": "REDIS_EXPORTER_TLS_CLIENT_KEY_FILE", "value": "/tls/tls.key"}],
+                         "ports": [{"name": "metrics", "containerPort": 9121}],
+                         "resources": {"requests": {"cpu": "10m", "memory": "32Mi"}, "limits": {"memory": "64Mi"}},
+                         "securityContext": {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True, "capabilities": {"drop": ["ALL"]}},
+                         "volumeMounts": [{"name": "tls", "mountPath": "/tls", "readOnly": True}],
+                         "readinessProbe": {"httpGet": {"path": "/health", "port": "metrics"}},
+                         "livenessProbe": {"httpGet": {"path": "/health", "port": "metrics"}}}
+            files[PATH + "/" + name + ".json"] = {"apiVersion": "apps/v1", "kind": "Deployment",
+                "metadata": {"name": name, "namespace": "monitoring"}, "spec": {"replicas": 1,
+                "selector": {"matchLabels": labels}, "template": {"metadata": {"labels": labels}, "spec": {
+                    "automountServiceAccountToken": False, "securityContext": {"runAsNonRoot": True, "runAsUser": 65534,
+                        "runAsGroup": 65534, "fsGroup": 65534, "seccompProfile": {"type": "RuntimeDefault"}},
+                    "containers": [container], "volumes": [{"name": "tls", "secret": {"secretName": "redis-metrics",
+                        "defaultMode": 288, "items": [{"key": k, "path": k} for k in ["ca.crt", "tls.crt", "tls.key"]]}}]}}}}
+            resources.append(name + ".json")
+        files[PATH + "/redis-podmonitor.json"] = {"apiVersion": "monitoring.coreos.com/v1", "kind": "PodMonitor",
+            "metadata": {"name": "redis", "namespace": "monitoring", "labels": {"release": "monitoring"}},
+            "spec": {"selector": {"matchLabels": {"app.kubernetes.io/name": "redis-metrics"}},
+                     "podTargetLabels": ["redis-role"], "podMetricsEndpoints": [{"port": "metrics", "interval": "30s"}]}}
+        resources.append("redis-podmonitor.json")
+        files[PATH + "/database-rules.json"] = {"apiVersion": "monitoring.coreos.com/v1", "kind": "PrometheusRule",
+            "metadata": {"name": "database-health", "namespace": "monitoring", "labels": {"release": "monitoring"}},
+            "spec": {"groups": [{"name": "database-health", "rules": [
+                {"alert": "RedisUnavailable", "expr": "redis_up == 0", "for": "2m", "labels": {"severity": "critical"},
+                 "annotations": {"summary": "Redis authentication or availability check failed"}},
+                {"alert": "RedisReplicationDisconnected", "expr": "redis_master_link_up == 0", "for": "2m", "labels": {"severity": "critical"},
+                 "annotations": {"summary": "Redis replica has lost its master connection"}},
+                {"alert": "RedisMemoryNearLimit", "expr": "redis_memory_used_bytes / redis_memory_max_bytes > 0.85", "for": "5m", "labels": {"severity": "warning"},
+                 "annotations": {"summary": "Redis memory is above 85 percent of its configured limit"}},
+                {"alert": "PostgreSQLCollectorUnavailable", "expr": "cnpg_collector_up == 0", "for": "2m", "labels": {"severity": "critical"},
+                 "annotations": {"summary": "PostgreSQL monitoring connection failed"}}
+            ]}]}}
+        resources.append("database-rules.json")
     files[PATH + "/kustomization.yaml"] = {"apiVersion": "kustomize.config.k8s.io/v1beta1", "kind": "Kustomization", "resources": resources}
     return files

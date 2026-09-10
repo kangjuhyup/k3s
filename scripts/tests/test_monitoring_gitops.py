@@ -38,6 +38,24 @@ class MonitoringTests(unittest.TestCase):
         self.assertEqual(p["persistentVolumeClaimRetentionPolicy"]["whenDeleted"], "Retain")
         self.assertFalse(v["kubelet"]["serviceMonitor"]["tlsConfig"]["insecureSkipVerify"])
 
+    def test_redis_scrapes_use_mtls_and_only_probe_credentials(self):
+        m = load("monitoring_gitops")
+        files = m.render(fixture(), {"enabled": True, "credentials_ready_reviewed": True})
+        for role in ["master", "replica"]:
+            pod = files[m.PATH + "/redis-metrics-" + role + ".json"]["spec"]["template"]["spec"]
+            container = pod["containers"][0]
+            env = {e["name"]: e for e in container["env"]}
+            self.assertTrue(env["REDIS_ADDR"]["value"].startswith("rediss://"))
+            self.assertIn("REDIS_EXPORTER_TLS_CLIENT_KEY_FILE", env)
+            self.assertNotIn("REDIS_EXPORTER_SKIP_TLS_VERIFICATION", env)
+            self.assertFalse(pod["automountServiceAccountToken"])
+            self.assertEqual(container["resources"]["limits"]["memory"], "64Mi")
+        mappings = json.loads((ROOT / "gitops/clusters/oci-a1/doppler.json").read_text())["mappings"]
+        keys = next(x["keys"] for x in mappings if x["name"] == "monitoring-redis")
+        self.assertIn("REDIS_PROBE_PASSWORD", keys)
+        self.assertNotIn("REDIS_ADMIN_PASSWORD", keys)
+        self.assertNotIn("REDIS_TLS_CA_KEY", keys)
+
     @unittest.skipUnless(os.environ.get("MONITORING_TEST_CHART") and os.environ.get("HELM_TEST_BINARY"), "Pinned monitoring chart required")
     def test_chart_resources_fit_project_and_services_are_internal(self):
         m = load("monitoring_gitops")

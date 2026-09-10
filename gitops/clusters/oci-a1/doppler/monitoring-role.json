@@ -26,7 +26,8 @@
       ],
       "resourceNames": [
         "alertmanager-slack",
-        "grafana-admin"
+        "grafana-admin",
+        "redis-metrics"
       ],
       "resources": [
         "secrets"
