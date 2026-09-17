@@ -38,7 +38,7 @@ class ArgoCDPublicIngressTests(unittest.TestCase):
         self.assertLess(int(certificate["metadata"]["annotations"]["argocd.argoproj.io/sync-wave"]),
                         int(files[self.public.PATH + "/gateway.yaml"]["metadata"]["annotations"]["argocd.argoproj.io/sync-wave"]))
         issuer = files[self.public.PATH + "/issuer.yaml"]["spec"]["acme"]
-        self.assertEqual(issuer["solvers"][0]["selector"], {"dnsNames": ["argo.rvkang.app", "grafana.rvkang.app", "auth.rvkang.app"]})
+        self.assertEqual(issuer["solvers"][0]["selector"], {"dnsNames": ["argo.rvkang.app", "grafana.rvkang.app", "auth.rvkang.app", "redis.rvkang.app"]})
         self.assertEqual(issuer["solvers"][0]["dns01"]["cloudflare"]["apiTokenSecretRef"],
                          {"name": "cloudflare-dns-api-token", "key": "api-token"})
         project = files[self.public.ROOT + "/argocd-ingress-project.yaml"]["spec"]

@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redisinsight
+  namespace: databases
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redisinsight
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redisinsight
+      annotations:
+        sidecar.istio.io/inject: 'false'
+        infra.oci-a1.example/config-revision: '1'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+      - name: access-config
+        image: docker.io/redis/redisinsight:3.8.0-arm64@sha256:c5727416132f2b318a4b1ba8f7ab374c54844839fc42b13455d8edc2ac7b89e2
+        command:
+        - node
+        - -e
+        - |
+          const fs = require('fs');
+          const aud = process.env.ACCESS_AUD;
+          if (!/^[a-f0-9]{64}$/.test(aud || '')) process.exit(1);
+          fs.writeFileSync('/runtime/envoy.yaml', fs.readFileSync('/template/envoy.yaml', 'utf8').replace('@ACCESS_AUD@', aud), {mode: 0o600});
+        env:
+        - name: ACCESS_AUD
+          valueFrom:
+            secretKeyRef:
+              name: redisinsight-runtime
+              key: access-aud
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: {drop: [ALL]}
+        resources:
+          requests: {cpu: 10m, memory: 32Mi}
+          limits: {memory: 128Mi}
+        volumeMounts:
+        - {name: proxy-template, mountPath: /template, readOnly: true}
+        - {name: proxy-runtime, mountPath: /runtime}
+      containers:
+      - name: redisinsight
+        image: docker.io/redis/redisinsight:3.8.0-arm64@sha256:c5727416132f2b318a4b1ba8f7ab374c54844839fc42b13455d8edc2ac7b89e2
+        env:
+        - {name: RI_APP_HOST, value: '127.0.0.1'}
+        - {name: RI_APP_PORT, value: '5540'}
+        - {name: RI_DATABASE_MANAGEMENT, value: 'false'}
+        - {name: RI_FILES_LOGGER, value: 'false'}
+        - {name: RI_LOG_LEVEL, value: warn}
+        - {name: RI_REDIS_TLS, value: 'true'}
+        - {name: RI_REDIS_TLS_CA_PATH, value: /tls/ca.crt}
+        - {name: RI_REDIS_TLS_CERT_PATH, value: /tls/tls.crt}
+        - {name: RI_REDIS_TLS_KEY_PATH, value: /tls/tls.key}
+        - {name: RI_REDIS_PORT, value: '6379'}
+        - {name: RI_REDIS_DB, value: '0'}
+        - name: RI_REDIS_HOST
+          valueFrom:
+            secretKeyRef: {name: redisinsight-runtime, key: redis-host}
+        - name: RI_REDIS_USERNAME
+          valueFrom:
+            secretKeyRef: {name: redisinsight-redis-credentials, key: username}
+        - name: RI_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef: {name: redisinsight-redis-credentials, key: password}
+        - name: RI_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef: {name: redisinsight-runtime, key: encryption-key}
+        resources:
+          requests: {cpu: 50m, memory: 256Mi}
+          limits: {memory: 768Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+        readinessProbe:
+          exec:
+            command: [node, -e, "require('http').get('http://127.0.0.1:5540/api/health/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+          timeoutSeconds: 5
+          periodSeconds: 15
+        startupProbe:
+          exec:
+            command: [node, -e, "require('http').get('http://127.0.0.1:5540/api/health/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 60
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - name: tls
+          mountPath: /tls
+          readOnly: true
+      - name: access-proxy
+        image: docker.io/envoyproxy/envoy:v1.39.1@sha256:57e14a549d7bd43c8d3f6d03e8cfa653e037d4b38e133acd9b54f38c524401b4
+        command: [envoy]
+        args: [-c, /runtime/envoy.yaml, --concurrency, '1', --log-level, warning]
+        ports:
+        - {name: access-http, containerPort: 8080}
+        readinessProbe:
+          tcpSocket: {port: access-http}
+        resources:
+          requests: {cpu: 10m, memory: 32Mi}
+          limits: {memory: 128Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: {drop: [ALL]}
+        volumeMounts:
+        - {name: proxy-runtime, mountPath: /runtime, readOnly: true}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: redisinsight-data}
+      - name: proxy-template
+        configMap: {name: redisinsight-access-proxy}
+      - name: proxy-runtime
+        emptyDir: {medium: Memory, sizeLimit: 1Mi}
+      - name: tls
+        secret:
+          secretName: redisinsight-runtime
+          defaultMode: 288
+          items:
+          - {key: ca.crt, path: ca.crt}
+          - {key: tls.crt, path: tls.crt}
+          - {key: tls.key, path: tls.key}

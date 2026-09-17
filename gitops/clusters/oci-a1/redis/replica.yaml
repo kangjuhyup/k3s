@@ -19,7 +19,7 @@ spec:
   template:
     metadata:
       annotations:
-        infra.oci-a1.example/acl-revision: '2'
+        infra.oci-a1.example/acl-revision: '3'
         infra.oci-a1.example/tls-revision: '1'
         sidecar.istio.io/inject: 'false'
       labels:
@@ -94,6 +94,9 @@ spec:
         - mountPath: /tls
           name: tls
           readOnly: true
+        - mountPath: /readonly
+          name: readonly-account
+          readOnly: true
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
@@ -123,6 +126,10 @@ spec:
         secret:
           defaultMode: 288
           secretName: shared-redis-replica-tls
+      - name: readonly-account
+        secret:
+          defaultMode: 288
+          secretName: redisinsight-redis-credentials
   volumeClaimTemplates:
   - apiVersion: v1
     kind: PersistentVolumeClaim

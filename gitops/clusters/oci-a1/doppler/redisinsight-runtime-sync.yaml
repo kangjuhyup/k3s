@@ -1,0 +1,46 @@
+apiVersion: secrets.doppler.com/v1alpha1
+kind: DopplerSecret
+metadata:
+  name: redisinsight-runtime
+  namespace: doppler-operator-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '20'
+spec:
+  project: infrastructure
+  config: prd
+  host: https://api.doppler.com
+  verifyTLS: true
+  resyncSeconds: 120
+  tokenSecret:
+    name: doppler-auth-infrastructure-prd
+    namespace: doppler-operator-system
+  managedSecret:
+    name: redisinsight-runtime
+    namespace: databases
+    type: Opaque
+  secrets:
+  - REDISINSIGHT_ACCESS_AUD
+  - REDISINSIGHT_ENCRYPTION_KEY
+  - REDIS_REPLICA_HOST
+  - REDIS_TLS_CA_CERT
+  - REDISINSIGHT_TLS_CERT
+  - REDISINSIGHT_TLS_KEY
+  processors:
+    REDISINSIGHT_ACCESS_AUD:
+      asName: access-aud
+      type: plain
+    REDISINSIGHT_ENCRYPTION_KEY:
+      asName: encryption-key
+      type: plain
+    REDIS_REPLICA_HOST:
+      asName: redis-host
+      type: plain
+    REDIS_TLS_CA_CERT:
+      asName: ca.crt
+      type: plain
+    REDISINSIGHT_TLS_CERT:
+      asName: tls.crt
+      type: plain
+    REDISINSIGHT_TLS_KEY:
+      asName: tls.key
+      type: plain

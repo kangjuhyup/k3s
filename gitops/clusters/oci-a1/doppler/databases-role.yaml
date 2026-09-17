@@ -21,6 +21,8 @@ rules:
   - shared-redis-master-tls
   - shared-redis-private
   - shared-redis-replica-tls
+  - redisinsight-redis-credentials
+  - redisinsight-runtime
   resources:
   - secrets
   verbs:

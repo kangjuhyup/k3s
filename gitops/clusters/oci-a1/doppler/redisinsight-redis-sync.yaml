@@ -1,0 +1,30 @@
+apiVersion: secrets.doppler.com/v1alpha1
+kind: DopplerSecret
+metadata:
+  name: redisinsight-redis
+  namespace: doppler-operator-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '20'
+spec:
+  project: infrastructure
+  config: prd
+  host: https://api.doppler.com
+  verifyTLS: true
+  resyncSeconds: 120
+  tokenSecret:
+    name: doppler-auth-infrastructure-prd
+    namespace: doppler-operator-system
+  managedSecret:
+    name: redisinsight-redis-credentials
+    namespace: databases
+    type: Opaque
+  secrets:
+  - REDISINSIGHT_REDIS_USERNAME
+  - REDISINSIGHT_REDIS_PASSWORD
+  processors:
+    REDISINSIGHT_REDIS_USERNAME:
+      asName: username
+      type: plain
+    REDISINSIGHT_REDIS_PASSWORD:
+      asName: password
+      type: plain

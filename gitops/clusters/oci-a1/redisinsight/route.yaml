@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: redisinsight-public
+  namespace: istio-system
+spec:
+  exportTo: [.]
+  gateways: [redisinsight-public]
+  hosts: [redis.rvkang.app]
+  http:
+  - match:
+    - port: 80
+    redirect: {port: 443, scheme: https}
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: redisinsight.databases.svc.cluster.local
+        port: {number: 80}

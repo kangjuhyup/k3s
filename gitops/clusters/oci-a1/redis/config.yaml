@@ -72,6 +72,10 @@ data:
       [ "$account" != /accounts/auth ] || scripting='+eval'
       printf 'user %s on >%s ~%s* resetchannels -@all +@read +@write -@dangerous -@scripting -keys -scan -randomkey -dbsize +ping +hello +echo +client|setname +client|setinfo +client|getname +multi +exec +discard +watch +unwatch %s\n' "$name" "$secret" "$prefix" "$scripting" >> /runtime/users.acl
     done
+    # UI credentials are deliberately outside the writable application-account loop.
+    name=$(cat /readonly/username); secret=$(cat /readonly/password)
+    safe "$name"; password "$secret"
+    printf 'user %s on >%s resetkeys %%R~* resetchannels -@all +@read -@dangerous -@scripting +scan +dbsize +info +ping +hello +echo +select +command +memory|usage +client|setname +client|setinfo +client|getname\n' "$name" "$secret" >> /runtime/users.acl
     cp /private/probe-username /runtime/probe-username
     cp /private/probe-password /runtime/probe-password
     mkdir -p /runtime/tls

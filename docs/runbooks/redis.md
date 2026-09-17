@@ -19,6 +19,29 @@ Secret/ConfigMap 변경만으로 실행 중 ACL·설정이 갱신되지 않는�
 
 검증: `scripts/redis_verify.py --run-config <보호된-run-config-경로>`는 명시한 kubeconfig/context로 일시적 로컬 port-forward를 열어 mTLS·ACL·복제를 검사하고 종료한다. 정상 인증서와 서버 SAN 검증, 평문·클라이언트 인증서 없음·신뢰하지 않는 CA·잘못된 서버 이름의 거부를 확인한다. 랜덤 키를 60초 TTL로 생성하고 검증 후 해당 키만 삭제한다. 검증에 필요한 임시 PEM은 제한된 임시 디렉터리의 0600 파일로 전달하고 종료 시 삭제한다. Argo CD revision·Synced/Healthy, 두 Pod Ready/PVC Bound도 별도로 확인한다. 백업 복원·노드 장애·최대 부하 검증과 구분한다.
 
+## Redis Insight 조회 UI
+
+`https://redis.rvkang.app`은 Cloudflare Access의 운영자 이메일 허용 정책으로 보호한다.
+앱 원본은 `gitops/apps/redisinsight`, 운영 라우팅은 `gitops/clusters/oci-a1/redisinsight`다.
+단일 UI와 Envoy를 같은 Pod에 배포하며 UI는 loopback으로만 수신한다. Service는
+Envoy로만 연결되고 모든 요청의 Access JWT 서명·issuer·앱 audience·만료를 검사한다.
+Cloudflare DNS 프록시를 우회한 원본 요청에도 JWT가 필요하다.
+Envoy 설정은 Git으로 관리하며 initContainer는 Doppler의 audience만 메모리 파일에 주입한다.
+
+Redis 복제본에 전용 mTLS 인증서와 ACL 계정으로 접속한다. ACL은 모든 키 조회를 허용하지만
+쓰기·스크립팅·관리 명령·Pub/Sub은 허용하지 않는다. UI의 연결 추가·편집·삭제도 비활성이다.
+키 값에 앱 토큰 등 민감한 정보가 포함될 수 있으므로 일반 사용자에게 Access 권한을 주지 않는다.
+조회 전용은 Redis 데이터 기준이며, UI 자체 설정·조회 이력은 PVC에 저장될 수 있다.
+
+`infrastructure/prd`의 `REDISINSIGHT_REDIS_USERNAME/PASSWORD`, `REDISINSIGHT_TLS_CERT/KEY`,
+`REDISINSIGHT_ENCRYPTION_KEY`, `REDISINSIGHT_ACCESS_AUD`, `REDISINSIGHT_ACCESS_APP_ID`를 사용한다.
+CA·복제본 주소는 기존 키를 최소 매핑한다. Access API 토큰은 Pod에 주입하지 않는다.
+암호화 키는 PVC와 함께 보존한다. UI PVC는 1GiB, replicas 1이며 HPA는 적용하지 않는다.
+
+인증서 점검·갱신 명령은 Redis Insight 인증서가 존재하면 함께 처리한다. 갱신 후 UI의
+`infra.oci-a1.example/config-revision`도 Git에서 변경해 재배포한다. 자동 갱신은 없다.
+롤백은 Git revert로 수행하고 PVC·Doppler 값을 삭제하지 않는다.
+
 ## mTLS 인증서와 갱신
 
 Redis 전용 CA 개인키 `REDIS_TLS_CA_KEY`는 `infrastructure / prd`에만 보관하며 Kubernetes Secret 매핑에 포함하지 않는다. 같은 config의 읽기 토큰을 가진 Doppler Operator는 원본 config 접근 권한이 있으므로, 이 방식이 CA 키의 오프라인 격리를 의미하지는 않는다. 서명 권한의 더 강한 격리는 별도 signing config/외부 PKI로 이전하는 후속 작업이다.

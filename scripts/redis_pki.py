@@ -78,6 +78,10 @@ def provision(renew=False):
     existing = {p: set(json.loads(doppler(p, ["secrets", "--only-names", "--json"]))) for p in [INFRA, APP]}
     pairs = [(INFRA, "REDIS_MASTER_TLS", "REDIS_HOST"), (INFRA, "REDIS_REPLICA_TLS", "REDIS_REPLICA_HOST"),
              (INFRA, "REDIS_OPERATIONS_TLS", None), (APP, "REDIS_TLS", None)]
+    insight_keys = {"REDISINSIGHT_TLS_CERT", "REDISINSIGHT_TLS_KEY"}
+    if insight_keys & existing[INFRA]:
+        assert insight_keys <= existing[INFRA], "Incomplete Redis Insight certificate pair"
+        pairs.append((INFRA, "REDISINSIGHT_TLS", None))
     ca_names = {"REDIS_TLS_CA_CERT", "REDIS_TLS_CA_KEY"}
     if renew:
         assert ca_names <= existing[INFRA], "Missing CA; do not replace it implicitly"
@@ -103,7 +107,7 @@ def provision(renew=False):
         doppler(project, ["secrets", "set", key, "--no-interactive"], value)
     doppler(APP, ["secrets", "set", "REDIS_TLS_CA_CERT", "--no-interactive"], "${infrastructure.prd.REDIS_TLS_CA_CERT}")
     assert get(APP, "REDIS_TLS_CA_CERT") == get(INFRA, "REDIS_TLS_CA_CERT"), "CA reference unresolved"
-    print(json.dumps({"leaf_certificates": 4, "leaf_valid_days": 90, "ca_reused": renew,
+    print(json.dumps({"leaf_certificates": len(pairs), "leaf_valid_days": 90, "ca_reused": renew,
                       "private_files_written": False, "deployment_performed": False}))
 
 
@@ -111,8 +115,14 @@ def check():
     ca = x509.load_pem_x509_certificate(get(INFRA, "REDIS_TLS_CA_CERT").encode())
     now = datetime.now(timezone.utc)
     remaining = []
-    for project, prefix, host_key in [(INFRA, "REDIS_MASTER_TLS", "REDIS_HOST"),
-            (INFRA, "REDIS_REPLICA_TLS", "REDIS_REPLICA_HOST"), (INFRA, "REDIS_OPERATIONS_TLS", None), (APP, "REDIS_TLS", None)]:
+    pairs = [(INFRA, "REDIS_MASTER_TLS", "REDIS_HOST"),
+            (INFRA, "REDIS_REPLICA_TLS", "REDIS_REPLICA_HOST"), (INFRA, "REDIS_OPERATIONS_TLS", None), (APP, "REDIS_TLS", None)]
+    existing = set(json.loads(doppler(INFRA, ["secrets", "--only-names", "--json"])))
+    insight_keys = {"REDISINSIGHT_TLS_CERT", "REDISINSIGHT_TLS_KEY"}
+    if insight_keys & existing:
+        assert insight_keys <= existing, "Incomplete Redis Insight certificate pair"
+        pairs.append((INFRA, "REDISINSIGHT_TLS", None))
+    for project, prefix, host_key in pairs:
         cert = x509.load_pem_x509_certificate(get(project, prefix + "_CERT").encode())
         key = serialization.load_pem_private_key(get(project, prefix + "_KEY").encode(), password=None)
         cert.verify_directly_issued_by(ca)
@@ -129,7 +139,7 @@ def check():
         else:
             assert ExtendedKeyUsageOID.SERVER_AUTH not in purposes
     assert get(APP, "REDIS_TLS_CA_CERT") == get(INFRA, "REDIS_TLS_CA_CERT")
-    print(json.dumps({"certificate_pairs_verified": 4, "minimum_remaining_days": min(remaining), "values_displayed": False}))
+    print(json.dumps({"certificate_pairs_verified": len(pairs), "minimum_remaining_days": min(remaining), "values_displayed": False}))
 
 
 if __name__ == "__main__":

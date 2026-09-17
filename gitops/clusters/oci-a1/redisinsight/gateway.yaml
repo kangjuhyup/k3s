@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: redisinsight-public
+  namespace: istio-system
+spec:
+  selector: {app: istio-ingress}
+  servers:
+  - hosts: [./redis.rvkang.app]
+    port: {name: http-redisinsight, number: 80, protocol: HTTP}
+    tls: {httpsRedirect: true}
+  - hosts: [./redis.rvkang.app]
+    port: {name: https-redisinsight, number: 443, protocol: HTTPS}
+    tls:
+      credentialName: redisinsight-public-tls
+      minProtocolVersion: TLSV1_2
+      mode: SIMPLE

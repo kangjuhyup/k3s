@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: app-redisinsight
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '-10'
+spec:
+  sourceRepos: [https://github.com/kangjuhyup/k3s.git]
+  destinations:
+  - {namespace: databases, server: 'https://kubernetes.default.svc'}
+  - {namespace: istio-system, server: 'https://kubernetes.default.svc'}
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+  - {group: '', kind: ConfigMap}
+  - {group: '', kind: Service}
+  - {group: '', kind: PersistentVolumeClaim}
+  - {group: apps, kind: Deployment}
+  - {group: networking.istio.io, kind: Gateway}
+  - {group: networking.istio.io, kind: VirtualService}
+  - {group: cert-manager.io, kind: Certificate}

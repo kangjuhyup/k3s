@@ -18,3 +18,5 @@ resources:
 - shared-redis-sync.yaml
 - shared-redis-master-tls-sync.yaml
 - shared-redis-replica-tls-sync.yaml
+- redisinsight-redis-sync.yaml
+- redisinsight-runtime-sync.yaml

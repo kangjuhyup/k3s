@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redisinsight
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '60'
+spec:
+  project: app-redisinsight
+  destination:
+    namespace: databases
+    server: https://kubernetes.default.svc
+  source:
+    path: gitops/clusters/oci-a1/redisinsight
+    repoURL: https://github.com/kangjuhyup/k3s.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      enabled: true
+      prune: false
+      selfHeal: true
+    syncOptions: [ServerSideApply=true, FailOnSharedResource=true]

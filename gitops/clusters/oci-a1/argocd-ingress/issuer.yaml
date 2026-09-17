@@ -20,3 +20,4 @@ spec:
         - argo.rvkang.app
         - grafana.rvkang.app
         - auth.rvkang.app
+        - redis.rvkang.app
