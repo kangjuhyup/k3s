@@ -5,6 +5,9 @@ metadata:
   namespace: auth
 spec:
   template:
+    metadata:
+      annotations:
+        infra.oci-a1.example/oidc-config-revision: '2026-09-17-1'
     spec:
       containers:
       - name: auth-service
