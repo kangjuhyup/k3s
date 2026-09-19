@@ -3,7 +3,7 @@ kind: Job
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '-10'
-  name: auth-migrate-68eb965c5377
+  name: auth-migrate-d3a9a7aa642b
   namespace: auth
 spec:
   activeDeadlineSeconds: 600
@@ -64,7 +64,7 @@ spec:
             secretKeyRef:
               key: ADMIN_PASSWORD
               name: auth-bootstrap
-        image: ghcr.io/kangjuhyup/auth/auth-service:v0.2.1@sha256:68eb965c5377c699e5bb3f59ffcdd0501b5fffb368ea9fc47017ab2367e69ea7
+        image: ghcr.io/kangjuhyup/auth/auth-service:v0.2.1@sha256:d3a9a7aa642bc150a34dd98545affd68460e12a6283fc955a27cdf9619d33889
         name: migrate
         securityContext:
           allowPrivilegeEscalation: false

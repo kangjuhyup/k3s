@@ -26,7 +26,7 @@ spec:
         - nginx
         - -g
         - daemon off;
-        image: ghcr.io/kangjuhyup/auth/auth-ui:v0.2.1@sha256:b4da8db044535b08680276f9d0325ed3416d1674a87432759f84edfe1a7dd878
+        image: ghcr.io/kangjuhyup/auth/auth-ui:v0.2.1@sha256:09bfb44892240f6fd6612495e92408c5a47f9b335d7560d723b271e1f36a242d
         livenessProbe:
           httpGet:
             path: /healthz

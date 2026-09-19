@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: auth-migrate-68eb965c5377
+  name: auth-migrate-d3a9a7aa642b
   namespace: auth
 spec:
   template:
