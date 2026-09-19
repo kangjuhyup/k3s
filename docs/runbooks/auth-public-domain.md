@@ -99,25 +99,34 @@ prune=false이므로 기존 워크로드가 남는다. 철거는 소유권·영�
 [Auth PR #27](https://github.com/kangjuhyup/auth/pull/27)에서 package·Release Please·
 컨테이너 버전의 불일치와 릴리스 workflow 태그 패턴을 수정했다.
 GitHub 릴리스는 `auth-v0.2.1`, 배포 이미지 태그는 `v0.2.1`이다.
-[이미지 게시 실행](https://github.com/kangjuhyup/auth/actions/runs/35434668176)이 성공했고,
+[이미지 게시 실행](https://github.com/kangjuhyup/auth/actions/runs/35436194086)이 성공했고,
 두 이미지의 linux/arm64 manifest와 소스 revision을 GHCR에서 직접 확인했다.
 기존 운영 소스 `c03573f` 이후 변경은 릴리스·버전·테스트 관련이며 앱과 DB migration 소스 변경은 없다.
 
 | 이미지 | OCI index digest |
 | --- | --- |
-| auth-service | `sha256:68eb965c5377c699e5bb3f59ffcdd0501b5fffb368ea9fc47017ab2367e69ea7` |
-| auth-ui | `sha256:b4da8db044535b08680276f9d0325ed3416d1674a87432759f84edfe1a7dd878` |
+| auth-service | `sha256:d3a9a7aa642bc150a34dd98545affd68460e12a6283fc955a27cdf9619d33889` |
+| auth-ui | `sha256:09bfb44892240f6fd6612495e92408c5a47f9b335d7560d723b271e1f36a242d` |
 
 API·워커·migration은 동일 service digest를 사용한다. 새 Job 이름은
-`auth-migrate-68eb965c5377`이며 성공한 뒤 Deployment가 갱신된다.
+`auth-migrate-d3a9a7aa642b`이며 성공한 뒤 Deployment가 갱신된다.
 Auth 공유 주소와 개발 Tenant는 유지한다.
 
-배포 커밋 `fc417bf` 반영 후 migration Job의 `succeeded=1`, API·UI·워커의
+최종 릴리스 digest를 고정한 배포 커밋 `1856cd0` 반영 후 migration Job의 `succeeded=1`, API·UI·워커의
 새 digest 및 Ready 상태를 확인했다. UI HTTP 200, 관리자 로그인, 개발 Tenant 조회,
 초대 전용 가입 정책과 OIDC discovery issuer 검증도 통과했다.
 실제 OIDC Client의 authorization/token 발급 및 교차 Tenant 격리 QA는 별도다.
 
 Argo CD operation은 `Succeeded`, health는 `Healthy`다. 자동 prune을 끈 정책에 따라
-이전 완료 Job `auth-migrate-ddc1b1826f80`이 남아 Application sync 상태는 `OutOfSync`다.
-새 선언 리소스는 동기화됐고 이 차이는 이전 Job의 `requiresPruning` 한 건이다.
+이전 완료 Job `auth-migrate-ddc1b1826f80`과 `auth-migrate-68eb965c5377`이 남아
+Application sync 상태는 `OutOfSync`다. 새 선언 리소스는 동기화됐고 이 차이는
+이전 Job의 `requiresPruning` 두 건이다.
 기존 Job을 직접 삭제하거나 자동 prune 범위를 넓히지 않았다.
+
+릴리스 전용 CI에서 발견한 Yarn 초기화 순서와 source revision 라벨은
+[PR #28](https://github.com/kangjuhyup/auth/pull/28),
+[PR #29](https://github.com/kangjuhyup/auth/pull/29)로 수정했다.
+최종 릴리스 실행 전체가 성공했으며 두 이미지 모두 `latest`와 `v0.2.1`의
+index digest가 같다. 이미지의 source revision과 기존 `auth-v0.2.1` 태그는
+`a557a42bf2733638a50e634dd0280e6b301a6319`를 유지한다.
+최종 digest의 새 Pod 3개 모두 Ready·재시작 0회이며 관리자·Tenant 검증도 재실행했다.
