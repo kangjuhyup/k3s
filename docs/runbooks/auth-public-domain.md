@@ -1,5 +1,15 @@
 # Auth GitOps 배포
 
+## 개발·운영의 Auth 공유
+
+2026-09-19 결정: 개발 서비스도 기존 `https://auth.rvkang.app`을 사용하고
+Auth 안에서 개발 전용 Tenant로 구분한다. Auth namespace·Application·DB·Redis와
+Doppler `auth/prd`는 공유하며 별도 개발 Auth 배포를 만들지 않는다.
+각 소비 서비스는 자기 환경 Tenant의 `/t/{tenantCode}/oidc` issuer와 전용 Client를 사용한다.
+[Tenant 설정과 검증](dev-prod-environments.md)을 따른다. 개발 Tenant는 관리자 API로 생성하고 조회·discovery를 확인했다. Client 등록은 후속 단계다.
+
+## 기존 배포 구성
+
 배포 및 auth 전용 Redis EVAL 권한 변경을 승인받았다. 원본은
 `gitops/apps/auth/`의 앱 원본, `gitops/clusters/oci-a1/auth/`의 환경 구성과
 `gitops/clusters/oci-a1/root/auth.yaml` Application이다. 앱 원본에는 Deployment·Service·Job·UI 설정을,
@@ -56,7 +66,9 @@ TLS는 Istio에서 종료하고 내부 HTTP로 전달한다. Namespace의 sideca
 
 ## 배포 및 갱신 확인
 
-1. 현재 이미지 태그는 ARM64가 확인된 **main-812ed68**이다.
+1. 현재 배포 선언은 ARM64가 확인된 **v0.2.1** 이미지와 OCI index digest를 고정한다.
+   소스는 `a557a42bf2733638a50e634dd0280e6b301a6319`이며
+   [Auth 릴리스](https://github.com/kangjuhyup/auth/releases/tag/auth-v0.2.1)와 일치한다.
    API·워커·마이그레이션 Job은 동일 service digest이며 Job 이름도 갱신했다.
    UI도 같은 소스 revision의 게시된 digest로 고정했다.
 2. auth 수정 결과와 위 Secret/환경변수/명령/라우팅 계약을 대조하고 필요한 선언을 수정한다.
@@ -81,3 +93,21 @@ kubectl kustomize gitops/clusters/oci-a1/auth
 활성화 후 bootstrap 경로로 되돌리거나 파일을 지우는 것은 uninstall/rollback이 아니다.
 prune=false이므로 기존 워크로드가 남는다. 철거는 소유권·영향을 별도로 검토한다.
 롤백은 검증된 이미지/선언을 Git으로 반영하며 DB migration은 Git revert로 되돌아가지 않는다.
+
+## 2026-09-19 릴리스 버전 정합성 수정
+
+[Auth PR #27](https://github.com/kangjuhyup/auth/pull/27)에서 package·Release Please·
+컨테이너 버전의 불일치와 릴리스 workflow 태그 패턴을 수정했다.
+GitHub 릴리스는 `auth-v0.2.1`, 배포 이미지 태그는 `v0.2.1`이다.
+[이미지 게시 실행](https://github.com/kangjuhyup/auth/actions/runs/35434668176)이 성공했고,
+두 이미지의 linux/arm64 manifest와 소스 revision을 GHCR에서 직접 확인했다.
+기존 운영 소스 `c03573f` 이후 변경은 릴리스·버전·테스트 관련이며 앱과 DB migration 소스 변경은 없다.
+
+| 이미지 | OCI index digest |
+| --- | --- |
+| auth-service | `sha256:68eb965c5377c699e5bb3f59ffcdd0501b5fffb368ea9fc47017ab2367e69ea7` |
+| auth-ui | `sha256:b4da8db044535b08680276f9d0325ed3416d1674a87432759f84edfe1a7dd878` |
+
+API·워커·migration은 동일 service digest를 사용한다. 새 Job 이름은
+`auth-migrate-68eb965c5377`이며 성공한 뒤 Deployment가 갱신된다.
+Auth 공유 주소와 개발 Tenant는 유지한다.
