@@ -6,6 +6,7 @@
 
 | 작업 | 현재 참고 지침 |
 | --- | --- |
+| 개발/운영 논리 분리·공유 Auth | [Tenant와 서비스 승격](dev-prod-environments.md): Auth는 Tenant 분리, 다른 서비스는 개발 데이터·배포 분리 |
 | 최초 설치·Argo CD bootstrap | [K3s 1단계](../../ansible/README.md), [Argo CD 2단계](argocd-bootstrap.md), [GitOps](../../.agents/skills/k3s-infra/references/gitops.md) |
 | Istio GitOps baseline | [Istio 3단계](istio-bootstrap.md): CRD/istiod/gateway 준비 순서, 내부 ClusterIP 기본값 |
 | ServiceLB 외부 노출·TLS·내부 mTLS | [외부 ingress 확장](istio-external-ingress.md): 입력 gate·도메인/경로·인증서 참조·앱 namespace STRICT |

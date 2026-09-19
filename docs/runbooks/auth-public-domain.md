@@ -111,3 +111,13 @@ GitHub 릴리스는 `auth-v0.2.1`, 배포 이미지 태그는 `v0.2.1`이다.
 API·워커·migration은 동일 service digest를 사용한다. 새 Job 이름은
 `auth-migrate-68eb965c5377`이며 성공한 뒤 Deployment가 갱신된다.
 Auth 공유 주소와 개발 Tenant는 유지한다.
+
+배포 커밋 `fc417bf` 반영 후 migration Job의 `succeeded=1`, API·UI·워커의
+새 digest 및 Ready 상태를 확인했다. UI HTTP 200, 관리자 로그인, 개발 Tenant 조회,
+초대 전용 가입 정책과 OIDC discovery issuer 검증도 통과했다.
+실제 OIDC Client의 authorization/token 발급 및 교차 Tenant 격리 QA는 별도다.
+
+Argo CD operation은 `Succeeded`, health는 `Healthy`다. 자동 prune을 끈 정책에 따라
+이전 완료 Job `auth-migrate-ddc1b1826f80`이 남아 Application sync 상태는 `OutOfSync`다.
+새 선언 리소스는 동기화됐고 이 차이는 이전 Job의 `requiresPruning` 한 건이다.
+기존 Job을 직접 삭제하거나 자동 prune 범위를 넓히지 않았다.
