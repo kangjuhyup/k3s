@@ -10,10 +10,10 @@ spec:
   source:
     repoURL: https://github.com/kangjuhyup/k3s.git
     targetRevision: main
-    path: gitops/clusters/oci-a1/vote
+    path: gitops/clusters/oci-a1/vote-dev
   destination:
     server: https://kubernetes.default.svc
-    namespace: vote
+    namespace: vote-dev
   syncPolicy:
     automated:
       enabled: false

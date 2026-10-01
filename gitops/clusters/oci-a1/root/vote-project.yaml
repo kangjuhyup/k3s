@@ -9,7 +9,7 @@ spec:
   sourceRepos:
   - https://github.com/kangjuhyup/k3s.git
   destinations:
-  - namespace: vote
+  - namespace: vote-dev
     server: https://kubernetes.default.svc
   - namespace: istio-system
     server: https://kubernetes.default.svc

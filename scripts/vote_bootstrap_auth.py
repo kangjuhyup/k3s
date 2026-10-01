@@ -21,12 +21,12 @@ def main():
         bundle = load('argocd_bundle')
         require(bundle.run(['git', 'rev-parse', 'HEAD'], root).strip() == run['expected_revision'])
         scoped = ['scripts/vote_bootstrap_auth.py', 'ansible/playbooks/bootstrap-vote-doppler-auth.yml',
-                  'gitops/clusters/oci-a1/vote', 'gitops/clusters/oci-a1/root/vote.yaml',
-                  'gitops/clusters/oci-a1/root/vote-project.yaml', gitops.SETTINGS_PATH]
+                  'gitops/clusters/oci-a1/vote-dev', 'gitops/clusters/oci-a1/root/vote.yaml',
+                  'gitops/clusters/oci-a1/root/vote-project.yaml', 'gitops/apps/vote', gitops.SETTINGS_PATH]
         require(not bundle.run(['git', 'status', '--porcelain', '--untracked-files=all', '--', *scoped], root).strip())
         gitops.validate_repository(root)
         mappings = []
-        for path in (root / 'gitops/clusters/oci-a1/vote/secrets').glob('*.yaml'):
+        for path in (root / 'gitops/clusters/oci-a1/vote-dev/secrets').glob('*.yaml'):
             obj = gitops.read_json(path)
             if obj.get('kind') != 'DopplerSecret' or obj['spec']['project'] != 'vote':
                 continue
@@ -42,7 +42,7 @@ def main():
                   'auth_ready_reviewed': False, 'targets_ready_reviewed': True, 'mappings': mappings}
         cluster = Cluster(run)
         app = cluster.get('application', 'vote', 'argocd')
-        require(app['spec']['source']['path'] == 'gitops/clusters/oci-a1/vote')
+        require(app['spec']['source']['path'] == 'gitops/clusters/oci-a1/vote-dev')
         require(app['spec']['syncPolicy']['automated']['enabled'] is False)
         bootstrap = gitops.validate(gitops.read_json(root / gitops.SETTINGS_PATH))
         created = bootstrap_tokens(cluster, bootstrap, config, os.environ, 'DOPPLER_VOTE_PRD_TOKEN')

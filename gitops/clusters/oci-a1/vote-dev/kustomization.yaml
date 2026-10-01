@@ -7,12 +7,6 @@ resources:
 - secrets/vote-authz-runtime.yaml
 - secrets/role.yaml
 - secrets/binding.yaml
-- vote-ui.yaml
-- vote-ui-service.yaml
-- vote-admin.yaml
-- vote-admin-service.yaml
-- vote-authz.yaml
-- vote-authz-service.yaml
 - authz-ingress.yaml
 - ingress/certificate.yaml
 - ingress/gateway.yaml
@@ -22,3 +16,4 @@ resources:
 - secrets/istio-role.yaml
 - secrets/istio-binding.yaml
 - ingress/issuer.yaml
+- ../../../apps/vote

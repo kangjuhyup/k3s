@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vote-admin
-  namespace: vote
+  namespace: vote-dev
   annotations:
     argocd.argoproj.io/sync-wave: '0'
 spec:

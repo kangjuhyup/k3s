@@ -1,13 +1,13 @@
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
-  name: vote-admin
+  name: vote-ui
   namespace: istio-system
   annotations:
     argocd.argoproj.io/sync-wave: '10'
 spec:
   hosts:
-  - vote-admin.rvkang.app
+  - vote.rvkang.app
   exportTo:
   - .
   gateways:
@@ -17,6 +17,6 @@ spec:
     - port: 443
     route:
     - destination:
-        host: vote-admin.vote.svc.cluster.local
+        host: vote-ui.vote-dev.svc.cluster.local
         port:
           number: 3001

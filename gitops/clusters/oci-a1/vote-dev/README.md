@@ -1,4 +1,4 @@
-# Vote production
+# Vote development deployment
 
 Vote server and UI use the same published ARM64 `0.1.0` source revision
 `2da2042b520dd222ecc43734b0484e457186f8cc`. Images are pinned by registry digest.
@@ -9,6 +9,9 @@ The user UI is `https://vote.rvkang.app`; the administrator instance is
 `AUTH_URL`. The approved API origin is `https://vote-api.rvkang.app`.
 The API image requires migration, API, worker and private authz processes.
 
+Common workloads and Services live in `gitops/apps/vote`; this environment
+overlay owns namespace, secrets, ingress and environment-specific policies.
+
 Runtime values come from Doppler `vote/prd`. UI receives no database, Redis,
 Auth administrator or introspection credentials. Only authz receives the
 introspection client secret. DNS/TLS uses a separate namespaced issuer with
@@ -18,7 +21,7 @@ application Pods.
 ## Initial activation
 
 Register the disabled Application through the root Application. Sync only the
-Vote Namespace through Argo CD at the committed revision. Issue a read-only
+Vote-dev Namespace through Argo CD at the committed revision. Issue a read-only
 Doppler service token scoped to `vote/prd` and pass it as
 `DOPPLER_VOTE_PRD_TOKEN` to
 `ansible/playbooks/bootstrap-vote-doppler-auth.yml`, with an explicit protected

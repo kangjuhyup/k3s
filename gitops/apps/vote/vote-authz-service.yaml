@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: vote-authz
-  namespace: vote
+  namespace: vote-dev
 spec:
   selector:
     app.kubernetes.io/name: vote-authz
