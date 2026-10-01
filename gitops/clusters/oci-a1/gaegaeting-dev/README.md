@@ -1,17 +1,16 @@
 # Gaegaeting dev deployment
 
 One `gaegaeting-dev` Application is registered in root GitOps. Its resource tree
-contains the services, Kafka, Secret projections, database preparation Jobs and ingress. Automated sync remains disabled, Deployments/StatefulSet have zero
-replicas and Jobs are
-suspended. All five application images and both migration Jobs are pinned to main
+contains the services, Kafka, Secret projections, database preparation Jobs and ingress. Activation is performed in reviewed Git phases; serving Deployments stay at zero
+until the database migrations complete. All five application images and both migration Jobs are pinned to main
 `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
 Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
 independently verified. No GHCR pull credential is required for the current public images.
 The dedicated token is scoped to the active `rvkang.app` zone. Public A records for
 both approved hosts have been checked against the protected ingress target; DNS-only
 mode and no AAAA records are required. Existing rvkang issuer/selectors and unrelated
-DNS records remain unchanged. Certificate readiness and application verification are
-still required; token readiness alone is insufficient. The app agent owns DNS writes.
+DNS records remain unchanged. Certificate readiness is verified; application verification remains a separate gate.
+Token readiness alone is insufficient. The app agent owns DNS writes.
 
 
 Target: `https://test-ggt-ui.rvkang.app` and `https://test-ggt-api.rvkang.app`;
@@ -29,18 +28,19 @@ exposed. Verify resolver authorization with the final application images.
    Actual DB names, usernames, endpoints, keys and private certificates are never stored
    here. `secrets/` projects only the keys needed by each workload. UI receives only
    public configuration. Existing Auth and other service credentials are preserved.
-2. Register namespaces and secret-delivery Applications through root GitOps only.
+2. Synchronize namespaces and secret delivery within the single Application.
    Wait for every required DopplerSecret to become ready before consumers start.
-3. Merge `database/cluster-patch.yaml` into the existing PostgreSQL Application as
-   a patch **after** database identity Secrets exist. Do not create a second owner of
+3. Add the development identity rules to the existing PostgreSQL Application
+   **after** database identity Secrets exist. Do not create a second owner of
    `shared-postgres`. Preserve the existing Auth access rule and deny-by-default rule.
-   The patch is deliberately absent from every active Kustomization.
+   The active source is `../postgresql/cluster.yaml`; the preparation reference
+   `database/cluster-patch.yaml` is not independently applied.
 4. Execute the separate GitOps provisioning Job with the short-lived PostgreSQL
    client certificate supplied through Doppler. It creates only fresh dev databases
    and restricted roles and rejects an existing unowned/privileged role. Do not change
    `bootstrap.initdb`: it is not replayed on an existing cluster. After success remove
    the temporary `postgres` certificate access rule through Git, suspend the Job and
-   remove its credentials through the authorized credential lifecycle. No direct SQL
+   retire its short-lived credentials through the authorized credential lifecycle. No direct SQL
    or Kubernetes mutation bypass is needed. A certificate prepared before a long CI
    delay must be renewed before execution (24-hour lifetime).
 5. Activate the dedicated single-node dev Kafka StatefulSet. Official Apache Kafka
@@ -78,7 +78,11 @@ Git rollback does not reverse DB migrations or Doppler changes.
 - Independent `gaegaeting-dev` Auth tenant/scopes/three clients created; existing
   `dev` and `gaegaeting` clients preserved. Discovery issuer and browser-origin CORS
   checked. Provisioning client-credentials token and introspection credentials returned HTTP 200.
-- Dev runtime secrets generated in Doppler; database resources not yet created.
+- All 13 Doppler Secret projections report SecretSyncReady=True; required keys and final
+  public runtime configuration were checked without values.
+- Certificate `gaegaeting-dev-public` Ready=True; both HTTPS hosts verify successfully.
+- Dedicated Kafka reports Ready 1/1. The existing PostgreSQL server reports Ready 1/1;
+  fresh dev database/role provisioning Job completed successfully.
 - Original storage dev configuration reused the production bucket/key. Separate
   dev user and pet buckets were created; exact dev UI CORS configured; zero-byte
   canary PUT/HEAD/DELETE succeeded on each. Bucket names stay in Doppler only.
@@ -98,10 +102,10 @@ Git rollback does not reverse DB migrations or Doppler changes.
 Use repository Python 3.12.9 / PyYAML 6.0.3 and kubectl 1.36.4 (Kustomize 5.8.1):
 
 ```sh
-.local/os-cleanup-venv/bin/python scripts/gaegaeting_validate.py
+.local/os-cleanup-venv/bin/python scripts/gaegaeting_validate.py --release
 ```
 
-This renders all five paths, checks ownership, inactive gates, dev-only secret
+This renders the single application tree, checks ownership, inactive gates, dev-only secret
 mapping, nonroot security and edge bypass controls. `--release` additionally rejects
 non-digest image references; it is not an external readiness attestation. The dedicated
 Envoy configuration is also checked with its pinned ARM64 image in validation mode.
@@ -113,7 +117,7 @@ private-identifier policy is why the bounded SQL Job reads identity from Secrets
 
 Pinned PostgreSQL 18.4 ARM64 local validation passed for fresh database/role creation,
 idempotent rerun, restricted role flags and rejection of an unowned colliding role.
-This test used disposable synthetic data; cluster databases remain unchanged.
+This test used disposable synthetic data. Live Job completion is recorded separately.
 
 ## Scoped authentication bootstrap
 
