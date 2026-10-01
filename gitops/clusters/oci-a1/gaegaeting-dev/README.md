@@ -3,8 +3,9 @@
 The `gaegaeting-dev` Application references reusable workloads in `gitops/apps/gaegaeting`.
 This cluster overlay owns development replicas/resource budgets, Secret delivery,
 database preparation and ingress. Kafka is separate shared infrastructure under the
-`kafka` Application and `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained. Application replicas remain zero until the shared topic
-prefix release and final rollout gates pass. Both current migration Jobs completed.
+`kafka` Application and `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained. Account, edge-authz and UI are running with one ready replica each. Match, Gateway
+and Envoy remain at zero until the shared-topic-prefix Match release is verified.
+Both current migration Jobs completed.
 All five application images and both migration Jobs are pinned to main
 `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
 Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
@@ -136,3 +137,7 @@ environment. The helper verifies the committed revision and creates only the mis
 operator-authentication Secret through the existing bootstrap ownership checks. It
 does not apply workloads or overwrite existing credentials. Normal Secret projections
 remain owned by Argo plus Doppler Operator.
+
+The scoped `gaegaeting/dev` read token is stored at
+`bootstrap/prd:DOPPLER_GAEGAETING_DEV_TOKEN` and expires on 2026-12-30. Renew it
+before expiry through the protected credential lifecycle.
