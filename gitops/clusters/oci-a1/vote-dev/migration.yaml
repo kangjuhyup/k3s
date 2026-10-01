@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: vote-migrate-0-1-0-v2
+  name: vote-migrate-0-1-0-v3
   namespace: vote-dev
   annotations:
     argocd.argoproj.io/sync-wave: '0'
@@ -86,7 +86,7 @@ spec:
             - ALL
         resources:
           requests:
-            cpu: 100m
+            cpu: 25m
             memory: 128Mi
           limits:
             memory: 384Mi

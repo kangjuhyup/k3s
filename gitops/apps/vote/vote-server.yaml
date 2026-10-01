@@ -16,6 +16,7 @@ spec:
       labels: *id001
       annotations:
         infra.oci-a1.example/runtime-revision: '3'
+        sidecar.istio.io/proxyCPU: 20m
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -144,3 +145,8 @@ spec:
         configMap:
           name: vote-redis-transport
       enableServiceLinks: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1

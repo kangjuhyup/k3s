@@ -43,7 +43,7 @@ For this digest only, Doppler `DATABASE_SSL_COMPAT` maps to runtime `DATABASE_SS
 and skips that obsolete branch; `PGSSLMODE=verify-full` enables native pg TLS.
 Validate actual TLS and restricted-role queries before activation. This does not
 disable transport encryption or server certificate verification.
-Migration v2 explicitly awaits compiled migrations with a process keep-alive
+Migration v3 explicitly awaits compiled migrations with a process keep-alive
 and requires a populated schema; a Job exit code alone is insufficient evidence.
 No shared TLS mode or Auth certificate/account is changed.
 
@@ -63,3 +63,7 @@ API `/readiness` also requires Wasabi. Missing Vote bucket/access configuration
 must remain an explicit blocker; do not bypass readiness or use another app's
 bucket. Missing tenant users prevents a real-user login test unless a valid
 Vote tenant identity is provided or a scoped test identity is established.
+
+Vote-dev has one replica per process. Use zero surge and 20m mesh proxy CPU
+requests to fit the existing single-node capacity without altering shared apps.
+The migration requests 25m CPU and may burst; observe Ready after each rollout.

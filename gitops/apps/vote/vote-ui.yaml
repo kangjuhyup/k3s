@@ -16,6 +16,7 @@ spec:
       labels: *id001
       annotations:
         infra.oci-a1.example/runtime-revision: '2'
+        sidecar.istio.io/proxyCPU: 20m
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -72,3 +73,8 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 36
       enableServiceLinks: false
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
