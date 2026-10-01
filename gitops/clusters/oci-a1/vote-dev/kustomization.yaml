@@ -29,3 +29,4 @@ resources:
 - api-authorization.yaml
 - api-ingress.yaml
 - ingress/vote-api.yaml
+- migration.yaml
