@@ -29,6 +29,13 @@ def main():
     check(len(identities) == len(set(identities)), 'Duplicate Kubernetes resource ownership')
     check(not any(r['kind'] == 'Secret' for r in resources), 'Secret values must be Doppler-owned')
     workloads = [r for r in resources if r['kind'] in ['Deployment', 'StatefulSet', 'Job']]
+    release = json.loads((BASE / 'release-images.json').read_text())
+    check(re.fullmatch(r'[0-9a-f]{40}', release['revision']), 'Invalid source revision')
+    expected = {i['service']: i['image'] + ':sha-' + release['revision'] + '@' + i['digest']
+                for i in release['images']}
+    check(set(expected) == {'account', 'match', 'gateway', 'edge-authz', 'integration-ui'},
+          'Incomplete release image manifest')
+    app_image_count = 0
     for r in workloads:
         spec = r['spec']
         pod = spec['template']['spec']
@@ -37,9 +44,16 @@ def main():
         if not args.release:
             check(spec.get('suspend') is True if r['kind'] == 'Job' else spec.get('replicas') == 0, 'Preparation may not start workloads')
         for c in pod['containers']:
+            if c['name'] in expected:
+                check(c['image'] == expected[c['name']], 'Application/migration image differs from release')
+                app_image_count += 1
+                if r['kind'] == 'Job':
+                    check(r['metadata']['name'] == c['name'] + '-migration-' + release['revision'][:12],
+                          'Migration Job identity differs from release')
             check(c['securityContext']['allowPrivilegeEscalation'] is False, 'Privilege escalation allowed')
             if args.release:
                 check(re.search(r'@sha256:[0-9a-f]{64}$', c['image']), 'Unpinned release image')
+    check(app_image_count == 7, 'Expected five deployments and two migration image references')
     apps = list(yaml.safe_load_all((BASE / 'applications.yaml').read_text()))
     if not args.release:
         check(all(a['spec']['syncPolicy']['automated']['enabled'] is False for a in apps), 'Argo automation enabled before release')

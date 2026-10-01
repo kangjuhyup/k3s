@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: account
-        image: ghcr.io/kangjuhyup/gaegaeting/account:pending-digest
+        image: ghcr.io/kangjuhyup/gaegaeting/account:sha-317f550e3fb4fbd773a606c1d58293e3cf7cb32d@sha256:ef64ce4d78bf8381d3d8dc8d29b536723806f4c8a8e9c7206728d3c347f97a11
         ports:
         - name: http
           containerPort: 2800

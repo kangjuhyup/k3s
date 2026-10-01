@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: edge-authz
-        image: ghcr.io/kangjuhyup/gaegaeting/edge-authz:pending-digest
+        image: ghcr.io/kangjuhyup/gaegaeting/edge-authz:sha-317f550e3fb4fbd773a606c1d58293e3cf7cb32d@sha256:85eda5d49b432002acb7e5ad0335031c3d0601d7a01363497505f184aa23bcaa
         ports:
         - name: http
           containerPort: 4010

@@ -2,7 +2,12 @@
 
 This directory is inactive preparation. No root Application references it; Applications
 have automated sync disabled, Deployments/StatefulSet have zero replicas and Jobs are
-suspended. Pending image tags are intentional blockers, never deployable release pins.
+suspended. All five application images and both migration Jobs are pinned to main
+`317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
+Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
+independently verified. No GHCR pull credential is required for the current public images.
+The current external blocker is the missing DNS token key
+`infrastructure/prd:CLOUDFLARE_GAEGAETING_DNS_API_TOKEN` (checked 2026-10-01).
 
 Target: `https://dev.gaegaeting.app` and `https://api-dev.gaegaeting.app`;
 shared Auth at `https://auth.rvkang.app/t/gaegaeting-dev/oidc`. Public UI client is
@@ -40,9 +45,9 @@ exposed. Verify resolver authorization with the final application images.
    not a production Kafka security or HA design. Five GiB local-path storage,
    24-hour retention, 1 GiB memory request / 2 GiB limit. No external consumer is
    implied: notification and chat services are not in this release.
-6. Replace all five `pending-digest` tags with verified main SHA/index digests and
-   verify registry pull access. Migration Jobs use the same service digest, `/app`
-   working directory and `node dist/src/migrations/migrate.js`. Give Jobs
+6. The five image digests and registry pull access are verified. Migration Jobs use
+   the same service digest, `/app`
+   working directory and `node dist/src/migrations/migrate.js`. Jobs have
    release-specific names; unsuspend only after DB/TLS/Kafka/storage/Auth gates pass.
    Migration Jobs run before account/match, then gateway/edge/UI/proxy. Shallow HTTP
    probes do not replace dependency or signup/login verification.

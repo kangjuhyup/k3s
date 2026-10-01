@@ -1,0 +1,91 @@
+{
+  "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+  "workflowRun": 36854622011,
+  "images": [
+    {
+      "service": "account",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/account",
+      "digest": "sha256:ef64ce4d78bf8381d3d8dc8d29b536723806f4c8a8e9c7206728d3c347f97a11",
+      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "visibility": "public"
+    },
+    {
+      "service": "edge-authz",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/edge-authz",
+      "digest": "sha256:85eda5d49b432002acb7e5ad0335031c3d0601d7a01363497505f184aa23bcaa",
+      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "visibility": "public"
+    },
+    {
+      "service": "gateway",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/gateway",
+      "digest": "sha256:4756b8bac28027b6293ff9b6744c21f7a6161d9483a5a557681f52afcadbb67d",
+      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "visibility": "public"
+    },
+    {
+      "service": "integration-ui",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
+      "digest": "sha256:b34f5c6f981bbf5dca9ceb896b3ab535b72ed644bc26136e5f4e51c0eebd5ed6",
+      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "visibility": "public"
+    },
+    {
+      "service": "match",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/match",
+      "digest": "sha256:3d2c5f34e107ba1dea569f49c8e58900d156fb09864114e75f030e2a93ad9df3",
+      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "visibility": "public"
+    }
+  ]
+}
