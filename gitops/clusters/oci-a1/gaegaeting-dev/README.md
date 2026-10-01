@@ -7,8 +7,11 @@ suspended. All five application images and both migration Jobs are pinned to mai
 `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
 Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
 independently verified. No GHCR pull credential is required for the current public images.
-The current external blocker is the missing DNS token key
-`infrastructure/prd:CLOUDFLARE_GAEGAETING_DNS_API_TOKEN` (checked 2026-10-01).
+The DNS token key `infrastructure/prd:CLOUDFLARE_GAEGAETING_DNS_API_TOKEN`
+is now readable/nonempty and active; the single matching Cloudflare zone remains
+`pending` (checked 2026-10-01). Token readiness does not clear the rollout gate:
+verify registrar delegation, public DNS and Certificate Ready separately. The app
+agent owns DNS record/registrar changes; K3s must not duplicate those writes.
 
 Target: `https://dev.gaegaeting.app` and `https://api-dev.gaegaeting.app`;
 shared Auth at `https://auth.rvkang.app/t/gaegaeting-dev/oidc`. Public UI client is
