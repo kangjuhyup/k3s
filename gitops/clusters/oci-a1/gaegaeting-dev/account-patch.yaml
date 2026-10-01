@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account
+  namespace: gaegaeting-dev
+spec:
+  replicas: 0
+  template:
+    spec:
+      containers:
+      - name: account
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 1Gi

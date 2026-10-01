@@ -2,16 +2,16 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: kafka
-  namespace: gaegaeting-dev-kafka
+  namespace: kafka
 spec:
   serviceName: kafka
-  replicas: 0
   selector:
-    matchLabels: &id001
-      app.kubernetes.io/name: gaegaeting-kafka
+    matchLabels:
+      app.kubernetes.io/name: kafka
   template:
     metadata:
-      labels: *id001
+      labels:
+        app.kubernetes.io/name: kafka
       annotations:
         sidecar.istio.io/inject: 'false'
     spec:
@@ -33,7 +33,7 @@ spec:
           containerPort: 9093
         envFrom:
         - secretRef:
-            name: gaegaeting-kafka-runtime
+            name: kafka-runtime
         resources:
           requests:
             cpu: 250m
@@ -69,6 +69,9 @@ spec:
       resources:
         requests:
           storage: 5Gi
+      volumeMode: Filesystem
+    apiVersion: v1
+    kind: PersistentVolumeClaim
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: Retain
     whenScaled: Retain

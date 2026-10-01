@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../../platform/kafka
+- namespace.yaml
+- network-policy.yaml
+- secret-writer-role.yaml
+- secret-writer-binding.yaml
+- runtime-sync.yaml
+patchesStrategicMerge:
+- broker-patch.yaml

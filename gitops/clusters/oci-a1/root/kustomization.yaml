@@ -29,3 +29,5 @@ resources:
 - gaegaeting-dev.yaml
 - vote-project.yaml
 - vote.yaml
+- kafka-project.yaml
+- kafka.yaml

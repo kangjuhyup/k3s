@@ -2,6 +2,8 @@
 
 앱별 디렉터리에 재사용 가능한 배포 원본을 둔다. [auth](auth/kustomization.yaml)는 API·UI·워커·마이그레이션 Job·Service·UI 설정을 관리한다.
 
+[gaegaeting](gaegaeting/kustomization.yaml)는 account·match·gateway·edge-authz·통합 UI·Envoy 프록시와 migration Job의 원본을 관리한다. 개발 환경의 namespace·리소스 예산·도메인·Doppler 전달은 [Gaegaeting dev 환경 구성](../clusters/oci-a1/gaegaeting-dev/kustomization.yaml)에 둔다. Kafka는 앱 원본에 포함하지 않고 공용 인프라로 배포한다.
+
 OCI 리소스 예산·HPA·공개 도메인·Doppler 주입은 [auth 환경 구성](../clusters/oci-a1/auth/kustomization.yaml)에 둔다. 환경 Kustomization이 앱 원본을 참조하고 리소스와 공개 URL을 패치한다. 앱 원본만 직접 배포하지 않는다.
 
 환경별 연결·namespace·배치 설정은 [clusters/oci-a1](../clusters/oci-a1/README.md)에서 관리한다. 이미지와 chart 버전을 추적 가능한 값으로 고정하고 정확한 이미지의 ARM64 지원을 검증한다.

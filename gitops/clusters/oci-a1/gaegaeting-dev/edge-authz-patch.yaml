@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-authz
+  namespace: gaegaeting-dev
+spec:
+  replicas: 0
+  template:
+    spec:
+      containers:
+      - name: edge-authz
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            memory: 256Mi

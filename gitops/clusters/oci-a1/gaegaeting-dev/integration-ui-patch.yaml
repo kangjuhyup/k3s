@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: integration-ui
+  namespace: gaegaeting-dev
+spec:
+  replicas: 0
+  template:
+    spec:
+      containers:
+      - name: integration-ui
+        resources:
+          requests:
+            cpu: 100m
+            memory: 32Mi
+          limits:
+            memory: 128Mi

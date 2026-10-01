@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: gaegaeting-dev
+spec:
+  replicas: 0
+  template:
+    spec:
+      containers:
+      - name: gateway
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 512Mi

@@ -6,7 +6,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '30'
 spec:
-  replicas: 0
   selector:
     matchLabels: &id001
       app.kubernetes.io/name: edge-proxy
@@ -46,12 +45,6 @@ spec:
           httpGet:
             path: /health
             port: http
-        resources:
-          requests:
-            cpu: 100m
-            memory: 64Mi
-          limits:
-            memory: 256Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

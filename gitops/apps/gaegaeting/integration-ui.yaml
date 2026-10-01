@@ -1,15 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: edge-authz
+  name: integration-ui
   namespace: gaegaeting-dev
   annotations:
     argocd.argoproj.io/sync-wave: '20'
 spec:
-  replicas: 0
   selector:
     matchLabels: &id001
-      app.kubernetes.io/name: edge-authz
+      app.kubernetes.io/name: integration-ui
       app.kubernetes.io/part-of: gaegaeting
   template:
     metadata:
@@ -26,20 +25,14 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-      - name: edge-authz
-        image: ghcr.io/kangjuhyup/gaegaeting/edge-authz:sha-317f550e3fb4fbd773a606c1d58293e3cf7cb32d@sha256:85eda5d49b432002acb7e5ad0335031c3d0601d7a01363497505f184aa23bcaa
+      - name: integration-ui
+        image: ghcr.io/kangjuhyup/gaegaeting/integration-ui:sha-317f550e3fb4fbd773a606c1d58293e3cf7cb32d@sha256:b34f5c6f981bbf5dca9ceb896b3ab535b72ed644bc26136e5f4e51c0eebd5ed6
         ports:
         - name: http
-          containerPort: 4010
+          containerPort: 8080
         envFrom:
         - secretRef:
-            name: gaegaeting-edge-authz-runtime
-        resources:
-          requests:
-            cpu: 100m
-            memory: 64Mi
-          limits:
-            memory: 256Mi
+            name: gaegaeting-integration-ui-runtime
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

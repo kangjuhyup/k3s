@@ -31,7 +31,9 @@ def main():
     workloads = [r for r in resources if r['kind'] in ['Deployment', 'StatefulSet', 'Job']]
     release = json.loads((BASE / 'release-images.json').read_text())
     check(re.fullmatch(r'[0-9a-f]{40}', release['revision']), 'Invalid source revision')
-    expected = {i['service']: i['image'] + ':sha-' + release['revision'] + '@' + i['digest']
+    revisions = {i['service']: i['revision'] for i in release['images']}
+    check(all(re.fullmatch(r'[0-9a-f]{40}', r) for r in revisions.values()), 'Invalid service revision')
+    expected = {i['service']: i['image'] + ':sha-' + i['revision'] + '@' + i['digest']
                 for i in release['images']}
     check(set(expected) == {'account', 'match', 'gateway', 'edge-authz', 'integration-ui'},
           'Incomplete release image manifest')
@@ -48,7 +50,7 @@ def main():
                 check(c['image'] == expected[c['name']], 'Application/migration image differs from release')
                 app_image_count += 1
                 if r['kind'] == 'Job':
-                    check(r['metadata']['name'] == c['name'] + '-migration-' + release['revision'][:12],
+                    check(r['metadata']['name'] == c['name'] + '-migration-' + revisions[c['name']][:12],
                           'Migration Job identity differs from release')
             check(c['securityContext']['allowPrivilegeEscalation'] is False, 'Privilege escalation allowed')
             if args.release:

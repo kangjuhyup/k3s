@@ -1,15 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: match
+  name: account
   namespace: gaegaeting-dev
   annotations:
     argocd.argoproj.io/sync-wave: '10'
 spec:
-  replicas: 0
   selector:
     matchLabels: &id001
-      app.kubernetes.io/name: match
+      app.kubernetes.io/name: account
       app.kubernetes.io/part-of: gaegaeting
   template:
     metadata:
@@ -26,20 +25,14 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-      - name: match
-        image: ghcr.io/kangjuhyup/gaegaeting/match:sha-317f550e3fb4fbd773a606c1d58293e3cf7cb32d@sha256:3d2c5f34e107ba1dea569f49c8e58900d156fb09864114e75f030e2a93ad9df3
+      - name: account
+        image: ghcr.io/kangjuhyup/gaegaeting/account:sha-317f550e3fb4fbd773a606c1d58293e3cf7cb32d@sha256:ef64ce4d78bf8381d3d8dc8d29b536723806f4c8a8e9c7206728d3c347f97a11
         ports:
         - name: http
-          containerPort: 2801
+          containerPort: 2800
         envFrom:
         - secretRef:
-            name: gaegaeting-match-runtime
-        resources:
-          requests:
-            cpu: 100m
-            memory: 512Mi
-          limits:
-            memory: 1Gi
+            name: gaegaeting-account-runtime
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -47,18 +40,18 @@ spec:
             - ALL
         startupProbe:
           httpGet:
-            path: /match/health
+            path: /account/health
             port: http
           failureThreshold: 60
           periodSeconds: 5
         readinessProbe:
           httpGet:
-            path: /match/health
+            path: /account/health
             port: http
           periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /match/health
+            path: /account/health
             port: http
           periodSeconds: 20
           failureThreshold: 3

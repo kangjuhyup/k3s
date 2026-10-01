@@ -1,22 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- ../../../apps/gaegaeting
 - namespace.yaml
-- account.yaml
-- account-service.yaml
-- account-migration.yaml
-- match.yaml
-- match-service.yaml
-- match-migration.yaml
-- gateway.yaml
-- gateway-service.yaml
-- edge-authz.yaml
-- edge-authz-service.yaml
-- integration-ui.yaml
-- integration-ui-service.yaml
 - edge-proxy-config.yaml
-- edge-proxy.yaml
-- edge-proxy-service.yaml
 - edge-proxy-policy.yaml
 - account-ingress-policy.yaml
 - match-ingress-policy.yaml
@@ -27,3 +14,10 @@ resources:
 - database
 - kafka
 - ingress
+patchesStrategicMerge:
+- account-patch.yaml
+- match-patch.yaml
+- gateway-patch.yaml
+- edge-authz-patch.yaml
+- integration-ui-patch.yaml
+- edge-proxy-patch.yaml

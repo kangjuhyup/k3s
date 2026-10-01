@@ -1,8 +1,12 @@
 # Gaegaeting dev deployment
 
-One `gaegaeting-dev` Application is registered in root GitOps. Its resource tree
-contains the services, Kafka, Secret projections, database preparation Jobs and ingress. Activation is performed in reviewed Git phases; serving Deployments stay at zero
-until the database migrations complete. All five application images and both migration Jobs are pinned to main
+The `gaegaeting-dev` Application references reusable workloads in `gitops/apps/gaegaeting`.
+This cluster overlay owns development replicas/resource budgets, Secret delivery,
+database preparation and ingress. Kafka is separate shared infrastructure under the
+`kafka` Application and `gitops/clusters/oci-a1/kafka`; the old dedicated broker is being
+retired with its PVC retained. Application replicas remain zero until the shared topic
+prefix release and final rollout gates pass. Both current migration Jobs completed.
+All five application images and both migration Jobs are pinned to main
 `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
 Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
 independently verified. No GHCR pull credential is required for the current public images.
@@ -43,10 +47,11 @@ exposed. Verify resolver authorization with the final application images.
    retire its short-lived credentials through the authorized credential lifecycle. No direct SQL
    or Kubernetes mutation bypass is needed. A certificate prepared before a long CI
    delay must be renewed before execution (24-hour lifetime).
-5. Activate the dedicated single-node dev Kafka StatefulSet. Official Apache Kafka
+5. Activate the shared single-node Kafka Application. Official Apache Kafka
    4.1.2 index digest includes ARM64; UID1000 startup/topic creation smoke passed. Broker configuration lives in Doppler. Match
    currently hardcodes plaintext/no SASL; the broker is cluster-private and ingress
-   limited to Match and its own namespace. This is a dev isolation arrangement,
+   currently limited to Match and its own namespace. Environment topic prefixes are
+   required for shared-broker isolation;
    not a production Kafka security or HA design. Five GiB local-path storage,
    24-hour retention, 1 GiB memory request / 2 GiB limit. No external consumer is
    implied: notification and chat services are not in this release.
@@ -81,7 +86,9 @@ Git rollback does not reverse DB migrations or Doppler changes.
 - All 13 Doppler Secret projections report SecretSyncReady=True; required keys and final
   public runtime configuration were checked without values.
 - Certificate `gaegaeting-dev-public` Ready=True; both HTTPS hosts verify successfully.
-- Dedicated Kafka reports Ready 1/1. The existing PostgreSQL server reports Ready 1/1;
+- Account and Match release migration Jobs completed with exit code 0.
+- Former dedicated Kafka was Ready 1/1 and has no application topics; it is being
+  replaced by the shared Kafka Application. The existing PostgreSQL server reports Ready 1/1;
   fresh dev database/role provisioning Job completed successfully.
 - Original storage dev configuration reused the production bucket/key. Separate
   dev user and pet buckets were created; exact dev UI CORS configured; zero-byte
@@ -91,8 +98,9 @@ Git rollback does not reverse DB migrations or Doppler changes.
 - Redis has no runtime imports/connections in current account/match/gateway code;
   account envSpec still requires REDIS_HOST/PORT. No Redis ACL or mTLS changes made.
 - Match Kafka producer connects at module startup. Like and Pair emit notification
-  and chat events. `@OnEvent` handlers are in-process, not Kafka consumers. Separate
-  dev broker isolates the currently hardcoded topic names from production.
+  and chat events. `@OnEvent` handlers are in-process, not Kafka consumers. The shared
+  broker requires distinct development/production topic prefixes; the application agent
+  is preparing this configurable prefix before serving rollout.
 - Production identity verification provider is unimplemented. Mock signup is allowed
   only in dev with NODE_ENV=development and REGISTRATION_MOCK_ENABLED=true.
   This preparation does not enable production signup or production deployment.
