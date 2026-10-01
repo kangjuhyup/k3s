@@ -1,6 +1,6 @@
 {
-  "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
-  "workflowRun": 36854622011,
+  "revision": "d58055d0880308ac74ed40667d1e8940de0e67fa",
+  "workflowRun": 36861689629,
   "images": [
     {
       "service": "account",
@@ -73,8 +73,8 @@
     {
       "service": "match",
       "image": "ghcr.io/kangjuhyup/gaegaeting/match",
-      "digest": "sha256:3d2c5f34e107ba1dea569f49c8e58900d156fb09864114e75f030e2a93ad9df3",
-      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+      "digest": "sha256:60ff4cfc216271039b2dde68594a491ef830a67f28ec8fa72103f97787e43bd7",
+      "revision": "d58055d0880308ac74ed40667d1e8940de0e67fa",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
@@ -85,7 +85,11 @@
       ],
       "registryVerified": true,
       "anonymousPull": true,
-      "visibility": "public"
+      "visibility": "public",
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "workflowRun": 36861689629
     }
   ]
 }
