@@ -76,7 +76,8 @@ exposed. Verify resolver authorization with the final application images.
 
 The project and single Application declaration live in `../root/gaegaeting-dev*.yaml`
 and are referenced by root Kustomization. Registration does not synchronize their
-workloads: the Application retains `automated.enabled: false`. Initial prune stays disabled.
+workloads by itself. After dependency, migration, TLS and browser E2E gates passed,
+the Application enabled automatic synchronization and self-healing. Automatic prune stays disabled.
 Do not prune databases, buckets or Kafka PVCs when rolling back an application.
 Git rollback does not reverse DB migrations or Doppler changes.
 
@@ -91,7 +92,14 @@ Git rollback does not reverse DB migrations or Doppler changes.
 - Account and Match release migration Jobs completed with exit code 0. All six serving
   Deployments are Ready 1/1. UI health/login/interaction return HTTPS 200; unauthenticated
   Gateway GraphQL returns 401 and private Account/health routes return 404.
-  Full browser signup/login and protected GraphQL E2E is tracked separately.
+  Full browser signup/PKCE login and protected GraphQL E2E passed with exactly one
+  new synthetic QA user. Profile and pet creation/readback matched; location and daily-feed
+  create/read returned HTTP 200 with no GraphQL errors. The recommendation list was empty
+  because no other candidate users existed. Nine public readiness/negative checks passed,
+  including forged/anonymous denial, exact-origin CORS and private-route blocking.
+  Before profile creation, MyProfile returned INTERNAL_SERVER_ERROR; the UI handled setup
+  and subsequent creation/readback passed. This initial error remains an application issue,
+  not a claim that every GraphQL response was error-free.
 - Shared Kafka reports Ready 1/1; its separate Argo Application is Synced/Healthy and
   the broker metadata/API handshake passes. The former broker had zero application
   topics and is stopped; its namespace/PVC are retained. The existing PostgreSQL server reports Ready 1/1;

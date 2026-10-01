@@ -1,0 +1,18 @@
+{
+  "ui": "https://test-ggt-ui.rvkang.app",
+  "api": "https://test-ggt-api.rvkang.app",
+  "tenant": "gaegaeting-dev",
+  "qaUsersCreated": 1,
+  "completed": true,
+  "verifiedAt": "2026-10-01T12:45:37.495080+00:00",
+  "publicNegativePassed": true,
+  "profileReadbackIdMatch": true,
+  "petReadbackNameMatch": true,
+  "recommendation": "location/save/daily-feed/create/read succeed; no other candidate users",
+  "expectedInitialProfileAbsence": "Before profile creation, MyProfile returned INTERNAL_SERVER_ERROR and setup UI handled absence; subsequent creation and readback passed.",
+  "matchRevision": "d58055d0880308ac74ed40667d1e8940de0e67fa",
+  "otherServiceRevision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+  "signupPassed": true,
+  "pkceLoginPassed": true,
+  "evidenceSource": "Application agent browser verification; private credentials excluded"
+}
