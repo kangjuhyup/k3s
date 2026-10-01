@@ -15,7 +15,7 @@ spec:
     metadata:
       labels: *id001
       annotations:
-        infra.oci-a1.example/runtime-revision: '3'
+        infra.oci-a1.example/runtime-revision: '4'
         sidecar.istio.io/proxyCPU: 20m
     spec:
       automountServiceAccountToken: false
