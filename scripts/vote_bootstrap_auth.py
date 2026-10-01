@@ -17,7 +17,13 @@ def main():
     try:
         gitops = load('gitops_validate')
         run = validate_run(gitops.read_json(args.run_config))
-        load('argocd_bundle').verify_checkout(root, run['expected_revision'])
+        # The checkout is shared with other deployment agents; validate only this bootstrap's inputs.
+        bundle = load('argocd_bundle')
+        require(bundle.run(['git', 'rev-parse', 'HEAD'], root).strip() == run['expected_revision'])
+        scoped = ['scripts/vote_bootstrap_auth.py', 'ansible/playbooks/bootstrap-vote-doppler-auth.yml',
+                  'gitops/clusters/oci-a1/vote', 'gitops/clusters/oci-a1/root/vote.yaml',
+                  'gitops/clusters/oci-a1/root/vote-project.yaml', gitops.SETTINGS_PATH]
+        require(not bundle.run(['git', 'status', '--porcelain', '--untracked-files=all', '--', *scoped], root).strip())
         gitops.validate_repository(root)
         mappings = []
         for path in (root / 'gitops/clusters/oci-a1/vote/secrets').glob('*.yaml'):
