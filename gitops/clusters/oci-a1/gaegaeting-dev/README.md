@@ -141,3 +141,9 @@ remain owned by Argo plus Doppler Operator.
 The scoped `gaegaeting/dev` read token is stored at
 `bootstrap/prd:DOPPLER_GAEGAETING_DEV_TOKEN` and expires on 2026-12-30. Renew it
 before expiry through the protected credential lifecycle.
+
+The six dev serving containers request 25m CPU each (150m total), without CPU
+limits. This reserves room for migrations and rolling updates on the shared
+4-core node; requests are scheduling reservations, not throughput caps. At the
+initial rollout, each existing Gaegaeting container used approximately 1m CPU
+while total node usage was 10%, but node-wide CPU requests had reached 98%.
