@@ -1,7 +1,8 @@
 # Gaegaeting dev deployment
 
-This directory is inactive preparation. No root Application references it; Applications
-have automated sync disabled, Deployments/StatefulSet have zero replicas and Jobs are
+The five Gaegaeting dev Applications are registered in root GitOps so they appear
+in Argo CD Apps. Automated sync remains disabled, Deployments/StatefulSet have zero
+replicas and Jobs are
 suspended. All five application images and both migration Jobs are pinned to main
 `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
 Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
@@ -61,8 +62,9 @@ exposed. Verify resolver authorization with the final application images.
    enable all five Applications in one step or rely on app-of-apps waves alone as
    proof that independent Applications' prerequisites are healthy.
 
-`project.yaml` and `applications.yaml` are reviewable registration candidates, not
-resources referenced by `root/kustomization.yaml`. Initial prune stays disabled.
+The project and five Application declarations live in `../root/gaegaeting-dev*.yaml`
+and are referenced by root Kustomization. Registration does not synchronize their
+workloads: each Application retains `automated.enabled: false`. Initial prune stays disabled.
 Do not prune databases, buckets or Kafka PVCs when rolling back an application.
 Git rollback does not reverse DB migrations or Doppler changes.
 

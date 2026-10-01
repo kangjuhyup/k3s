@@ -54,11 +54,14 @@ def main():
             if args.release:
                 check(re.search(r'@sha256:[0-9a-f]{64}$', c['image']), 'Unpinned release image')
     check(app_image_count == 7, 'Expected five deployments and two migration image references')
-    apps = list(yaml.safe_load_all((BASE / 'applications.yaml').read_text()))
+    root_path = BASE.parent / 'root'
+    apps = [yaml.safe_load(p.read_text()) for p in root_path.glob('gaegaeting-dev*.yaml')
+            if p.name != 'gaegaeting-dev-project.yaml']
+    check(len(apps) == 5, 'Expected five registered Gaegaeting Applications')
     if not args.release:
         check(all(a['spec']['syncPolicy']['automated']['enabled'] is False for a in apps), 'Argo automation enabled before release')
-        active = (BASE.parent / 'root/kustomization.yaml').read_text()
-        check('gaegaeting' not in active, 'Preparation referenced by active root')
+        registered = yaml.safe_load((root_path / 'kustomization.yaml').read_text())['resources']
+        check(all(a['metadata']['name'] + '.yaml' in registered for a in apps), 'Application missing from root')
     for r in resources:
         if r['kind'] == 'DopplerSecret':
             check((r['spec']['project'], r['spec']['config']) == (('infrastructure', 'prd') if r['metadata']['name'] == 'gaegaeting-dev-cloudflare' else ('gaegaeting', 'dev')), 'Cross-environment secret source')

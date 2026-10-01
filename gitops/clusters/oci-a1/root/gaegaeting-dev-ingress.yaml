@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gaegaeting-dev-ingress
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '70'
+spec:
+  project: app-gaegaeting-dev
+  source:
+    repoURL: https://github.com/kangjuhyup/k3s.git
+    targetRevision: main
+    path: gitops/clusters/oci-a1/gaegaeting-dev/ingress
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      enabled: false
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+    - ServerSideApply=true
+    - FailOnSharedResource=true

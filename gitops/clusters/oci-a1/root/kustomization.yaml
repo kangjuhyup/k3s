@@ -25,3 +25,9 @@ resources:
 - redisinsight.yaml
 - root-project.yaml
 - root.yaml
+- gaegaeting-dev-project.yaml
+- gaegaeting-dev.yaml
+- gaegaeting-dev-secrets.yaml
+- gaegaeting-dev-kafka.yaml
+- gaegaeting-dev-database.yaml
+- gaegaeting-dev-ingress.yaml

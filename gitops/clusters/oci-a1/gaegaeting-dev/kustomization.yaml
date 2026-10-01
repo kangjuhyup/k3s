@@ -14,8 +14,12 @@ resources:
 - edge-authz-service.yaml
 - integration-ui.yaml
 - integration-ui-service.yaml
-- network-policy.yaml
 - edge-proxy-config.yaml
 - edge-proxy.yaml
 - edge-proxy-service.yaml
 - edge-proxy-policy.yaml
+- account-ingress-policy.yaml
+- match-ingress-policy.yaml
+- gateway-ingress-policy.yaml
+- edge-authz-ingress-policy.yaml
+- integration-ui-ingress-policy.yaml

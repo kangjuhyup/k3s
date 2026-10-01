@@ -151,7 +151,10 @@ def validate_repository(root):
     for app in (o for o in root_objects if o.get("kind") == "Application"):
         spec = app["spec"]
         policy = spec["syncPolicy"]
-        require(policy["automated"] == {"enabled": True, "selfHeal": True, "prune": False, "allowEmpty": False})
+        # Registration and workload activation are separate GitOps decisions.
+        enabled = policy["automated"].get("enabled")
+        require(type(enabled) is bool)
+        require(policy["automated"] == {"enabled": enabled, "selfHeal": True, "prune": False, "allowEmpty": False})
         require({"ServerSideApply=true", "FailOnSharedResource=true"}.issubset(policy["syncOptions"]))
         require(not app["metadata"].get("finalizers"))
         project = projects[spec["project"]]
@@ -211,7 +214,7 @@ def validate_repository(root):
                     cert = next(o for o in declarations.values() if o.get("kind") == "Certificate"
                                 and o["metadata"].get("namespace") == obj["metadata"].get("namespace")
                                 and o["spec"]["secretName"] == server["tls"]["credentialName"])
-                    require({h.removeprefix("./") for h in server["hosts"]}.issubset(cert["spec"]["dnsNames"]))
+                    require({h.split("/", 1)[-1] for h in server["hosts"]}.issubset(cert["spec"]["dnsNames"]))
         if kind == "HorizontalPodAutoscaler":
             hpa = obj["spec"]
             require(1 <= hpa["minReplicas"] <= hpa["maxReplicas"])
@@ -224,9 +227,14 @@ def validate_repository(root):
                         for a in root_objects if a.get("kind") == "Application"
                         and "RespectIgnoreDifferences=true" in a["spec"]["syncPolicy"]["syncOptions"]
                         for rule in a["spec"].get("ignoreDifferences", [])))
-    issuers = {o["metadata"]["name"]: o for o in active if o["kind"] == "ClusterIssuer"}
+    issuers = {(o["kind"], o["metadata"].get("namespace"), o["metadata"]["name"]): o
+               for o in active if o["kind"] in {"ClusterIssuer", "Issuer"}}
     for cert in (o for o in active if o["kind"] == "Certificate"):
-        issuer = issuers[cert["spec"]["issuerRef"]["name"]]["spec"]["acme"]
+        ref = cert["spec"]["issuerRef"]
+        kind = ref.get("kind", "Issuer")
+        namespace = cert["metadata"].get("namespace") if kind == "Issuer" else None
+        require((kind, namespace, ref["name"]) in issuers)
+        issuer = issuers[(kind, namespace, ref["name"])]["spec"]["acme"]
         names = {name for solver in issuer["solvers"] for name in solver.get("selector", {}).get("dnsNames", [])}
         require(set(cert["spec"]["dnsNames"]).issubset(names))
     base = files[BASE_PATH]

@@ -51,6 +51,20 @@ class DeclarationSafetyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.validator.validate_repository(self.root)
 
+    def test_registered_app_can_wait_with_automatic_sync_disabled(self):
+        self.change("root/auth.yaml", lambda o: o["spec"]["syncPolicy"]["automated"].update(enabled=False))
+        self.validator.validate_repository(self.root)
+
+    def test_disabled_sync_must_be_a_boolean_not_a_string(self):
+        self.change("root/auth.yaml", lambda o: o["spec"]["syncPolicy"]["automated"].update(enabled="false"))
+        with self.assertRaises(ValueError):
+            self.validator.validate_repository(self.root)
+
+    def test_certificate_cannot_use_an_issuer_in_another_namespace(self):
+        self.change("gaegaeting-dev/ingress/issuer.yaml", lambda o: o["metadata"].update(namespace="gaegaeting-dev"))
+        with self.assertRaises(ValueError):
+            self.validator.validate_repository(self.root)
+
     def test_live_certificate_must_be_covered_by_dns_issuer(self):
         self.change("monitoring/grafana-certificate.yaml", lambda o: o["spec"].update(dnsNames=["unconfigured.example.invalid"]))
         with self.assertRaises(ValueError):
