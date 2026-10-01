@@ -30,7 +30,7 @@ class DeclarationSafetyTests(unittest.TestCase):
         self.assertEqual(before, {p: p.read_bytes() for p in before})
 
     def test_draft_workloads_still_require_immutable_images(self):
-        self.change("auth/auth-service-patch.yaml", lambda o: o["spec"]["template"]["spec"]["containers"][0].update(image="example.invalid/auth:main"))
+        self.change("../../apps/prod/auth/auth-service-patch.yaml", lambda o: o["spec"]["template"]["spec"]["containers"][0].update(image="example.invalid/auth:main"))
         with self.assertRaises(ValueError):
             self.validator.validate_repository(self.root)
 
@@ -42,7 +42,7 @@ class DeclarationSafetyTests(unittest.TestCase):
         self.assertNotIn("DO_NOT_DISPLAY", str(error.exception))
 
     def test_hpa_replica_ownership_cannot_be_overridden_by_git(self):
-        self.change("auth/auth-service-patch.yaml", lambda o: o["spec"].update(replicas=1))
+        self.change("../../apps/prod/auth/auth-service-patch.yaml", lambda o: o["spec"].update(replicas=1))
         with self.assertRaises(ValueError):
             self.validator.validate_repository(self.root)
 

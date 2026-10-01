@@ -11,7 +11,7 @@ Doppler `auth/prd`는 공유하며 별도 개발 Auth 배포를 만들지 않는
 ## 기존 배포 구성
 
 배포 및 auth 전용 Redis EVAL 권한 변경을 승인받았다. 원본은
-`gitops/apps/auth/`의 앱 원본, `gitops/clusters/oci-a1/auth/`의 환경 구성과
+`gitops/apps/base/auth/`의 앱 원본, `gitops/clusters/oci-a1/auth/`의 환경 구성과
 `gitops/clusters/oci-a1/root/auth.yaml` Application이다. 앱 원본에는 Deployment·Service·Job·UI 설정을,
 환경 구성에는 리소스/공개 URL 패치·HPA·Namespace·Doppler 주입·인증서·라우팅을 둔다.
 Application의 `spec.source.path`는 전체 `auth` 환경 overlay를 참조한다.

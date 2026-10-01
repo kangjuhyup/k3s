@@ -9,7 +9,7 @@ The user UI is `https://vote.rvkang.app`; the administrator instance is
 `AUTH_URL`. The approved API origin is `https://vote-api.rvkang.app`.
 The API image requires migration, API, worker and private authz processes.
 
-Common workloads and Services live in `gitops/apps/vote`; this environment
+Common workloads and Services live in `gitops/apps/base/vote`; this environment
 overlay owns namespace, secrets, ingress and environment-specific policies.
 
 Runtime values come from Doppler `vote/prd`. UI receives no database, Redis,

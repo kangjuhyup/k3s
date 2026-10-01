@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- ../../../apps/auth
+- ../../../apps/prod/auth
 - auth-bootstrap-sync.yaml
 - auth-runtime-sync.yaml
 - auth-service-destination.yaml
@@ -13,8 +13,3 @@ resources:
 - route.yaml
 - secret-writer-binding.yaml
 - secret-writer-role.yaml
-patchesStrategicMerge:
-- auth-service-patch.yaml
-- auth-ui-patch.yaml
-- auth-worker-patch.yaml
-- migration-patch.yaml

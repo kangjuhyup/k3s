@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../base/auth
+patchesStrategicMerge:
+- auth-service-patch.yaml
+- auth-ui-patch.yaml
+- auth-worker-patch.yaml
+- migration-patch.yaml

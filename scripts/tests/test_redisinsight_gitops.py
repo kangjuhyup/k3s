@@ -6,7 +6,7 @@ from test_argocd_gitops import ROOT, layout
 
 class RedisInsightTests(unittest.TestCase):
     def test_browser_uses_only_read_credentials_and_cannot_manage_connections(self):
-        doc = yaml.safe_load((ROOT / 'gitops/apps/redisinsight/deployment.yaml').read_text())
+        doc = yaml.safe_load((ROOT / 'gitops/apps/base/redisinsight/deployment.yaml').read_text())
         pod = doc['spec']['template']['spec']
         self.assertFalse(pod['automountServiceAccountToken'])
         ui = next(c for c in pod['containers'] if c['name'] == 'redisinsight')
@@ -19,7 +19,7 @@ class RedisInsightTests(unittest.TestCase):
         self.assertNotIn('CA_KEY', str(pod))
 
     def test_every_proxy_request_requires_an_access_jwt_for_this_app(self):
-        doc = yaml.safe_load((ROOT / 'gitops/apps/redisinsight/access-proxy.yaml').read_text())
+        doc = yaml.safe_load((ROOT / 'gitops/apps/base/redisinsight/access-proxy.yaml').read_text())
         config = yaml.safe_load(doc['data']['envoy.yaml'])
         hcm = config['static_resources']['listeners'][0]['filter_chains'][0]['filters'][0]['typed_config']
         jwt = hcm['http_filters'][0]['typed_config']
@@ -37,5 +37,5 @@ class RedisInsightTests(unittest.TestCase):
         self.assertNotIn('+@write', readonly)
         self.assertNotIn('+eval', readonly)
         self.assertIn('/readonly/username', start)
-        service = yaml.safe_load((ROOT / 'gitops/apps/redisinsight/service.yaml').read_text())
+        service = yaml.safe_load((ROOT / 'gitops/apps/base/redisinsight/service.yaml').read_text())
         self.assertEqual(service['spec']['ports'][0]['targetPort'], 'access-http')

@@ -1,13 +1,15 @@
 # Gaegaeting dev deployment
 
-The `gaegaeting-dev` Application references reusable workloads in `gitops/apps/gaegaeting`.
-This cluster overlay owns development replicas/resource budgets, Secret delivery,
-database preparation and ingress. Kafka is separate shared infrastructure under the
-`kafka` Application and `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained. Account, edge-authz and UI are running with one ready replica each. Match, Gateway
-and Envoy remain at zero until the shared-topic-prefix Match release is verified.
-Both current migration Jobs completed.
-All five application images and both migration Jobs are pinned to main
-`317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
+The `gaegaeting-dev` Application references reusable workloads in `gitops/apps/base/gaegaeting`.
+The `gitops/apps/dev/gaegaeting` overlay supplies development replicas and resource
+budgets. This cluster overlay owns Secret delivery, database preparation and ingress.
+Kafka is separate shared infrastructure under the `kafka` Application and
+`gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained.
+All six serving Deployments have one ready replica. The current Account and Match
+migration Jobs completed with exit code 0. Match and its migration use source
+`d58055d0880308ac74ed40667d1e8940de0e67fa`; the other four application images and Account
+migration remain on `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`.
+See the per-service revisions in [release image manifest](release-images.json).
 Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
 independently verified. No GHCR pull credential is required for the current public images.
 The dedicated token is scoped to the active `rvkang.app` zone. Public A records for
@@ -86,7 +88,10 @@ Git rollback does not reverse DB migrations or Doppler changes.
 - All 13 Doppler Secret projections report SecretSyncReady=True; required keys and final
   public runtime configuration were checked without values.
 - Certificate `gaegaeting-dev-public` Ready=True; both HTTPS hosts verify successfully.
-- Account and Match release migration Jobs completed with exit code 0.
+- Account and Match release migration Jobs completed with exit code 0. All six serving
+  Deployments are Ready 1/1. UI health/login/interaction return HTTPS 200; unauthenticated
+  Gateway GraphQL returns 401 and private Account/health routes return 404.
+  Full browser signup/login and protected GraphQL E2E is tracked separately.
 - Shared Kafka reports Ready 1/1; its separate Argo Application is Synced/Healthy and
   the broker metadata/API handshake passes. The former broker had zero application
   topics and is stopped; its namespace/PVC are retained. The existing PostgreSQL server reports Ready 1/1;
@@ -101,7 +106,9 @@ Git rollback does not reverse DB migrations or Doppler changes.
 - Match Kafka producer connects at module startup. Like and Pair emit notification
   and chat events. `@OnEvent` handlers are in-process, not Kafka consumers. The shared
   broker requires distinct development/production topic prefixes; the application agent
-  is preparing this configurable prefix before serving rollout.
+  has verified the published ARM64 image against a real Kafka broker: 15 dev-prefixed
+  events round-tripped, while legacy/production topic offsets stayed zero. The live
+  Match runtime uses `KAFKA_TOPIC_PREFIX=dev.gaegaeting`.
 - Production identity verification provider is unimplemented. Mock signup is allowed
   only in dev with NODE_ENV=development and REGISTRATION_MOCK_ENABLED=true.
   This preparation does not enable production signup or production deployment.
@@ -114,7 +121,7 @@ Use repository Python 3.12.9 / PyYAML 6.0.3 and kubectl 1.36.4 (Kustomize 5.8.1)
 .local/os-cleanup-venv/bin/python scripts/gaegaeting_validate.py --release
 ```
 
-This renders the single application tree, checks ownership, inactive gates, dev-only secret
+This renders the single application tree, checks ownership, activation gates, dev-only secret
 mapping, nonroot security and edge bypass controls. `--release` additionally rejects
 non-digest image references; it is not an external readiness attestation. The dedicated
 Envoy configuration is also checked with its pinned ARM64 image in validation mode.

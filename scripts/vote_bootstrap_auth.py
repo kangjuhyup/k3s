@@ -22,7 +22,7 @@ def main():
         require(bundle.run(['git', 'rev-parse', 'HEAD'], root).strip() == run['expected_revision'])
         scoped = ['scripts/vote_bootstrap_auth.py', 'ansible/playbooks/bootstrap-vote-doppler-auth.yml',
                   'gitops/clusters/oci-a1/vote-dev', 'gitops/clusters/oci-a1/root/vote.yaml',
-                  'gitops/clusters/oci-a1/root/vote-project.yaml', 'gitops/apps/vote', gitops.SETTINGS_PATH]
+                  'gitops/clusters/oci-a1/root/vote-project.yaml', 'gitops/apps/base/vote', gitops.SETTINGS_PATH]
         require(not bundle.run(['git', 'status', '--porcelain', '--untracked-files=all', '--', *scoped], root).strip())
         gitops.validate_repository(root)
         mappings = []

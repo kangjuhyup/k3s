@@ -38,7 +38,9 @@
 | `gitops/platform/argocd/` | Argo CD 자기관리 원본 |
 | `gitops/platform/istio/` | Istio 공통 배포·정책 원본 |
 | `gitops/platform/doppler/` | Doppler 연동의 공통 주입 선언, 실제 값 제외 |
-| `gitops/apps/` | 앱별 재사용 배포 원본 |
+| `gitops/apps/base/` | 앱별 공통 배포 원본 |
+| `gitops/apps/dev/` | 개발 환경 앱 overlay |
+| `gitops/apps/prod/` | 운영 환경 앱 overlay |
 | `scripts/` | 추후 로컬 검증·inventory 생성 유틸리티 |
 | `docs/architecture/` | 구조·설계·구현 전 결정 사항 |
 | `docs/runbooks/` | 환경별 증설·백업·복구 절차의 진입점 |

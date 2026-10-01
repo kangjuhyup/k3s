@@ -16,7 +16,7 @@ resources:
 - secrets/istio-role.yaml
 - secrets/istio-binding.yaml
 - ingress/issuer.yaml
-- ../../../apps/vote
+- ../../../apps/dev/vote
 - redis/provision-tls.yaml
 - redis/role.yaml
 - redis/binding.yaml

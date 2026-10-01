@@ -12,12 +12,12 @@ class AuthTests(unittest.TestCase):
 
     def resource(self, name):
         path = self.m.PATH + "/" + name + ".yaml"
-        original = self.files.get(path) or manifest_files()["gitops/apps/auth/" + name + ".yaml"]
+        original = self.files.get(path) or manifest_files()["gitops/apps/base/auth/" + name + ".yaml"]
         return next(o for o in self.effective if o["kind"] == original["kind"]
                     and o["metadata"]["name"] == original["metadata"]["name"])
 
     def test_app_base_is_reusable_and_environment_supplies_resources_and_domain(self):
-        base = manifest_files()["gitops/apps/auth/auth-service.yaml"]
+        base = manifest_files()["gitops/apps/base/auth/auth-service.yaml"]
         container = base["spec"]["template"]["spec"]["containers"][0]
         self.assertNotIn("resources", container)
         self.assertFalse(any(e["name"] in ("ADMIN_UI_URL", "OIDC_ISSUER") for e in container["env"]))

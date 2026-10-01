@@ -22,7 +22,7 @@ Secret/ConfigMap 변경만으로 실행 중 ACL·설정이 갱신되지 않는�
 ## Redis Insight 조회 UI
 
 `https://redis.rvkang.app`은 Cloudflare Access의 운영자 이메일 허용 정책으로 보호한다.
-앱 원본은 `gitops/apps/redisinsight`, 운영 라우팅은 `gitops/clusters/oci-a1/redisinsight`다.
+앱 원본은 `gitops/apps/base/redisinsight`, 운영 라우팅은 `gitops/clusters/oci-a1/redisinsight`다.
 단일 UI와 Envoy를 같은 Pod에 배포하며 UI는 loopback으로만 수신한다. Service는
 Envoy로만 연결되고 모든 요청의 Access JWT 서명·issuer·앱 audience·만료를 검사한다.
 Cloudflare DNS 프록시를 우회한 원본 요청에도 JWT가 필요하다.
