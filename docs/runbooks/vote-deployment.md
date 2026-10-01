@@ -81,23 +81,49 @@ UI digest: `sha256:81bf724b6809a034af42377a15884cb4857725a8f03821b2b43cab2e37cd5
   audience. Authz accepted it, rejected an invalid token with 401, and the API
   verified the signed assertion and existing tenant code/ID.
 - A protected read of `/organizations/memberships` inside the API Pod returned 200.
-  This does not establish external ingress/BFF success while API endpoints are unready.
+  Public ingress authentication and both UI BFF membership reads also returned 200.
 - Compiled migration v3 completed and PostgreSQL has 39 Vote public-schema tables.
   API/worker sessions use TLS; the Vote role has no elevated role privileges.
 - Redis verified mTLS transport, PING, exchange Lua and other-prefix denial passed.
-- Worker/authz/UI/admin are Ready 1/1. Server liveness is 200, readiness is 503;
-  storage reports `down/not_configured`. External API returns 503.
+- Server/worker/authz/UI/admin are all Ready 1/1. Public server liveness and
+  readiness return 200; unauthenticated protected API requests return 401.
+- Argo Vote is Synced/Healthy at `eb2cb91` after scoped storage delivery and rollout.
 - PostgreSQL, Redis master/replica and Istiod retained their original Ready Pod UIDs.
   Superseded Vote migration Jobs and the empty, incorrectly named initial Vote
   Namespace were pruned through Argo; no application/PVC/Secret was present there.
 
-Completion still requires Vote-owned Wasabi configuration in Doppler `vote/prd`:
-`WASABI_ENDPOINT`, `WASABI_REGION`, `WASABI_BUCKET`, `WASABI_ACCESS_KEY_ID`,
-`WASABI_SECRET_ACCESS_KEY`. Optional settings are `WASABI_KEY_PREFIX`,
-`WASABI_FORCE_PATH_STYLE`, `WASABI_PRESIGNED_URL_EXPIRES_IN_SECONDS`.
-Add only to server/worker runtime delivery when values are present, then verify
-HeadBucket, scoped object upload/read/cleanup, exact-origin CORS, readiness,
-external authenticated API/BFF calls and final rollout. Wasabi keys must not reach
-UI/authz or reports. Keep the bucket private and grant only bucket ListBucket
-(readiness HeadBucket) plus GetObject/PutObject/DeleteObject on Vote's prefix.
-Browser presigned upload needs CORS for the two approved Vote UI origins.
+## Registered Wasabi storage and final verification
+
+The original protected `.env` credentials were used only by the operator to
+inspect the existing account. The existing Vote-named bucket was reused; its
+seven original objects are unchanged. No bucket, backup, lifecycle, Object Lock,
+or shared infrastructure was replaced. The bucket has no public ACL or bucket
+policy. A dedicated programmatic IAM user has bucket ListBucket for readiness
+HeadBucket and GetObject/PutObject/DeleteObject only on Vote's configured prefix.
+Access to an existing object outside that prefix was denied with 403.
+
+All five required Wasabi keys and three optional adapter settings are registered
+in Doppler `vote/prd`, delivered only in server/worker runtime. Public UI/admin
+and Authz Secrets contain no Wasabi keys. Credentials and actual bucket/account
+values are omitted from Git and reports. Operator credentials are not delivered
+to workloads; the temporary new-key receipt was removed after Doppler readback.
+
+The bucket CORS configuration lists the two approved Vote HTTPS UI origins,
+PUT/GET/HEAD, content-type and x-amz-* headers, and ETag exposure. Both origin
+preflights returned 200 with the matching origin. Actual PUT returned the Wasabi
+service's wildcard CORS response, which supports the image's cookie-free
+presigned requests; strict runtime origin restriction is not established by the
+stored CORS document. Object access is still governed by IAM and signed URLs.
+See [Wasabi's documented CORS response behavior](https://docs.wasabi.com/apidocs/bucket-cors-support-with-the-wasabi-s3-api).
+
+The deployed image's storage adapter generated a unique prefixed signed URL.
+PUT/GET returned 200, HEAD verified size/metadata, downloaded bytes matched, and
+the temporary object was deleted and confirmed absent. Both existing-client
+OIDC login/callback/session flows and authenticated UI BFF API reads passed after
+storage activation. Public ingress passed the existing Auth introspection,
+issuer/audience/tenant checks, signed Authz assertion and protected API read.
+Temporary tenant identities and sessions were removed. Shared PostgreSQL, both
+Redis Pods and Istiod remain Ready with their original Pod UIDs.
+
+No deployment blocker remains. These checks verify deployment and integration;
+they do not constitute a complete business-flow test of creating and executing a vote.
