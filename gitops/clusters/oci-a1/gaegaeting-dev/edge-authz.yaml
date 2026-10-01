@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-authz
+  namespace: gaegaeting-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: '20'
+spec:
+  replicas: 0
+  selector:
+    matchLabels: &id001
+      app.kubernetes.io/name: edge-authz
+      app.kubernetes.io/part-of: gaegaeting
+  template:
+    metadata:
+      labels: *id001
+      annotations:
+        sidecar.istio.io/inject: 'false'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: edge-authz
+        image: ghcr.io/kangjuhyup/gaegaeting/edge-authz:pending-digest
+        ports:
+        - name: http
+          containerPort: 4010
+        envFrom:
+        - secretRef:
+            name: gaegaeting-edge-authz-runtime
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          failureThreshold: 60
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 20
+          failureThreshold: 3

@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: gaegaeting-dev-public
+  namespace: istio-system
+spec:
+  selector:
+    app: istio-ingress
+  servers:
+  - hosts:
+    - gaegaeting-dev/dev.gaegaeting.app
+    - gaegaeting-dev/api-dev.gaegaeting.app
+    port:
+      number: 80
+      name: http-gaegaeting-dev
+      protocol: HTTP
+    tls:
+      httpsRedirect: true
+  - hosts:
+    - gaegaeting-dev/dev.gaegaeting.app
+    - gaegaeting-dev/api-dev.gaegaeting.app
+    port:
+      number: 443
+      name: https-gaegaeting-dev
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: gaegaeting-dev-public-tls
+      minProtocolVersion: TLSV1_2

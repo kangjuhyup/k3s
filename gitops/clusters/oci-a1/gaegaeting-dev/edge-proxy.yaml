@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-proxy
+  namespace: gaegaeting-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: '30'
+spec:
+  replicas: 0
+  selector:
+    matchLabels: &id001
+      app.kubernetes.io/name: edge-proxy
+      app.kubernetes.io/part-of: gaegaeting
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: envoy
+        image: envoyproxy/envoy:v1.37.5@sha256:1c2b79776c6e3b38e8b0113b825e6a599f9bfc08d680c199d80bf8964856c529
+        command:
+        - /bin/sh
+        - /etc/proxy/start.sh
+        envFrom:
+        - secretRef:
+            name: gaegaeting-proxy-runtime
+        volumeMounts:
+        - name: config
+          mountPath: /etc/proxy
+          readOnly: true
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: config
+        configMap:
+          name: edge-proxy-start

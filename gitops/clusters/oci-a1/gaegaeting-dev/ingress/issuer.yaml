@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: gaegaeting-dev-cloudflare
+  namespace: istio-system
+spec:
+  acme:
+    privateKeySecretRef:
+      name: gaegaeting-dev-acme-account
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            key: api-token
+            name: gaegaeting-dev-cloudflare-dns
+      selector:
+        dnsNames:
+        - dev.gaegaeting.app
+        - api-dev.gaegaeting.app

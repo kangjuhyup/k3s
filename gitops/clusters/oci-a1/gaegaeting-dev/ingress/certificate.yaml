@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gaegaeting-dev-public
+  namespace: istio-system
+spec:
+  dnsNames:
+  - dev.gaegaeting.app
+  - api-dev.gaegaeting.app
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: gaegaeting-dev-cloudflare
+  secretName: gaegaeting-dev-public-tls
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always

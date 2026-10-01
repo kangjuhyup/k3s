@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: gaegaeting-dev-api
+  namespace: gaegaeting-dev
+spec:
+  hosts:
+  - api-dev.gaegaeting.app
+  exportTo:
+  - istio-system
+  gateways:
+  - istio-system/gaegaeting-dev-public
+  http:
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: edge-proxy
+        port:
+          number: 8080

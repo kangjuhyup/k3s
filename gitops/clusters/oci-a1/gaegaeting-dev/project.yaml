@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: app-gaegaeting-dev
+  namespace: argocd
+spec:
+  description: Gaegaeting dev only; gate-controlled activation
+  sourceRepos:
+  - https://github.com/kangjuhyup/k3s.git
+  destinations:
+  - namespace: gaegaeting-dev
+    server: https://kubernetes.default.svc
+  - namespace: gaegaeting-dev-kafka
+    server: https://kubernetes.default.svc
+  - namespace: databases
+    server: https://kubernetes.default.svc
+  - namespace: doppler-operator-system
+    server: https://kubernetes.default.svc
+  - namespace: istio-system
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: Service
+  - group: ''
+    kind: ConfigMap
+  - group: ''
+    kind: PersistentVolumeClaim
+  - group: apps
+    kind: Deployment
+  - group: apps
+    kind: StatefulSet
+  - group: batch
+    kind: Job
+  - group: networking.k8s.io
+    kind: NetworkPolicy
+  - group: rbac.authorization.k8s.io
+    kind: Role
+  - group: rbac.authorization.k8s.io
+    kind: RoleBinding
+  - group: secrets.doppler.com
+    kind: DopplerSecret
+  - group: cert-manager.io
+    kind: Certificate
+  - group: networking.istio.io
+    kind: Gateway
+  - group: networking.istio.io
+    kind: VirtualService
+  - group: cert-manager.io
+    kind: Issuer
