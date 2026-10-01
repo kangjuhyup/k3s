@@ -16,7 +16,7 @@ spec:
     namespace: vote-dev
   syncPolicy:
     automated:
-      enabled: false
+      enabled: true
       selfHeal: true
       prune: false
       allowEmpty: false
