@@ -17,3 +17,15 @@ resources:
 - secrets/istio-binding.yaml
 - ingress/issuer.yaml
 - ../../../apps/vote
+- redis/provision-tls.yaml
+- redis/role.yaml
+- redis/binding.yaml
+- redis/provision-job.yaml
+- secrets/vote-server-runtime.yaml
+- secrets/vote-db-ca.yaml
+- secrets/vote-redis-tls.yaml
+- secrets/vote-redis-upstream.yaml
+- peer-authentication.yaml
+- api-authorization.yaml
+- api-ingress.yaml
+- ingress/vote-api.yaml

@@ -1,0 +1,18 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: vote-api-authz
+  namespace: vote-dev
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vote-server
+  action: CUSTOM
+  provider:
+    name: vote-authz
+  rules:
+  - to:
+    - operation:
+        notPaths:
+        - /liveness
+        - /readiness

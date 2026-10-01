@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vote-redis-acl-v1
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: '-10'
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 180
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: 'false'
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: provision
+        image: docker.io/library/redis:8.2.9-alpine@sha256:30abb90e62f14b737010746def3ba99cc79fe19dcdb3d37b41f21fc62e7da19d
+        command:
+        - sh
+        - -c
+        - "set -eu\nfor attempt in $(seq 1 60); do\n  [ ! -f /private/vote-username\
+          \ ] || [ ! -f /private/vote-password ] || break\n  sleep 2\ndone\nname=$(cat\
+          \ /private/vote-username); secret=$(cat /private/vote-password)\ncase \"\
+          $name\" in ''|*[!a-zA-Z0-9_-]*) exit 1;; esac\ncase \"$secret\" in ''|*[!a-f0-9]*)\
+          \ exit 1;; esac\n[ \"${#secret}\" -eq 64 ]\nadmin=$(cat /private/admin-username);\
+          \ password=$(cat /private/admin-password)\nhost=$(cat /private/master-host);\
+          \ port=$(cat /private/port)\noutput=$({ printf 'AUTH %s %s\\n' \"$admin\"\
+          \ \"$password\"; printf 'ACL SETUSER %s on >%s ~participation-access:exchange:*\
+          \ resetchannels -@all +ping +info +get +set +del +exists +incr +pexpire\
+          \ +pttl +eval +client|setinfo +client|setname\\n' \"$name\" \"$secret\"\
+          ; printf 'ACL SAVE\\n'; } | redis-cli --raw --tls --cacert /tls/ca.crt --cert\
+          \ /tls/tls.crt --key /tls/tls.key --sni \"$host\" -h \"$host\" -p \"$port\"\
+          )\n[ \"$output\" = \"$(printf 'OK\\nOK\\nOK')\" ] || { echo 'Vote Redis\
+          \ ACL provisioning failed; details suppressed.'; exit 1; }\necho 'Vote-only\
+          \ Redis ACL configured and saved; existing users preserved.'\n"
+        resources:
+          requests:
+            cpu: 20m
+            memory: 32Mi
+          limits:
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: private
+          mountPath: /private
+          readOnly: true
+        - name: tls
+          mountPath: /tls
+          readOnly: true
+      volumes:
+      - name: private
+        secret:
+          secretName: shared-redis-private
+          defaultMode: 288
+      - name: tls
+        secret:
+          secretName: vote-redis-provision-tls
+          defaultMode: 288
+      enableServiceLinks: false

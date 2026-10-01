@@ -37,6 +37,12 @@ spec:
     REDIS_REPLICATION_USERNAME:
       asName: replication-username
       type: plain
+    REDIS_VOTE_USERNAME:
+      type: plain
+      asName: vote-username
+    REDIS_VOTE_PASSWORD:
+      type: plain
+      asName: vote-password
   project: infrastructure
   resyncSeconds: 120
   secrets:
@@ -48,6 +54,8 @@ spec:
   - REDIS_PROBE_USERNAME
   - REDIS_REPLICATION_PASSWORD
   - REDIS_REPLICATION_USERNAME
+  - REDIS_VOTE_USERNAME
+  - REDIS_VOTE_PASSWORD
   tokenSecret:
     name: doppler-auth-infrastructure-prd
     namespace: doppler-operator-system

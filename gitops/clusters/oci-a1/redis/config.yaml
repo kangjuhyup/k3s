@@ -72,6 +72,12 @@ data:
       [ "$account" != /accounts/auth ] || scripting='+eval'
       printf 'user %s on >%s ~%s* resetchannels -@all +@read +@write -@dangerous -@scripting -keys -scan -randomkey -dbsize +ping +hello +echo +client|setname +client|setinfo +client|getname +multi +exec +discard +watch +unwatch %s\n' "$name" "$secret" "$prefix" "$scripting" >> /runtime/users.acl
     done
+    # Vote only uses its participation exchange keys; allow exactly the required script commands.
+    if [ -f /private/vote-username ] && [ -f /private/vote-password ]; then
+      name=$(cat /private/vote-username); secret=$(cat /private/vote-password)
+      safe "$name"; password "$secret"
+      printf 'user %s on >%s ~participation-access:exchange:* resetchannels -@all +ping +info +get +set +del +exists +incr +pexpire +pttl +eval +client|setinfo +client|setname\n' "$name" "$secret" >> /runtime/users.acl
+    fi
     # UI credentials are deliberately outside the writable application-account loop.
     name=$(cat /readonly/username); secret=$(cat /readonly/password)
     safe "$name"; password "$secret"

@@ -1,0 +1,84 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vote-migrate-0-1-0
+  namespace: vote-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 180
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: 'false'
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: migrate
+        image: ghcr.io/kangjuhyup/e-vote/server@sha256:781e7db5b6f86b57f0d0367811cadcc06dd4ca28c3fe246100bc67fba741f497
+        command:
+        - node
+        - dist/src/migrate.js
+        env:
+        - name: DATABASE_HOST
+          valueFrom:
+            secretKeyRef:
+              name: vote-server-runtime
+              key: DATABASE_HOST
+        - name: DATABASE_PORT
+          valueFrom:
+            secretKeyRef:
+              name: vote-server-runtime
+              key: DATABASE_PORT
+        - name: DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: vote-server-runtime
+              key: DATABASE_NAME
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: vote-server-runtime
+              key: DATABASE_USER
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vote-server-runtime
+              key: DATABASE_PASSWORD
+        - name: DATABASE_SSL
+          valueFrom:
+            secretKeyRef:
+              name: vote-server-runtime
+              key: DATABASE_SSL
+        - name: NODE_EXTRA_CA_CERTS
+          value: /database-tls/ca.crt
+        volumeMounts:
+        - name: db-ca
+          mountPath: /database-tls
+          readOnly: true
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 384Mi
+      volumes:
+      - name: db-ca
+        secret:
+          secretName: vote-db-ca
+          defaultMode: 288
+      enableServiceLinks: false

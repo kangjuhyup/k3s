@@ -1,8 +1,8 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: vote-secret-writer
-  namespace: vote-dev
+  name: vote-redis-secret-writer
+  namespace: databases
   annotations:
     argocd.argoproj.io/sync-wave: '-30'
 rules:
@@ -17,12 +17,6 @@ rules:
   resources:
   - secrets
   resourceNames:
-  - vote-ui-runtime
-  - vote-admin-runtime
-  - vote-authz-runtime
-  - vote-server-runtime
-  - vote-db-ca
-  - vote-redis-tls
-  - vote-redis-upstream
+  - vote-redis-provision-tls
   verbs:
   - update

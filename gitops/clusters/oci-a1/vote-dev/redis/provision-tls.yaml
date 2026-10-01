@@ -1,0 +1,34 @@
+apiVersion: secrets.doppler.com/v1alpha1
+kind: DopplerSecret
+metadata:
+  name: vote-redis-provision-tls
+  namespace: doppler-operator-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '-20'
+spec:
+  project: infrastructure
+  config: prd
+  host: https://api.doppler.com
+  verifyTLS: true
+  resyncSeconds: 120
+  tokenSecret:
+    name: doppler-auth-infrastructure-prd
+    namespace: doppler-operator-system
+  managedSecret:
+    name: vote-redis-provision-tls
+    namespace: databases
+    type: Opaque
+  secrets:
+  - REDIS_OPERATIONS_TLS_CERT
+  - REDIS_OPERATIONS_TLS_KEY
+  - REDIS_TLS_CA_CERT
+  processors:
+    REDIS_OPERATIONS_TLS_CERT:
+      type: plain
+      asName: tls.crt
+    REDIS_OPERATIONS_TLS_KEY:
+      type: plain
+      asName: tls.key
+    REDIS_TLS_CA_CERT:
+      type: plain
+      asName: ca.crt

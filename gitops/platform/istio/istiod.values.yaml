@@ -36,3 +36,15 @@ global:
         memory: 512Mi
   proxy_init:
     image: docker.io/istio/proxyv2:1.30.4@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9
+meshConfig:
+  extensionProviders:
+  - name: vote-authz
+    envoyExtAuthzHttp:
+      service: vote-authz.vote-dev.svc.cluster.local
+      port: 3005
+      timeout: 5s
+      failOpen: false
+      includeRequestHeadersInCheck:
+      - authorization
+      headersToUpstreamOnAllow:
+      - x-vote-authz-assertion

@@ -9,6 +9,7 @@ spec:
   dnsNames:
   - vote.rvkang.app
   - vote-admin.rvkang.app
+  - vote-api.rvkang.app
   issuerRef:
     group: cert-manager.io
     kind: Issuer

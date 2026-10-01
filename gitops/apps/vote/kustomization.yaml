@@ -7,3 +7,7 @@ resources:
 - vote-admin-service.yaml
 - vote-authz.yaml
 - vote-authz-service.yaml
+- redis-transport.yaml
+- vote-server.yaml
+- vote-worker.yaml
+- vote-server-service.yaml

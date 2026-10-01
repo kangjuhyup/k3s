@@ -4,3 +4,5 @@ metadata:
   name: vote-dev
   annotations:
     argocd.argoproj.io/sync-wave: '-40'
+  labels:
+    istio-injection: enabled

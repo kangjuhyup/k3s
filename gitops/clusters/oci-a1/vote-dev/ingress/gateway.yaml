@@ -12,6 +12,7 @@ spec:
   - hosts:
     - ./vote.rvkang.app
     - ./vote-admin.rvkang.app
+    - ./vote-api.rvkang.app
     port:
       number: 80
       name: http-vote
@@ -21,6 +22,7 @@ spec:
   - hosts:
     - ./vote.rvkang.app
     - ./vote-admin.rvkang.app
+    - ./vote-api.rvkang.app
     port:
       number: 443
       name: https-vote

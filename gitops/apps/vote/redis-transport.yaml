@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vote-redis-transport
+  namespace: vote-dev
+data:
+  render.js: const fs=require('node:fs');const host=process.env.REDIS_UPSTREAM_HOST;const
+    port=Number(process.env.REDIS_UPSTREAM_PORT);if(!host||!Number.isInteger(port)||port<1||port>65535)throw
+    Error('Redis upstream configuration missing');const endpoint={socket_address:{address:host,port_value:port}};const
+    config={static_resources:{listeners:[{name:'redis-loopback',address:{socket_address:{address:'127.0.0.1',port_value:6379}},filter_chains:[{filters:[{name:'envoy.filters.network.tcp_proxy',typed_config:{'@type':'type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy',stat_prefix:'vote_redis',cluster:'shared-redis'}}]}]}],clusters:[{name:'shared-redis',type:'STRICT_DNS',connect_timeout:'5s',load_assignment:{cluster_name:'shared-redis',endpoints:[{lb_endpoints:[{endpoint:{address:endpoint}}]}]},transport_socket:{name:'envoy.transport_sockets.tls',typed_config:{'@type':'type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext',sni:host,common_tls_context:{tls_params:{tls_minimum_protocol_version:'TLSv1_2'},tls_certificates:[{certificate_chain:{filename:'/redis-tls/tls.crt'},private_key:{filename:'/redis-tls/tls.key'}}],validation_context:{trusted_ca:{filename:'/redis-tls/ca.crt'},match_typed_subject_alt_names:[{san_type:'DNS',matcher:{exact:host}}]}}}}}
+    ]}};fs.writeFileSync('/transport/envoy.json',JSON.stringify(config),{mode:0o640});

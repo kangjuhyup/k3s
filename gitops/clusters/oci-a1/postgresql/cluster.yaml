@@ -32,6 +32,7 @@ spec:
       all scram-sha-256
     - hostssl @/projected/gaegaeting-dev/match/database @/projected/gaegaeting-dev/match/username
       all scram-sha-256
+    - hostssl sameuser all all scram-sha-256
     - host all all all reject
   projectedVolumeTemplate:
     sources:

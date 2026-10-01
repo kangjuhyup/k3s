@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote-worker
+  namespace: vote-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: '20'
+spec:
+  replicas: 0
+  selector:
+    matchLabels: &id001
+      app.kubernetes.io/name: vote-worker
+      app.kubernetes.io/part-of: vote
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      nodeSelector:
+        kubernetes.io/os: linux
+        kubernetes.io/arch: arm64
+      initContainers:
+      - name: render-redis-transport
+        image: ghcr.io/kangjuhyup/e-vote/server@sha256:781e7db5b6f86b57f0d0367811cadcc06dd4ca28c3fe246100bc67fba741f497
+        command:
+        - node
+        - /render/render.js
+        envFrom:
+        - secretRef:
+            name: vote-redis-upstream
+        securityContext: &id002
+          allowPrivilegeEscalation: false
+          capabilities: &id003
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            memory: 64Mi
+        volumeMounts:
+        - name: render
+          mountPath: /render
+          readOnly: true
+        - name: transport
+          mountPath: /transport
+      containers:
+      - name: vote-worker
+        image: ghcr.io/kangjuhyup/e-vote/server@sha256:781e7db5b6f86b57f0d0367811cadcc06dd4ca28c3fe246100bc67fba741f497
+        envFrom:
+        - secretRef:
+            name: vote-server-runtime
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: NODE_EXTRA_CA_CERTS
+          value: /database-tls/ca.crt
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            memory: 512Mi
+        securityContext: *id002
+        volumeMounts:
+        - name: db-ca
+          mountPath: /database-tls
+          readOnly: true
+        command:
+        - node
+        - dist/src/worker.js
+      - name: redis-mtls
+        image: docker.io/istio/proxyv2:1.30.4@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9
+        command:
+        - /usr/local/bin/envoy
+        - -c
+        - /transport/envoy.json
+        - --log-level
+        - error
+        - --concurrency
+        - '1'
+        - --disable-hot-restart
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: *id003
+          runAsUser: 1337
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            memory: 96Mi
+        volumeMounts:
+        - name: transport
+          mountPath: /transport
+          readOnly: true
+        - name: redis-tls
+          mountPath: /redis-tls
+          readOnly: true
+      volumes:
+      - name: db-ca
+        secret:
+          secretName: vote-db-ca
+          defaultMode: 288
+      - name: redis-tls
+        secret:
+          secretName: vote-redis-tls
+          defaultMode: 288
+      - name: transport
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Mi
+      - name: render
+        configMap:
+          name: vote-redis-transport
+      enableServiceLinks: false
