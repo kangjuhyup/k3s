@@ -5,7 +5,7 @@ metadata:
   namespace: gaegaeting-dev-kafka
 spec:
   serviceName: kafka
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels: &id001
       app.kubernetes.io/name: gaegaeting-kafka

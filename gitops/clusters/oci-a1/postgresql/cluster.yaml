@@ -27,17 +27,36 @@ spec:
       max_connections: '100'
       shared_buffers: 256MB
     pg_hba:
+    - hostssl postgres postgres all cert
     - hostssl @/projected/identity/database @/projected/identity/username all scram-sha-256
+    - hostssl @/projected/gaegaeting-dev/account/database @/projected/gaegaeting-dev/account/username
+      all scram-sha-256
+    - hostssl @/projected/gaegaeting-dev/match/database @/projected/gaegaeting-dev/match/username
+      all scram-sha-256
     - host all all all reject
   projectedVolumeTemplate:
     sources:
     - secret:
+        name: auth-db-private
         items:
         - key: database
           path: identity/database
         - key: username
           path: identity/username
-        name: auth-db-private
+    - secret:
+        name: gaegaeting-account-db-identity
+        items:
+        - key: database
+          path: gaegaeting-dev/account/database
+        - key: username
+          path: gaegaeting-dev/account/username
+    - secret:
+        name: gaegaeting-match-db-identity
+        items:
+        - key: database
+          path: gaegaeting-dev/match/database
+        - key: username
+          path: gaegaeting-dev/match/username
   resources:
     limits:
       memory: 2Gi
