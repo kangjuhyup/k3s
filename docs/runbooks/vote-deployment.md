@@ -37,6 +37,14 @@ transport forwards Redis to the existing upstream using a dedicated clientAuth
 certificate from the existing CA, CA verification and exact server SAN matching.
 Store private endpoints in Doppler; generate the transport config at runtime.
 Database uses verified TLS with the existing CA through `NODE_EXTRA_CA_CERTS`.
+The published 0.1.0 image uses MikroORM 7 but its `DATABASE_SSL=true` path emits
+obsolete v6 `driverOptions.connection.ssl`, replacing pg’s connection object.
+For this digest only, Doppler `DATABASE_SSL_COMPAT` maps to runtime `DATABASE_SSL`
+and skips that obsolete branch; `PGSSLMODE=verify-full` enables native pg TLS.
+Validate actual TLS and restricted-role queries before activation. This does not
+disable transport encryption or server certificate verification.
+Migration v2 explicitly awaits compiled migrations with a process keep-alive
+and requires a populated schema; a Job exit code alone is insufficient evidence.
 No shared TLS mode or Auth certificate/account is changed.
 
 Only Vote's inbound CUSTOM policy selects the new `vote-authz` provider.

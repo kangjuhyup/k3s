@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: vote-migrate-0-1-0
+  name: vote-migrate-0-1-0-v2
   namespace: vote-dev
   annotations:
     argocd.argoproj.io/sync-wave: '0'
@@ -27,7 +27,16 @@ spec:
         image: ghcr.io/kangjuhyup/e-vote/server@sha256:781e7db5b6f86b57f0d0367811cadcc06dd4ca28c3fe246100bc67fba741f497
         command:
         - node
-        - dist/src/migrate.js
+        - -e
+        - const keepAlive=setInterval(()=>{},1000);(async()=>{const {MikroORM}=require('@mikro-orm/postgresql');const
+          {createDatabaseConfig}=require('./dist/src/platform/database/database.config');const
+          {createDatabaseEntityRegistry}=require('./dist/src/composition/persistence/database-entity.registry');const
+          orm=await MikroORM.init({...await createDatabaseConfig(process.env,createDatabaseEntityRegistry),logger:()=>{},debug:false});try{await
+          orm.migrator.up();const rows=await orm.em.getConnection().execute("select
+          count(*)::int n from information_schema.tables where table_schema='public'");if(rows[0].n<2)throw
+          Error('Schema missing');process.stdout.write('Vote compiled migrations completed;
+          schema verified.\n');}finally{await orm.close(true);}})().catch(()=>{process.stderr.write('Vote
+          migration failed; details suppressed.\n');process.exitCode=1;}).finally(()=>clearInterval(keepAlive));
         env:
         - name: DATABASE_HOST
           valueFrom:
@@ -61,6 +70,11 @@ spec:
               key: DATABASE_SSL
         - name: NODE_EXTRA_CA_CERTS
           value: /database-tls/ca.crt
+        - name: PGSSLMODE
+          valueFrom:
+            secretKeyRef:
+              name: vote-server-runtime
+              key: PGSSLMODE
         volumeMounts:
         - name: db-ca
           mountPath: /database-tls
