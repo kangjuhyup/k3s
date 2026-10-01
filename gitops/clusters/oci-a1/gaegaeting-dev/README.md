@@ -1,7 +1,7 @@
 # Gaegaeting dev deployment
 
-The five Gaegaeting dev Applications are registered in root GitOps so they appear
-in Argo CD Apps. Automated sync remains disabled, Deployments/StatefulSet have zero
+One `gaegaeting-dev` Application is registered in root GitOps. Its resource tree
+contains the services, Kafka, Secret projections, database preparation Jobs and ingress. Automated sync remains disabled, Deployments/StatefulSet have zero
 replicas and Jobs are
 suspended. All five application images and both migration Jobs are pinned to main
 `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
@@ -61,13 +61,14 @@ exposed. Verify resolver authorization with the final application images.
    and `api-dev` use the `infrastructure/prd:GAEGAETING_INGRESS_IPV4` key, DNS only, TTL Auto.
    Do not publish the IP in source or logs. Wait for certificate readiness before
    enabling public routes and verify HTTPS/PKCE/external interaction end to end.
-8. Enable the relevant Applications in Git only after their gates pass. Do not
-   enable all five Applications in one step or rely on app-of-apps waves alone as
-   proof that independent Applications' prerequisites are healthy.
+8. Keep the single Application sync-disabled until deployment gates pass. Activate
+   dependencies and workloads in reviewed Git phases; verify Secret delivery, shared
+   DB access, Kafka, migrations and TLS before enabling the serving workloads.
+   Grouping resources in one Application is not proof of dependency readiness.
 
-The project and five Application declarations live in `../root/gaegaeting-dev*.yaml`
+The project and single Application declaration live in `../root/gaegaeting-dev*.yaml`
 and are referenced by root Kustomization. Registration does not synchronize their
-workloads: each Application retains `automated.enabled: false`. Initial prune stays disabled.
+workloads: the Application retains `automated.enabled: false`. Initial prune stays disabled.
 Do not prune databases, buckets or Kafka PVCs when rolling back an application.
 Git rollback does not reverse DB migrations or Doppler changes.
 

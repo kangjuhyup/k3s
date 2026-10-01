@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--release', action='store_true')
     args = parser.parse_args()
     resources = []
-    for suffix in ['', 'kafka', 'secrets', 'database', 'ingress']:
+    for suffix in ['']:
         result = subprocess.run([args.kubectl, 'kustomize', str(BASE / suffix)], capture_output=True, text=True, check=True)
         resources.extend(yaml.safe_load_all(result.stdout))
     identities = [(r['apiVersion'], r['kind'], r['metadata'].get('namespace'), r['metadata']['name']) for r in resources]
@@ -57,7 +57,8 @@ def main():
     root_path = BASE.parent / 'root'
     apps = [yaml.safe_load(p.read_text()) for p in root_path.glob('gaegaeting-dev*.yaml')
             if p.name != 'gaegaeting-dev-project.yaml']
-    check(len(apps) == 5, 'Expected five registered Gaegaeting Applications')
+    check(len(apps) == 1 and apps[0]['metadata']['name'] == 'gaegaeting-dev',
+          'All Gaegaeting resources must belong to one Application')
     if not args.release:
         check(all(a['spec']['syncPolicy']['automated']['enabled'] is False for a in apps), 'Argo automation enabled before release')
         registered = yaml.safe_load((root_path / 'kustomization.yaml').read_text())['resources']

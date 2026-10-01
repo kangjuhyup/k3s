@@ -23,3 +23,7 @@ resources:
 - gateway-ingress-policy.yaml
 - edge-authz-ingress-policy.yaml
 - integration-ui-ingress-policy.yaml
+- secrets
+- database
+- kafka
+- ingress
