@@ -12,6 +12,10 @@ spec:
   - {namespace: istio-system, server: 'https://kubernetes.default.svc'}
   clusterResourceWhitelist: []
   namespaceResourceWhitelist:
+  - group: ''
+    kind: Pod
+  - group: apps
+    kind: ReplicaSet
   - {group: '', kind: ConfigMap}
   - {group: '', kind: Service}
   - {group: '', kind: PersistentVolumeClaim}

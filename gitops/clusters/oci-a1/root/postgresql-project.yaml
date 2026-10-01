@@ -13,6 +13,8 @@ spec:
   - namespace: databases
     server: https://kubernetes.default.svc
   namespaceResourceWhitelist:
+  - group: ''
+    kind: Pod
   - group: postgresql.cnpg.io
     kind: Cluster
   sourceRepos:

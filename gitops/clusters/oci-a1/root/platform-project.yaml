@@ -19,6 +19,10 @@ spec:
     server: https://kubernetes.default.svc
   namespaceResourceWhitelist:
   - group: ''
+    kind: Pod
+  - group: apps
+    kind: ReplicaSet
+  - group: ''
     kind: ConfigMap
   - group: ''
     kind: Service

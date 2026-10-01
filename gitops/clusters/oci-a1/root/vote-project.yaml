@@ -22,6 +22,10 @@ spec:
     kind: Namespace
   namespaceResourceWhitelist:
   - group: ''
+    kind: Pod
+  - group: apps
+    kind: ReplicaSet
+  - group: ''
     kind: Service
   - group: ''
     kind: ConfigMap
