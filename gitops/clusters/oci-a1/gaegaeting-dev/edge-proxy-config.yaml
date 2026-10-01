@@ -59,7 +59,7 @@ data:
                   response_headers_to_add:
                   - header:
                       key: access-control-allow-origin
-                      value: https://dev.gaegaeting.app
+                      value: https://test-ggt-ui.rvkang.app
                     append_action: OVERWRITE_IF_EXISTS_OR_ADD
                   - header:
                       key: access-control-allow-credentials

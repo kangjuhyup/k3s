@@ -3,6 +3,8 @@ kind: Issuer
 metadata:
   name: gaegaeting-dev-cloudflare
   namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '-15'
 spec:
   acme:
     privateKeySecretRef:
@@ -16,5 +18,5 @@ spec:
             name: gaegaeting-dev-cloudflare-dns
       selector:
         dnsNames:
-        - dev.gaegaeting.app
-        - api-dev.gaegaeting.app
+        - test-ggt-ui.rvkang.app
+        - test-ggt-api.rvkang.app

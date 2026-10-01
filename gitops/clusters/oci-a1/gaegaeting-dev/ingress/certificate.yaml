@@ -3,10 +3,12 @@ kind: Certificate
 metadata:
   name: gaegaeting-dev-public
   namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '-10'
 spec:
   dnsNames:
-  - dev.gaegaeting.app
-  - api-dev.gaegaeting.app
+  - test-ggt-ui.rvkang.app
+  - test-ggt-api.rvkang.app
   issuerRef:
     group: cert-manager.io
     kind: Issuer

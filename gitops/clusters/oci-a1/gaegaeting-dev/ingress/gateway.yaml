@@ -8,8 +8,8 @@ spec:
     app: istio-ingress
   servers:
   - hosts:
-    - gaegaeting-dev/dev.gaegaeting.app
-    - gaegaeting-dev/api-dev.gaegaeting.app
+    - gaegaeting-dev/test-ggt-ui.rvkang.app
+    - gaegaeting-dev/test-ggt-api.rvkang.app
     port:
       number: 80
       name: http-gaegaeting-dev
@@ -17,8 +17,8 @@ spec:
     tls:
       httpsRedirect: true
   - hosts:
-    - gaegaeting-dev/dev.gaegaeting.app
-    - gaegaeting-dev/api-dev.gaegaeting.app
+    - gaegaeting-dev/test-ggt-ui.rvkang.app
+    - gaegaeting-dev/test-ggt-api.rvkang.app
     port:
       number: 443
       name: https-gaegaeting-dev

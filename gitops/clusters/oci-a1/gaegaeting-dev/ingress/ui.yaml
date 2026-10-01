@@ -5,7 +5,7 @@ metadata:
   namespace: gaegaeting-dev
 spec:
   hosts:
-  - dev.gaegaeting.app
+  - test-ggt-ui.rvkang.app
   exportTo:
   - istio-system
   gateways:

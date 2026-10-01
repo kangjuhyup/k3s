@@ -7,13 +7,14 @@ suspended. All five application images and both migration Jobs are pinned to mai
 `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
 Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
 independently verified. No GHCR pull credential is required for the current public images.
-The DNS token key `infrastructure/prd:CLOUDFLARE_GAEGAETING_DNS_API_TOKEN`
-is now readable/nonempty and active; the single matching Cloudflare zone remains
-`pending` (checked 2026-10-01). Token readiness does not clear the rollout gate:
-verify registrar delegation, public DNS and Certificate Ready separately. The app
-agent owns DNS record/registrar changes; K3s must not duplicate those writes.
+The dedicated token is scoped to the active `rvkang.app` zone. Public A records for
+both approved hosts have been checked against the protected ingress target; DNS-only
+mode and no AAAA records are required. Existing rvkang issuer/selectors and unrelated
+DNS records remain unchanged. Certificate readiness and application verification are
+still required; token readiness alone is insufficient. The app agent owns DNS writes.
 
-Target: `https://dev.gaegaeting.app` and `https://api-dev.gaegaeting.app`;
+
+Target: `https://test-ggt-ui.rvkang.app` and `https://test-ggt-api.rvkang.app`;
 shared Auth at `https://auth.rvkang.app/t/gaegaeting-dev/oidc`. Public UI client is
 `gaegaeting-web`. Initial authentication uses a dedicated Envoy proxy and private
 edge-authz, with a distinct API audience matching the dev API URL. External assertion
@@ -56,9 +57,9 @@ exposed. Verify resolver authorization with the final application images.
    Migration Jobs run before account/match, then gateway/edge/UI/proxy. Shallow HTTP
    probes do not replace dependency or signup/login verification.
 7. Supply `infrastructure/prd:CLOUDFLARE_GAEGAETING_DNS_API_TOKEN`, scoped to
-   `gaegaeting.app` DNS Edit and Zone Read. `ingress/` uses its own namespace Issuer
-   and Secret; it does not modify the existing rvkang issuer. DNS A records `dev`
-   and `api-dev` use the `infrastructure/prd:GAEGAETING_INGRESS_IPV4` key, DNS only, TTL Auto.
+   `rvkang.app` DNS Edit and Zone Read. `ingress/` uses its own namespace Issuer
+   and Secret; it does not modify the existing rvkang issuer. DNS A records `test-ggt-ui`
+   and `test-ggt-api` use the `infrastructure/prd:GAEGAETING_INGRESS_IPV4` key, DNS only, TTL Auto.
    Do not publish the IP in source or logs. Wait for certificate readiness before
    enabling public routes and verify HTTPS/PKCE/external interaction end to end.
 8. Keep the single Application sync-disabled until deployment gates pass. Activate
@@ -113,3 +114,13 @@ private-identifier policy is why the bounded SQL Job reads identity from Secrets
 Pinned PostgreSQL 18.4 ARM64 local validation passed for fresh database/role creation,
 idempotent rerun, restricted role flags and rejection of an unowned colliding role.
 This test used disposable synthetic data; cluster databases remain unchanged.
+
+## Scoped authentication bootstrap
+
+After Argo creates target namespaces and RBAC, run
+`ansible/playbooks/bootstrap-gaegaeting-doppler-auth.yml` with the repository-pinned
+Python, explicit protected run-config and DOPPLER_GAEGAETING_DEV_TOKEN in the controller
+environment. The helper verifies the committed revision and creates only the missing
+operator-authentication Secret through the existing bootstrap ownership checks. It
+does not apply workloads or overwrite existing credentials. Normal Secret projections
+remain owned by Argo plus Doppler Operator.
