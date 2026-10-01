@@ -4,7 +4,7 @@ metadata:
   name: integration-ui
   namespace: gaegaeting-dev
 spec:
-  replicas: 0
+  replicas: 1
   template:
     spec:
       containers:

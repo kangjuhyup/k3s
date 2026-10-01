@@ -12,8 +12,8 @@ resources:
 - integration-ui-ingress-policy.yaml
 - secrets
 - database
-- kafka
 - ingress
+- retired-kafka-namespace.yaml
 patchesStrategicMerge:
 - account-patch.yaml
 - match-patch.yaml

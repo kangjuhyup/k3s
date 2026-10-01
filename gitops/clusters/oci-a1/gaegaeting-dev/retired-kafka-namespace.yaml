@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gaegaeting-dev-kafka
+  annotations:
+    argocd.argoproj.io/sync-wave: '-40'
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+    kafka-retirement-note: Retained namespace for the unused broker PVC; no running
+      Kafka workload.

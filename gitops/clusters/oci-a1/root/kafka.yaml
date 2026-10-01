@@ -16,7 +16,7 @@ spec:
     namespace: kafka
   syncPolicy:
     automated:
-      enabled: false
+      enabled: true
       selfHeal: true
       prune: false
       allowEmpty: false

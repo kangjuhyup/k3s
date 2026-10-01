@@ -4,7 +4,7 @@ metadata:
   name: edge-authz
   namespace: gaegaeting-dev
 spec:
-  replicas: 0
+  replicas: 1
   template:
     spec:
       containers:

@@ -3,8 +3,7 @@
 The `gaegaeting-dev` Application references reusable workloads in `gitops/apps/gaegaeting`.
 This cluster overlay owns development replicas/resource budgets, Secret delivery,
 database preparation and ingress. Kafka is separate shared infrastructure under the
-`kafka` Application and `gitops/clusters/oci-a1/kafka`; the old dedicated broker is being
-retired with its PVC retained. Application replicas remain zero until the shared topic
+`kafka` Application and `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained. Application replicas remain zero until the shared topic
 prefix release and final rollout gates pass. Both current migration Jobs completed.
 All five application images and both migration Jobs are pinned to main
 `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`; see [release image manifest](release-images.json).
@@ -87,8 +86,9 @@ Git rollback does not reverse DB migrations or Doppler changes.
   public runtime configuration were checked without values.
 - Certificate `gaegaeting-dev-public` Ready=True; both HTTPS hosts verify successfully.
 - Account and Match release migration Jobs completed with exit code 0.
-- Former dedicated Kafka was Ready 1/1 and has no application topics; it is being
-  replaced by the shared Kafka Application. The existing PostgreSQL server reports Ready 1/1;
+- Shared Kafka reports Ready 1/1; its separate Argo Application is Synced/Healthy and
+  the broker metadata/API handshake passes. The former broker had zero application
+  topics and is stopped; its namespace/PVC are retained. The existing PostgreSQL server reports Ready 1/1;
   fresh dev database/role provisioning Job completed successfully.
 - Original storage dev configuration reused the production bucket/key. Separate
   dev user and pet buckets were created; exact dev UI CORS configured; zero-byte
