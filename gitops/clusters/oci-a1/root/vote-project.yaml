@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: app-vote
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: '-10'
+spec:
+  sourceRepos:
+  - https://github.com/kangjuhyup/k3s.git
+  destinations:
+  - namespace: vote
+    server: https://kubernetes.default.svc
+  - namespace: istio-system
+    server: https://kubernetes.default.svc
+  - namespace: doppler-operator-system
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: Service
+  - group: ''
+    kind: ConfigMap
+  - group: apps
+    kind: Deployment
+  - group: batch
+    kind: Job
+  - group: rbac.authorization.k8s.io
+    kind: Role
+  - group: rbac.authorization.k8s.io
+    kind: RoleBinding
+  - group: networking.k8s.io
+    kind: NetworkPolicy
+  - group: secrets.doppler.com
+    kind: DopplerSecret
+  - group: cert-manager.io
+    kind: Certificate
+  - group: networking.istio.io
+    kind: Gateway
+  - group: networking.istio.io
+    kind: VirtualService
+  - group: networking.istio.io
+    kind: DestinationRule
+  - group: security.istio.io
+    kind: PeerAuthentication
+  - group: security.istio.io
+    kind: AuthorizationPolicy
+  - group: networking.istio.io
+    kind: EnvoyFilter
+  - group: cert-manager.io
+    kind: Issuer

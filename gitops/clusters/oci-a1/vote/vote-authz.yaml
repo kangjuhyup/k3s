@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote-authz
+  namespace: vote
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &id001
+      app.kubernetes.io/name: vote-authz
+      app.kubernetes.io/part-of: vote
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      nodeSelector:
+        kubernetes.io/os: linux
+        kubernetes.io/arch: arm64
+      containers:
+      - name: vote-authz
+        image: ghcr.io/kangjuhyup/e-vote/server@sha256:781e7db5b6f86b57f0d0367811cadcc06dd4ca28c3fe246100bc67fba741f497
+        envFrom:
+        - secretRef:
+            name: vote-authz-runtime
+        env:
+        - name: NODE_ENV
+          value: production
+        ports:
+        - name: http
+          containerPort: 3005
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            memory: 384Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        command:
+        - node
+        - dist/src/authz.js
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3005
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3005
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: 3005
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 36

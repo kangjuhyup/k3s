@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote-ui
+  namespace: vote
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &id001
+      app.kubernetes.io/name: vote-ui
+      app.kubernetes.io/part-of: vote
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      nodeSelector:
+        kubernetes.io/os: linux
+        kubernetes.io/arch: arm64
+      containers:
+      - name: vote-ui
+        image: ghcr.io/kangjuhyup/e-vote/ui@sha256:81bf724b6809a034af42377a15884cb4857725a8f03821b2b43cab2e37cd5140
+        envFrom:
+        - secretRef:
+            name: vote-ui-runtime
+        env:
+        - name: NODE_ENV
+          value: production
+        ports:
+        - name: http
+          containerPort: 3001
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            memory: 384Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        livenessProbe:
+          httpGet:
+            path: /api/auth/providers
+            port: 3001
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          httpGet:
+            path: /api/auth/providers
+            port: 3001
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        startupProbe:
+          httpGet:
+            path: /api/auth/providers
+            port: 3001
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 36

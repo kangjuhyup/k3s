@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- namespace.yaml
+- secrets/vote-ui-runtime.yaml
+- secrets/vote-admin-runtime.yaml
+- secrets/vote-authz-runtime.yaml
+- secrets/role.yaml
+- secrets/binding.yaml
+- vote-ui.yaml
+- vote-ui-service.yaml
+- vote-admin.yaml
+- vote-admin-service.yaml
+- vote-authz.yaml
+- vote-authz-service.yaml
+- authz-ingress.yaml
+- ingress/certificate.yaml
+- ingress/gateway.yaml
+- ingress/vote-ui.yaml
+- ingress/vote-admin.yaml
+- secrets/cloudflare.yaml
+- secrets/istio-role.yaml
+- secrets/istio-binding.yaml
+- ingress/issuer.yaml

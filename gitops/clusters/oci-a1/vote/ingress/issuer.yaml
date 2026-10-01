@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: vote-cloudflare
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '-15'
+spec:
+  acme:
+    privateKeySecretRef:
+      name: vote-acme-account
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            key: api-token
+            name: vote-cloudflare-dns
+      selector:
+        dnsNames:
+        - vote.rvkang.app
+        - vote-admin.rvkang.app
+        - vote-api.rvkang.app

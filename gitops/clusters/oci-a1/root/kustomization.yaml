@@ -27,3 +27,5 @@ resources:
 - root.yaml
 - gaegaeting-dev-project.yaml
 - gaegaeting-dev.yaml
+- vote-project.yaml
+- vote.yaml

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vote-authz-private
+  namespace: vote
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vote-authz
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: vote-server
+    ports:
+    - port: 3005
+      protocol: TCP

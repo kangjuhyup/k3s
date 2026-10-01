@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vote-public
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '-15'
+spec:
+  dnsNames:
+  - vote.rvkang.app
+  - vote-admin.rvkang.app
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: vote-cloudflare
+  secretName: vote-public-tls
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
