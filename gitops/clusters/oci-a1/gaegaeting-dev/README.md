@@ -6,9 +6,15 @@ budgets. This cluster overlay owns Secret delivery, database preparation and ing
 Kafka is separate shared infrastructure under the `kafka` Application and
 `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained.
 All six serving Deployments have one ready replica. The current Account and Match
-migration Jobs completed with exit code 0. Match and its migration use source
-`d58055d0880308ac74ed40667d1e8940de0e67fa`; the other four application images and Account
-migration remain on `317f550e3fb4fbd773a606c1d58293e3cf7cb32d`.
+migration Jobs completed with exit code 0. All five application images and both
+migration Jobs now use source `7c3733450107934f08130f0ac7d0db1a8f54c59a`.
+The actual new Account artifact passed the real dev USER/PET storage probe. Read-only
+DB checks found all six Account migrations, three expected constraints and eight
+photo-review columns. HTTPS/runtime/CSP and public negative checks passed. Browser
+photo review E2E and temporary QA role/session cleanup are still pending; automatic
+sync is temporarily disabled for this release's final gates.
+See [photo rollout contract](profile-image-rollout.md) and
+[artifact evidence](photo-artifact-verification.json).
 See the per-service revisions in [release image manifest](release-images.json).
 Anonymous registry tag/digest fetch, index-body SHA256 and amd64/arm64 platforms were
 independently verified. No GHCR pull credential is required for the current public images.
@@ -77,7 +83,9 @@ exposed. Verify resolver authorization with the final application images.
 The project and single Application declaration live in `../root/gaegaeting-dev*.yaml`
 and are referenced by root Kustomization. Registration does not synchronize their
 workloads by itself. After dependency, migration, TLS and browser E2E gates passed,
-the Application enabled automatic synchronization and self-healing. Automatic prune stays disabled.
+the first release enabled automatic synchronization and self-healing. The photo release
+currently pauses automatic sync until its browser E2E/QA cleanup gates pass. Automatic
+prune stays disabled.
 Do not prune databases, buckets or Kafka PVCs when rolling back an application.
 Git rollback does not reverse DB migrations or Doppler changes.
 

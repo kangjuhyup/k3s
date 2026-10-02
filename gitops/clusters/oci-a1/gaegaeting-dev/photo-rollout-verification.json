@@ -1,0 +1,34 @@
+{
+  "sourceRevision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
+  "accountSchema": {
+    "accountMigrationCount": 6,
+    "newMigrationsPresent": true,
+    "constraintsPresent": 3,
+    "photoColumnsPresent": 8,
+    "readOnly": true
+  },
+  "publicReadiness": {
+    "/health": 200,
+    "/login": 200,
+    "/interaction": 200,
+    "/image-review": 200,
+    "runtimeOriginMatch": true,
+    "cspOriginMatch": true,
+    "anonymousDenied": true,
+    "forgedDenied": true,
+    "/account/internal/subjects/resolve": 404,
+    "/gateway/health": 404,
+    "/match/health": 404,
+    "corsExactOrigin": true,
+    "tlsVerified": true
+  },
+  "readyDeployments": 6,
+  "allFiveImageDigestsMatch": true,
+  "matchTopicPrefixVerified": true,
+  "sharedAuthDatabaseKafkaPodIdentitiesUnchanged": true,
+  "argocdSync": "Synced",
+  "argocdHealth": "Healthy",
+  "automaticSync": false,
+  "browserPhotoE2eCompleted": false,
+  "temporaryQaAdminAssigned": false
+}
