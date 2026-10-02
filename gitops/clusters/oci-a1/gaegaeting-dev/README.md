@@ -5,7 +5,7 @@ The `gitops/apps/dev/gaegaeting` overlay supplies development replicas and resou
 budgets. This cluster overlay owns Secret delivery, database preparation and ingress.
 Kafka is separate shared infrastructure under the `kafka` Application and
 `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained.
-The mobile rollout targets user/admin UI source `b7fe0e0525697e6e57ae11157b4b826696f4c50c` and Match source `12f9377882ae4ff7c80c8b9616cb6ae95c3fa1c7`. Account, gateway and edge-authz retain
+The mobile rollout targets user UI source `3ef28ab1d95288542885e5f6591dc6b92e4eb654` and admin UI source `b7fe0e0525697e6e57ae11157b4b826696f4c50c` and Match source `12f9377882ae4ff7c80c8b9616cb6ae95c3fa1c7`. Account, gateway and edge-authz retain
 `7c3733450107934f08130f0ac7d0db1a8f54c59a`; edge-proxy is unchanged.
 Existing completed migration Jobs retain their verified schema source and digest
 in `migrationImages`; this release changes no migrations.

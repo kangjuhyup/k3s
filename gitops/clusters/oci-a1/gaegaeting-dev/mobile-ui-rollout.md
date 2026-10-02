@@ -1,6 +1,6 @@
 # Mobile UI and Match state rollout
 
-Deploy core 1.0.4 user/admin UI artifacts and Match 1.0.2 through this existing
+Deploy core 1.0.5 user UI and core 1.0.4 admin UI artifacts and Match 1.0.2 through this existing
 Argo CD application. Exact source revisions, image digests and workflow runs are
 recorded per service in `release-images.json` and independently checked against
 the anonymous GHCR tag and digest in `mobile-image-verification.json`.
@@ -37,3 +37,9 @@ checks passed; this release does not claim Chrome logout E2E has been resolved.
 Rollback the three workload declarations and the three per-service release entries
 through Git. Argo CD performs the rollout; do not use direct Kubernetes mutations.
 No database migration rollback or fixture deletion is required by these changes.
+
+The final user UI artifact also serves likes, chats, bounded chat-room and storyboard
+SPA URLs. Direct navigation and refresh are verified against the deployed server;
+admin path isolation and rejected filesystem/invalid-room paths remain enforced.
+Only integration-ui changes in this route correction; other serving artifacts and
+completed migration Jobs remain unchanged.
