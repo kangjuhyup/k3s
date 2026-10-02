@@ -1,4 +1,3 @@
-# Inactive template. Replace ADMIN_UI_IMAGE with verified exact tag@digest before activation.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: admin-ui
-        image: ${ADMIN_UI_IMAGE}
+        image: ghcr.io/kangjuhyup/gaegaeting/admin-ui:sha-7c06eaefbfd55186e6d6503c8f95f061f3ee2b94@sha256:2940a65d00584446269f856783b4c3db56ae0649d943920f1daa88ece84b19dc
         ports:
         - name: http
           containerPort: 8080
@@ -41,6 +40,7 @@ spec:
           capabilities:
             drop:
             - ALL
+          readOnlyRootFilesystem: true
         startupProbe:
           httpGet:
             path: /admin/health

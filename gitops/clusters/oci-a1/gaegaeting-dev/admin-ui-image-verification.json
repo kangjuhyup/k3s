@@ -1,0 +1,34 @@
+{
+  "revision": "7c06eaefbfd55186e6d6503c8f95f061f3ee2b94",
+  "images": [
+    {
+      "service": "integration-ui",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui:sha-7c06eaefbfd55186e6d6503c8f95f061f3ee2b94@sha256:3d228352bc796419966c2674df9a1c13894b0a7fd16111e08caf3825b81e43a7",
+      "digest": "sha256:3d228352bc796419966c2674df9a1c13894b0a7fd16111e08caf3825b81e43a7",
+      "sourceRevision": "7c06eaefbfd55186e6d6503c8f95f061f3ee2b94",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "anonymousPull": true
+    },
+    {
+      "service": "admin-ui",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/admin-ui:sha-7c06eaefbfd55186e6d6503c8f95f061f3ee2b94@sha256:2940a65d00584446269f856783b4c3db56ae0649d943920f1daa88ece84b19dc",
+      "digest": "sha256:2940a65d00584446269f856783b4c3db56ae0649d943920f1daa88ece84b19dc",
+      "sourceRevision": "7c06eaefbfd55186e6d6503c8f95f061f3ee2b94",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "anonymousPull": true
+    }
+  ],
+  "actionsArtifactMatch": true,
+  "actualArm64RuntimeSmoke": true,
+  "actualUid": 1000,
+  "readOnlyRootFilesystem": true,
+  "capDropAll": true,
+  "networkNone": true,
+  "backendImagesAndMigrationsUnchanged": true
+}

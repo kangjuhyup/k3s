@@ -14,3 +14,4 @@ resources:
 - database
 - ingress
 - retired-kafka-namespace.yaml
+- admin-ui-ingress-policy.yaml

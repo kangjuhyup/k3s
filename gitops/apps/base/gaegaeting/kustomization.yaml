@@ -15,3 +15,5 @@ resources:
 - edge-proxy-service.yaml
 - account-migration.yaml
 - match-migration.yaml
+- admin-ui.yaml
+- admin-ui-service.yaml

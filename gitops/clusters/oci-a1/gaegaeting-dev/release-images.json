@@ -106,6 +106,20 @@
       "ciArtifactVerified": true,
       "visibility": "public",
       "workflowRun": 36948624468
+    },
+    {
+      "service": "admin-ui",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/admin-ui",
+      "revision": "7c06eaefbfd55186e6d6503c8f95f061f3ee2b94",
+      "digest": "sha256:2940a65d00584446269f856783b4c3db56ae0649d943920f1daa88ece84b19dc",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "ciArtifactVerified": true,
+      "visibility": "public"
     }
   ]
 }

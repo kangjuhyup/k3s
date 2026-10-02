@@ -35,7 +35,7 @@ def main():
     check(all(re.fullmatch(r'[0-9a-f]{40}', r) for r in revisions.values()), 'Invalid service revision')
     expected = {i['service']: i['image'] + ':sha-' + i['revision'] + '@' + i['digest']
                 for i in release['images']}
-    check(set(expected) == {'account', 'match', 'gateway', 'edge-authz', 'integration-ui'},
+    check(set(expected) == {'account', 'match', 'gateway', 'edge-authz', 'integration-ui', 'admin-ui'},
           'Incomplete release image manifest')
     app_image_count = 0
     for r in workloads:
@@ -55,7 +55,7 @@ def main():
             check(c['securityContext']['allowPrivilegeEscalation'] is False, 'Privilege escalation allowed')
             if args.release:
                 check(re.search(r'@sha256:[0-9a-f]{64}$', c['image']), 'Unpinned release image')
-    check(app_image_count == 7, 'Expected five deployments and two migration image references')
+    check(app_image_count == 8, 'Expected six application deployments and two migration image references')
     root_path = BASE.parent / 'root'
     apps = [yaml.safe_load(p.read_text()) for p in root_path.glob('gaegaeting-dev*.yaml')
             if p.name != 'gaegaeting-dev-project.yaml']
