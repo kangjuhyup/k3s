@@ -3,7 +3,9 @@
 import assert from 'node:assert/strict';
 import {Client} from 'pg';
 import {readDatabaseConnectionOptions} from '@core/database';
-import {createInternalAuthAssertion} from '@core/auth-assertion';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.resolve('@core/auth'));
+const {createInternalAuthAssertion}=await import(require.resolve('@core/auth-assertion'));
 const {users,tenantId,mode}=globalThis.seedInput;
 assert(['account','match'].includes(mode));assert(users.length<=25);
 const c=new Client(readDatabaseConnectionOptions({get:(k,f)=>process.env[k]??f}));
