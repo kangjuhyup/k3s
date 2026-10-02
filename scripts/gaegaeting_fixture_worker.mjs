@@ -6,6 +6,10 @@ import {readDatabaseConnectionOptions} from '@core/database';
 const {createInternalAuthAssertion}=await import(new URL('../../../auth-assertion/dist/src/index.js',import.meta.resolve('@core/auth')));
 const {users,tenantId,mode}=globalThis.seedInput;
 assert(['account','match'].includes(mode));assert(users.length<=25);
+assert.equal(process.env.NODE_ENV,'development');
+assert.equal(globalThis.seedInput.issuer,'https://auth.rvkang.app/t/gaegaeting-dev/oidc');
+assert.equal(process.env.DATABASE_NAME,globalThis.seedInput.expectedDatabaseName);
+assert(globalThis.seedInput.expectedDatabaseName);
 const c=new Client(readDatabaseConnectionOptions({get:(k,f)=>process.env[k]??f}));
 const scopes=['account:read','account:write','match:read','match:write'];
 async function gql(query,variables,identity){
@@ -34,7 +38,7 @@ try{
     else{const {certification,...petInput}=u.pet;assert.equal(certification,false);petId=(await gql('mutation($input:CreatePetInput!){createPet(input:$input){id}}',{input:petInput},identity)).createPet.id;}
     const counts=await c.query('SELECT (SELECT count(*)::int FROM user_attachment WHERE user_id=$1) AS u,(SELECT count(*)::int FROM pet_attachment WHERE pet_id=$2) AS p',[internalULID,petId]);assert.equal(counts.rows[0].u,0);assert.equal(counts.rows[0].p,0);
     console.log(JSON.stringify({ordinal:u.ordinal,accountComplete:true,authSubject,internalULID,petId}));
-    await new Promise(r=>setTimeout(r,Math.max(0,1300-(Date.now()-start))));
+    await new Promise(r=>setTimeout(r,Math.max(0,900-(Date.now()-start))));
    }else{
     const identity=u.identity;assert(identity?.authSubject&&identity.internalULID);stage='location-read';
     let r=await c.query('SELECT latitude,longitude,city,district FROM location WHERE user_id=$1',[identity.internalULID]);
