@@ -1,0 +1,61 @@
+# Inactive template. Replace ADMIN_UI_IMAGE with verified exact tag@digest before activation.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-ui
+  namespace: gaegaeting-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: '20'
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: admin-ui
+      app.kubernetes.io/part-of: gaegaeting
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: admin-ui
+        app.kubernetes.io/part-of: gaegaeting
+      annotations:
+        sidecar.istio.io/inject: 'false'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: admin-ui
+        image: ${ADMIN_UI_IMAGE}
+        ports:
+        - name: http
+          containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: gaegaeting-admin-ui-runtime
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        startupProbe:
+          httpGet:
+            path: /admin/health
+            port: http
+          failureThreshold: 60
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /admin/health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /admin/health
+            port: http
+          periodSeconds: 20
+          failureThreshold: 3
+  replicas: 0

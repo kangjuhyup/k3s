@@ -1,0 +1,19 @@
+{
+  "adminClientVerified": true,
+  "publicClient": true,
+  "redirectPath": "/admin/login",
+  "interactionPath": "/admin/interaction",
+  "existingClientsPreserved": true,
+  "rolesUnchanged": true,
+  "dopplerAdminKeysVerified": true,
+  "sharedRuntimeKeysPresent": true,
+  "newDnsTlsCorsChanges": false,
+  "workloadActivated": false,
+  "imageGate": "waiting for two published exact digests",
+  "inactiveRoutingCasesPassed": 12,
+  "activeRenderAdminResources": 0,
+  "gitopsValidationPassed": true,
+  "currentDeploymentsReady": 6,
+  "currentArgoSyncedHealthy": true,
+  "currentMigrationsComplete": true
+}

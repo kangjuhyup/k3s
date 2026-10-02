@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-ui
+  namespace: gaegaeting-dev
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: admin-ui
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            memory: 128Mi
