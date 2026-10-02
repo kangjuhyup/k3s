@@ -1,0 +1,34 @@
+{
+  "newApplicationImplementationVerified": true,
+  "node": "v24.13.1",
+  "repository": "in-memory test fixture",
+  "buckets": {
+    "USER": {
+      "boundedSnapshotPutGet": true,
+      "stagingReplayCannotChangeReview": true,
+      "pendingHidden": true,
+      "approvedVisible": true,
+      "oversizeRejected": true,
+      "invalidPngRejected": true,
+      "wrongMediaTypeRejected": true,
+      "oversizedDimensionsRejected": true,
+      "anonymousDenied": true
+    },
+    "PET": {
+      "boundedSnapshotPutGet": true,
+      "stagingReplayCannotChangeReview": true,
+      "pendingHidden": true,
+      "approvedVisible": true,
+      "oversizeRejected": true,
+      "invalidPngRejected": true,
+      "wrongMediaTypeRejected": true,
+      "oversizedDimensionsRejected": true,
+      "anonymousDenied": true
+    }
+  },
+  "image": "ghcr.io/kangjuhyup/gaegaeting/account:sha-7c3733450107934f08130f0ac7d0db1a8f54c59a@sha256:75ab111b68181a2f06f4d866b2ee25bf02c4f0c9162eefc7e227d9fa793e72f4",
+  "imageRevision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
+  "probeSha256": "eb8fd1ecd6dff50c5091765cad57e17e4cdc32155495e8f5f5e9426aca63b953",
+  "architecture": "arm64",
+  "liveDatabaseOrAdminAuthorizationVerified": false
+}

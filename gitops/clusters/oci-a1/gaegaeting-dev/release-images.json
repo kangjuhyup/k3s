@@ -1,12 +1,12 @@
 {
-  "revision": "d58055d0880308ac74ed40667d1e8940de0e67fa",
-  "workflowRun": 36861689629,
+  "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
+  "workflowRun": 36948624468,
   "images": [
     {
       "service": "account",
       "image": "ghcr.io/kangjuhyup/gaegaeting/account",
-      "digest": "sha256:ef64ce4d78bf8381d3d8dc8d29b536723806f4c8a8e9c7206728d3c347f97a11",
-      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+      "digest": "sha256:75ab111b68181a2f06f4d866b2ee25bf02c4f0c9162eefc7e227d9fa793e72f4",
+      "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
@@ -17,64 +17,17 @@
       ],
       "registryVerified": true,
       "anonymousPull": true,
-      "visibility": "public"
-    },
-    {
-      "service": "edge-authz",
-      "image": "ghcr.io/kangjuhyup/gaegaeting/edge-authz",
-      "digest": "sha256:85eda5d49b432002acb7e5ad0335031c3d0601d7a01363497505f184aa23bcaa",
-      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
-      "platforms": [
-        "linux/amd64",
-        "linux/arm64"
-      ],
-      "registryPlatforms": [
-        "linux/amd64",
-        "linux/arm64"
-      ],
-      "registryVerified": true,
-      "anonymousPull": true,
-      "visibility": "public"
-    },
-    {
-      "service": "gateway",
-      "image": "ghcr.io/kangjuhyup/gaegaeting/gateway",
-      "digest": "sha256:4756b8bac28027b6293ff9b6744c21f7a6161d9483a5a557681f52afcadbb67d",
-      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
-      "platforms": [
-        "linux/amd64",
-        "linux/arm64"
-      ],
-      "registryPlatforms": [
-        "linux/amd64",
-        "linux/arm64"
-      ],
-      "registryVerified": true,
-      "anonymousPull": true,
-      "visibility": "public"
-    },
-    {
-      "service": "integration-ui",
-      "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
-      "digest": "sha256:b34f5c6f981bbf5dca9ceb896b3ab535b72ed644bc26136e5f4e51c0eebd5ed6",
-      "revision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
-      "platforms": [
-        "linux/amd64",
-        "linux/arm64"
-      ],
-      "registryPlatforms": [
-        "linux/amd64",
-        "linux/arm64"
-      ],
-      "registryVerified": true,
-      "anonymousPull": true,
-      "visibility": "public"
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public",
+      "workflowRun": 36948624468
     },
     {
       "service": "match",
       "image": "ghcr.io/kangjuhyup/gaegaeting/match",
-      "digest": "sha256:60ff4cfc216271039b2dde68594a491ef830a67f28ec8fa72103f97787e43bd7",
-      "revision": "d58055d0880308ac74ed40667d1e8940de0e67fa",
+      "digest": "sha256:63a719b545d6a4ca1378f2df1f6b9a07f4f3793ff5320c1d822790c96d0e1f98",
+      "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
@@ -85,11 +38,74 @@
       ],
       "registryVerified": true,
       "anonymousPull": true,
-      "visibility": "public",
       "anonymousTagPull": true,
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
-      "workflowRun": 36861689629
+      "visibility": "public",
+      "workflowRun": 36948624468
+    },
+    {
+      "service": "gateway",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/gateway",
+      "digest": "sha256:545b3a431c51ef65cdd63f99eed5a25dcd60a8be39880c68f62469236c40d303",
+      "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public",
+      "workflowRun": 36948624468
+    },
+    {
+      "service": "edge-authz",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/edge-authz",
+      "digest": "sha256:6c5dac638ade2d1c9a71ef2313c2d5a743fe3784cae633f06edfd64363b8553d",
+      "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public",
+      "workflowRun": 36948624468
+    },
+    {
+      "service": "integration-ui",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
+      "digest": "sha256:5f197fea50de35b9e577f9eb2a7f096bb156053303fb491618b746523ae1ad0e",
+      "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public",
+      "workflowRun": 36948624468
     }
   ]
 }
