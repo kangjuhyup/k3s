@@ -1,0 +1,21 @@
+{
+  "service": "integration-ui",
+  "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
+  "digest": "sha256:96f81cb9500e99e4c214b54a30859ab3bbc13e2460db6dbdedaffd84645251e0",
+  "revision": "2ca2b5e38403f952d31fed3695b8263352a0564d",
+  "platforms": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "registryPlatforms": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "registryVerified": true,
+  "anonymousPull": true,
+  "anonymousTagPull": true,
+  "indexBodyDigestVerified": true,
+  "ciArtifactVerified": true,
+  "visibility": "public",
+  "workflowRun": 36970940432
+}
