@@ -11,8 +11,10 @@ migration Jobs now use source `7c3733450107934f08130f0ac7d0db1a8f54c59a`.
 The actual new Account artifact passed the real dev USER/PET storage probe. Read-only
 DB checks found all six Account migrations, three expected constraints and eight
 photo-review columns. HTTPS/runtime/CSP and public negative checks passed. Browser
-photo review E2E and temporary QA role/session cleanup are still pending; automatic
-sync is temporarily disabled for this release's final gates.
+photo review E2E passed; the temporary QA ADMIN role was removed, sessions are zero,
+and the former admin token is rejected with HTTP 401. The separately authorized
+permanent dev administrator passed fresh PKCE login and review access. Automatic
+sync and self-healing are restored; automatic prune remains disabled.
 See [photo rollout contract](profile-image-rollout.md) and
 [artifact evidence](photo-artifact-verification.json).
 See the per-service revisions in [release image manifest](release-images.json).
@@ -83,9 +85,8 @@ exposed. Verify resolver authorization with the final application images.
 The project and single Application declaration live in `../root/gaegaeting-dev*.yaml`
 and are referenced by root Kustomization. Registration does not synchronize their
 workloads by itself. After dependency, migration, TLS and browser E2E gates passed,
-the first release enabled automatic synchronization and self-healing. The photo release
-currently pauses automatic sync until its browser E2E/QA cleanup gates pass. Automatic
-prune stays disabled.
+the Application enables automatic synchronization and self-healing. Photo release
+browser E2E and temporary QA privilege cleanup also passed. Automatic prune stays disabled.
 Do not prune databases, buckets or Kafka PVCs when rolling back an application.
 Git rollback does not reverse DB migrations or Doppler changes.
 
@@ -106,8 +107,8 @@ Git rollback does not reverse DB migrations or Doppler changes.
   because no other candidate users existed. Nine public readiness/negative checks passed,
   including forged/anonymous denial, exact-origin CORS and private-route blocking.
   Before profile creation, MyProfile returned INTERNAL_SERVER_ERROR; the UI handled setup
-  and subsequent creation/readback passed. This initial error remains an application issue,
-  not a claim that every GraphQL response was error-free.
+  and subsequent creation/readback passed. The photo release fixes this initial behavior: new
+  users now receive null before profile creation, verified by its browser E2E.
 - Shared Kafka reports Ready 1/1; its separate Argo Application is Synced/Healthy and
   the broker metadata/API handshake passes. The former broker had zero application
   topics and is stopped; its namespace/PVC are retained. The existing PostgreSQL server reports Ready 1/1;
@@ -170,3 +171,19 @@ limits. This reserves room for migrations and rolling updates on the shared
 4-core node; requests are scheduling reservations, not throughput caps. At the
 initial rollout, each existing Gaegaeting container used approximately 1m CPU
 while total node usage was 10%, but node-wide CPU requests had reached 98%.
+
+## Photo release browser verification (2026-10-02)
+
+[Aggregate evidence](photo-e2e-verification.json) contains no user identifiers or
+credentials. One new QA user verified signup identity reuse, three-field profile
+creation, pet/feed flows, USER/PET pending visibility, owner preview and staging
+replay isolation. Admin USER approval and PET rejection/re-upload/approval preserved
+reviewed bytes; duplicate review was rejected. Deletion removed public/owner entries
+and origin reads failed with browser cache bypassed (`cache: no-store`). Previously
+cached private image responses may persist for their existing 300-second cache TTL.
+
+The temporary QA direct ADMIN was revoked, user sessions explicitly deleted and
+read back as zero, and the former admin bearer received HTTP 401 with no data. The
+separately user-authorized permanent dev ADMIN remains assigned and passed fresh
+PKCE login, review UI and admin-list API checks. No production tenant or other user
+roles were changed. Passwords/tokens are excluded from all evidence.

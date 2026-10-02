@@ -109,3 +109,13 @@ CORS preflight passed. All probe objects were deleted. This proves storage primi
 not the pending snapshot-fix application's validation or 5 MiB limit implementation.
 See [aggregate evidence](photo-storage-verification.json). Recheck the final new image
 and browser E2E before enabling the feature.
+
+## Release completion (2026-10-02)
+
+Main `7c3733450107934f08130f0ac7d0db1a8f54c59a` passed the exact new Account
+artifact probe, ordered migrations/rollout and browser photo E2E. Temporary QA ADMIN
+was removed and sessions read back as zero; its old bearer received HTTP 401/no data.
+The explicitly authorized permanent dev ADMIN remains assigned and passed fresh
+login/review access. Restore automatic sync/self-heal with prune=false; the preparation
+blockers above are retained as history and do not indicate a current conditional-copy
+dependency. See photo-e2e-verification.json and photo-rollout-verification.json.

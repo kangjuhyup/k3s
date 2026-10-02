@@ -28,7 +28,11 @@
   "sharedAuthDatabaseKafkaPodIdentitiesUnchanged": true,
   "argocdSync": "Synced",
   "argocdHealth": "Healthy",
-  "automaticSync": false,
-  "browserPhotoE2eCompleted": false,
-  "temporaryQaAdminAssigned": false
+  "automaticSync": true,
+  "browserPhotoE2eCompleted": true,
+  "temporaryQaAdminAssigned": false,
+  "temporaryQaAdminRemoved": true,
+  "qaRemainingSessions": 0,
+  "oldQaBearerDenied": true,
+  "permanentDevAdminVerified": true
 }
