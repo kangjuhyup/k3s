@@ -21,4 +21,4 @@
 
 기존 Auth6 사용자 응답, Account28행·Match12행 fingerprint가 모두 동일하다. 증가한 feed1/items2는 owner/target 모두 신규 fixture인 브라우저 QA분임을 확인했다. Gaegaeting7개 Ready, 이미지·PodUID·migration JobUID 보존, Argo SyncedHealthy를 확인했다. Auth는 기존Pod를 유지하며 기존HPA가1개를 추가해2replica가 됐고 수동scaling/rollout은 없었다.
 
-집계 증거는 [seoul-fixture-verification.json](seoul-fixture-verification.json)이다. 개별 cleanup mapping과 비밀번호 checkpoint 및 fixture0001 QA 로그인 파일은 로컬 mode0600 비Git 파일에만 있다. QA 세션 폐기는 root의 직전 보호요청200·폐기준비 통지를 기다리며 아직 수행하지 않았다.
+집계 증거는 [seoul-fixture-verification.json](seoul-fixture-verification.json)이다. 개별 cleanup mapping과 비밀번호 checkpoint 및 fixture0001 QA 로그인 파일은 로컬 mode0600 비Git 파일에만 있다. QA fixture0001만 세션 DELETE 후 목록0을 확인했다. 브라우저에서 폐기 직전 보호요청 HTTP200, 폐기 후 동일 메모리 bearer HTTP401·보호 데이터 없음이 확인됐으며 QA 탭을 닫았다. 계정은 ACTIVE이고 프로필·pet·위치는 유지한다. 다른 fixture·기존 사용자·관리자 세션은 변경하지 않았다. 토큰은 전달하거나 파일에 저장하지 않았다.

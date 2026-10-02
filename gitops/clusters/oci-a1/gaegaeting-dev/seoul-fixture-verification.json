@@ -112,10 +112,24 @@
     "duringBulk": {
       "allPassed": true,
       "requests": 3
-    }
+    },
+    "beforeSessionRevocation": {
+      "hasErrors": false,
+      "httpStatus": 200,
+      "profileActive": true,
+      "profileSeoul": true
+    },
+    "afterSessionRevocation": {
+      "httpStatus": 401,
+      "protectedDataAbsent": true,
+      "rejected": true,
+      "sameMemoryToken": true
+    },
+    "qaBrowserClosed": true,
+    "tokenPersistedOrShared": false
   },
   "privateManifestPermissionsVerified": true,
-  "qaSessionCleanupPending": true,
+  "qaSessionCleanupPending": false,
   "feedOwnership": {
     "newFeedsOnlyFixtureOwners": true,
     "newFeedItemsOnlyFixtureTargets": true,
@@ -155,5 +169,16 @@
       "ready": true,
       "count": 3
     }
+  },
+  "bearerBrowserNegativePending": false,
+  "qaSessionCleanup": {
+    "onlyQaFixtureSessionRevoked": true,
+    "sessionsRemaining": 0,
+    "fixtureAccountActive": true,
+    "fixtureRolesEmpty": true,
+    "otherAccountsNotMutated": true,
+    "bearerBrowserNegativePending": false,
+    "sameMemoryBearerRejected": true,
+    "qaBrowserClosed": true
   }
 }

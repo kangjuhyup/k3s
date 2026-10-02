@@ -201,3 +201,8 @@ The authorized dev-only data seed has 1,000 new users, profiles, pets and locati
 identities were preserved. See [seed runbook](seoul-fixture-runbook.md) and
 [aggregate verification](seoul-fixture-verification.json). No application image or
 migration changed. Individual mappings and credentials are private local files.
+
+QA session cleanup is complete: only the first fixture sessions were revoked,
+the same browser bearer changed from HTTP 200 to HTTP 401, and the QA tab was
+closed. All 1,000 fixture accounts remain ACTIVE with their profiles, pets and
+locations; existing accounts and other sessions were not mutated.
