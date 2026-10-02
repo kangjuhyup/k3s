@@ -12,5 +12,20 @@
   "notificationOrKafkaPublishInvoked": false,
   "privateCleanupMode600": true,
   "publicSamples": 5,
-  "publicSampleContainsIdsOrCredentials": false
+  "publicSampleContainsIdsOrCredentials": false,
+  "idempotency": {
+    "sameGuardAndPrivateManifest": true,
+    "retryInserted": 0,
+    "activeOutgoingSampleLikes": 5,
+    "existingRowsPreserved": true
+  },
+  "clusterPreservation": {
+    "readyDeployments": 7,
+    "podUidsUnchanged": true,
+    "imagesUnchanged": true,
+    "migrationJobUidsUnchanged": true,
+    "migrationsComplete": true,
+    "comparedWithSeoulBaseline": true,
+    "completedJobPodsExcludedFromServingReadiness": true
+  }
 }
