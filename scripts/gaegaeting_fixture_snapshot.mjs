@@ -1,0 +1,6 @@
+// Read-only row fingerprints. Capture output privately, never publish row keys.
+import {Client} from 'pg';import {readDatabaseConnectionOptions} from '@core/database';import {createHash} from 'node:crypto';
+const c=new Client(readDatabaseConnectionOptions({get:(k,f)=>process.env[k]??f}));
+try{await c.connect();await c.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');const tables=(await c.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY table_name")).rows;const out={};
+for(const {table_name:table} of tables){if(!/^[a-z_]+$/.test(table))throw Error('table');const keys=(await c.query("SELECT a.attname FROM pg_index i JOIN pg_attribute a ON a.attrelid=i.indrelid AND a.attnum=ANY(i.indkey) WHERE i.indrelid=$1::regclass AND i.indisprimary ORDER BY a.attnum",[table])).rows.map(r=>r.attname);if(!keys.length)throw Error('primary key');const rows=(await c.query('SELECT to_jsonb(t) AS row FROM "'+table+'" t')).rows;out[table]=Object.fromEntries(rows.map(({row})=>[JSON.stringify(keys.map(k=>row[k])),createHash('sha256').update(JSON.stringify(row)).digest('hex')]));}
+await c.query('ROLLBACK');console.log(JSON.stringify(out));}catch(e){console.log(JSON.stringify({failed:true,code:e.code}));process.exitCode=1}finally{await c.end()}
