@@ -41,7 +41,18 @@ and real browser upload/approval remain release E2E gates.
 ## Ordered Git → Argo rollout
 
 1. Verify all five published digests, ARM64 runtime, revision, migration artifacts
-   and unchanged Match `KAFKA_TOPIC_PREFIX=dev.gaegaeting` behavior. Temporarily set
+   and unchanged Match `KAFKA_TOPIC_PREFIX=dev.gaegaeting` behavior. Before any
+   Account stop or migration, execute the reviewed application-supplied
+   `/tmp/ggt-photo-new-artifact-probe.mjs` with Node at `/app` in the exact new
+   Account image. Inject only the seven Account STORAGE_* settings from Doppler
+   gaegaeting/dev after checking both dev bucket markers; require ARM64, nonroot
+   and matching OCI revision. Keep anonymous-access checks enabled. Require both
+   bucket checks to pass, including compiled StorageService/ProfileImageService,
+   snapshot isolation, PENDING/APPROVED visibility and malformed/oversized input
+   rejection. Capture only aggregate output, suppress raw SDK errors, and verify
+   probe cleanup. Record image digest and reviewed script SHA256 with the evidence.
+   This in-memory repository probe does not prove live DB or ADMIN authorization;
+   those remain post-AppReady browser E2E checks. Temporarily set
    only the `gaegaeting-dev` Application automatic sync to false through Git/Argo;
    confirm the live gate before committing new desired images. Preserve self-heal
    and automatic-prune policy for restoration; other Applications remain untouched.
