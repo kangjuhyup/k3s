@@ -26,5 +26,5 @@
     }
   },
   "rewriteNotRequired": true,
-  "browserLoginE2EPending": true
+  "browserLoginE2EPending": false
 }

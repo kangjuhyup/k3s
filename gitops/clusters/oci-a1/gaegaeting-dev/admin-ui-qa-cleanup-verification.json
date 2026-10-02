@@ -1,0 +1,20 @@
+{
+  "feed-check": {
+    "feedReferences": 0,
+    "feedItemReferences": 0,
+    "readOnly": true
+  },
+  "delete": {
+    "ownerAndNameVerified": true,
+    "photos": 0,
+    "profilePreserved": true,
+    "deletedPets": 1,
+    "personalityStorage": "embedded pet.personalities",
+    "separatePersonalityRows": 0,
+    "committed": true
+  },
+  "postCommit": {
+    "postCommitPetAbsent": true,
+    "administratorProfilePresent": true
+  }
+}

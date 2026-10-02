@@ -10,7 +10,9 @@ All seven serving Deployments have one ready replica. User/admin UI images use s
 migration Jobs retain `7c3733450107934f08130f0ac7d0db1a8f54c59a`.
 The independent admin UI is served under `/admin` without rewriting. Backend/Envoy Pod
 UIDs and migration Job UIDs are unchanged. HTTPS path and runtime checks passed;
-separate-UI browser E2E and subsequent user-client scope cleanup are pending.
+separate-UI browser E2E passed, user-client `tenant_roles` was removed, and explicit
+requests for it now return `invalid_scope`. One authorized QA pet was deleted after
+identity/photo/feed checks; the administrator profile and role are preserved.
 See [admin UI rollout](admin-ui-rollout.md).
 The actual new Account artifact passed the real dev USER/PET storage probe. Read-only
 DB checks found all six Account migrations, three expected constraints and eight

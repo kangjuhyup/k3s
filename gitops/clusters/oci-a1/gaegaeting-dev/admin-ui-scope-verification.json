@@ -1,0 +1,16 @@
+{
+  "userClientTenantRolesRemoved": true,
+  "remainingUserScopesPreserved": true,
+  "adminClientAndOtherClientsUnchanged": true,
+  "userRolesAndSessionsUnchanged": true,
+  "normalAuthorizationStatus": "303",
+  "normalAuthorizationError": "",
+  "normalInteractionRedirect": true,
+  "forbiddenAuthorizationStatus": "303",
+  "forbiddenAuthorizationError": "invalid_scope",
+  "forbiddenInteractionRedirect": false,
+  "administratorActive": true,
+  "administratorRolePreserved": true,
+  "adminClientTenantRolesRetained": true,
+  "finalReadbackPassed": true
+}

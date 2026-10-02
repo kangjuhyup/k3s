@@ -5,13 +5,13 @@
   "migrationJobUidsAndCompletionUnchanged": true,
   "certificateReady": true,
   "argoSyncedHealthy": true,
-  "gitRevision": "9b8860e057767b0f94eddbb2fd3ae08bf6f3d371",
+  "gitRevision": "de85cd2bf93ff4d0455cc9690d9c744b8a086729",
   "automated": {
     "prune": false,
     "selfHeal": true,
     "allowEmpty": false,
     "enabled": true
   },
-  "userClientScopeRemovalPendingE2E": true,
-  "browserE2EPending": true
+  "userClientScopeRemovalPendingE2E": false,
+  "browserE2EPending": false
 }
