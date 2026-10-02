@@ -16,8 +16,11 @@ The existing `gaegaeting-web` client allows the additional `tenant_roles` scope.
 Normal login scopes remain unchanged. Only admin login requests the role scope;
 Account authorization requires the direct tenant role code `ADMIN`, introspected as
 `tenant_roles: [{id, code}]` and signed through Edge/Gateway. No real-user role is
-assigned without the explicitly designated account. Any temporary QA role assignment
-and removal needs the separately specified QA identity and test authorization.
+assigned without the explicitly designated account. A real reviewer designation is
+not an application rollout gate. After AppReady, the application agent creates exactly
+one new QA user and supplies its identity. Temporary direct ADMIN assignment to that
+QA identity, review E2E and removal are authorized as a bounded test sequence. Verify
+removal afterward; do not reuse an arbitrary real user or grant an unconfirmed identity.
 
 ## Storage
 
@@ -53,8 +56,10 @@ and real browser upload/approval remain release E2E gates.
    until its backend gates pass. Match migration uses its matching new image if its
    digest is updated. No database or shared Kafka reset is involved.
 5. Application agent performs one-new-QA-user browser E2E: signup identity reuse,
-   user/pet upload, pending visibility, designated/authorized temporary ADMIN review,
-   approval/readback, normal-user denial, frozen-copy protection and cleanup evidence.
+   user/pet upload, pending visibility, temporary ADMIN review for the supplied new QA
+   identity, approval/readback, normal-user denial, snapshot isolation and cleanup
+   evidence. Revoke that QA role and verify removal after review tests. Real reviewer
+   designation remains independent of rollout and this temporary QA flow.
    Validate both HTTPS endpoints and existing edge/private-route negative checks.
 6. Restore automatic synchronization after gates pass; require Synced/Healthy,
    successful migration Jobs and serving Deployments Ready. Automatic prune stays
