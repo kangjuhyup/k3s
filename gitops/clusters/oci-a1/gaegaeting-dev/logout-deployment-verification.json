@@ -1,0 +1,37 @@
+{
+  "devUi": "https://test-ggt-ui.rvkang.app",
+  "sourceRevision": "2ca2b5e38403f952d31fed3695b8263352a0564d",
+  "gitopsRevision": "3e7fdec584bbe23c07bc841f7a3969a1a52c3e43",
+  "deployment": {
+    "argoSyncedHealthy": true,
+    "gitopsRevision": "3e7fdec584bbe23c07bc841f7a3969a1a52c3e43",
+    "allSevenDeploymentsReady": true,
+    "exactUiImageVerified": true,
+    "otherServingPodAndMigrationJobUidsPreserved": true,
+    "preservedWorkloadCount": 10,
+    "autoSync": {
+      "allowEmpty": false,
+      "enabled": true,
+      "prune": false,
+      "selfHeal": true
+    },
+    "productionUnchanged": true
+  },
+  "httpLogoutUsingBrowserCookieSemantics": {
+    "loginPkceIdTokenVerified": true,
+    "tokenInitiallyAccepted": true,
+    "tokenRevokedAndRejected": true,
+    "providerSessionEnded": true,
+    "returnedToRegisteredUiRoot": true,
+    "reloginRequiresInteraction": true,
+    "testInteractionAborted": true,
+    "existingUsersRolesAndProfilesUnchanged": true
+  },
+  "browser": {
+    "logoutButtonVisible": true,
+    "localLogoutAndPendingStateVisible": true,
+    "providerConfirmationError": "invalid_request: xsrf token invalid",
+    "endToEndVerified": false,
+    "blockedReason": "Chrome extension UI is blocking automation. User was asked to close that UI to continue fresh-login verification."
+  }
+}

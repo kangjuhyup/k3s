@@ -206,3 +206,10 @@ QA session cleanup is complete: only the first fixture sessions were revoked,
 the same browser bearer changed from HTTP 200 to HTTP 401, and the QA tab was
 closed. All 1,000 fixture accounts remain ACTIVE with their profiles, pets and
 locations; existing accounts and other sessions were not mutated.
+
+## User UI logout handover
+
+The core 1.0.3 logout UI is deployed and HTTP revocation/end-session checks passed.
+Existing Chrome SSO confirmation still reports `xsrf token invalid`; browser E2E
+is **not complete**. Live deployment was rechecked without another rollout. See
+[logout rollout and unresolved investigation](logout-rollout.md).
