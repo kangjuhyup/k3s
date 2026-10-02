@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-10-02",
+  "scope": "Existing dev USER/PET buckets only",
+  "configurationCommit": "9147f65",
+  "providerChecks": {
+    "USER": {
+      "privateAcl": true,
+      "exactCors": true,
+      "stagingOnlyLifecycleDays": 7,
+      "existingRulesPreserved": true,
+      "put": true,
+      "conditionalHead": true,
+      "headMismatchDenied": true,
+      "conditionalRangeGet": true,
+      "anonymousGetDenied": true,
+      "conditionalSameBucketCopy": true,
+      "copyMismatchDenied": false,
+      "mismatchHeaderSent": true,
+      "mismatchCopyCreatedObject": false,
+      "copyReadback": true,
+      "signedGet": true,
+      "expiredSignedGetDenied": true,
+      "probeObjectsDeleted": true
+    },
+    "PET": {
+      "privateAcl": true,
+      "exactCors": true,
+      "stagingOnlyLifecycleDays": 7,
+      "existingRulesPreserved": true,
+      "put": true,
+      "conditionalHead": true,
+      "headMismatchDenied": true,
+      "conditionalRangeGet": true,
+      "anonymousGetDenied": true,
+      "conditionalSameBucketCopy": true,
+      "copyMismatchDenied": false,
+      "mismatchHeaderSent": true,
+      "mismatchCopyCreatedObject": true,
+      "copyReadback": true,
+      "signedGet": true,
+      "expiredSignedGetDenied": true,
+      "probeObjectsDeleted": true
+    }
+  },
+  "publishedNodeSdkSnapshot": {
+    "imageRevision": "317f550e3fb4fbd773a606c1d58293e3cf7cb32d",
+    "node": "v24.13.1",
+    "newApplicationImplementationVerified": false,
+    "buckets": {
+      "USER": {
+        "wrongGetIfMatchDenied": true,
+        "snapshotEtagAndBytesMatch": true,
+        "staleGetIfMatchDenied": true,
+        "reviewEqualsValidatedSnapshot": true,
+        "stagingRewriteCannotChangeReview": true,
+        "anonymousReviewDenied": true,
+        "actualCorsPreflight": true,
+        "probeObjectsDeleted": true
+      },
+      "PET": {
+        "wrongGetIfMatchDenied": true,
+        "snapshotEtagAndBytesMatch": true,
+        "staleGetIfMatchDenied": true,
+        "reviewEqualsValidatedSnapshot": true,
+        "stagingRewriteCannotChangeReview": true,
+        "anonymousReviewDenied": true,
+        "actualCorsPreflight": true,
+        "probeObjectsDeleted": true
+      }
+    }
+  },
+  "releaseGate": "Wait for snapshot-fix main digests and new-image QA; old release remains active",
+  "adminRoleAssigned": false
+}

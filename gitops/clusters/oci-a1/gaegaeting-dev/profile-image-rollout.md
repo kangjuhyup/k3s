@@ -23,11 +23,16 @@ and removal needs the separately specified QA identity and test authorization.
 
 Only the existing marked dev USER/PET buckets may be changed. Verify private access,
 exact dev UI CORS for PUT/GET/HEAD and Content-Type, and actual Account credential
-PUT, conditional HEAD, Range GET, ETag-conditional same-bucket CopyObject, GET and
-DELETE. Both mismatched ETag conditions and anonymous object reads must be denied.
+PUT, conditional HEAD, bounded full GET snapshot with IfMatch and response-ETag
+verification, server-side PUT to a fresh review key, GET and DELETE. Wrong/stale GET
+ETag conditions and anonymous object reads must be denied. CopyObject is no longer
+a required photo permission or safety mechanism. Enforce the 5 MiB stream limit,
+validate the snapshot, and retain exactly those bytes in the review object.
 Use synthetic canaries and remove only their exact keys. Preserve existing policies
-and lifecycle rules. The staging prefix `profile-images/uploads/` expires after
-seven days; `profile-images/review/` has no new expiration rule. Presigned URL expiry
+and lifecycle rules. The physical staging prefix is the Doppler `STORAGE_PROFILE_PREFIX` value followed
+by `/profile-images/uploads/`; it expires after seven days. Preserve this application
+prefix when configuring lifecycle; the bare logical prefix would not match objects.
+The corresponding `profile-images/review/` path has no new expiration rule. Presigned URL expiry
 and real browser upload/approval remain release E2E gates.
 
 ## Ordered Git → Argo rollout
@@ -64,3 +69,27 @@ URLs. Consequently an old-image-only rollback is unsafe after new photo data exi
 Do not automatically reverse migrations or discard review metadata. Prefer a forward
 fix on the new schema, or a separately reviewed compatible-code/database procedure.
 Existing signup rows retain unknown identity fields as null; do not fabricate data.
+
+## Preparation findings (2026-10-02)
+
+The UI origin key was stored in Doppler and projected successfully; the existing
+release remains Synced/Healthy. The additional Auth client scope was read back
+successfully without granting any user a role.
+
+Live storage probing observed success for CopyObject with a deliberately mismatched
+`CopySourceIfMatch`. Treat this as a **release blocker**, not a successful permission
+check. The app agent is replacing copying with a bounded full GET snapshot,
+validation and server-side PUT to the review key. Confirm wrong/stale IfMatch GET
+denial with the published Node SDK, response ETag verification and staging overwrite
+independence. The validated bytes must be the exact bytes saved for review. Do not infer safety from HTTP 200 or from a
+local S3 test server. Keep old serving images until this gate and the new release
+image checks are resolved.
+
+Published ARM64 Account image (source `317f550e3fb4`, Node 24.13.1) SDK probes passed
+for both dev buckets: wrong/stale IfMatch GET denied, returned ETag and snapshot bytes
+matched, review PUT/readback matched the validated snapshot, subsequent staging
+replacement did not change review bytes, anonymous review access denied, and actual
+CORS preflight passed. All probe objects were deleted. This proves storage primitives,
+not the pending snapshot-fix application's validation or 5 MiB limit implementation.
+See [aggregate evidence](photo-storage-verification.json). Recheck the final new image
+and browser E2E before enabling the feature.
