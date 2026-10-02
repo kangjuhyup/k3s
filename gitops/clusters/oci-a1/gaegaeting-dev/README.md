@@ -5,15 +5,15 @@ The `gitops/apps/dev/gaegaeting` overlay supplies development replicas and resou
 budgets. This cluster overlay owns Secret delivery, database preparation and ingress.
 Kafka is separate shared infrastructure under the `kafka` Application and
 `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained.
-All seven serving Deployments have one ready replica. User/admin UI images use source
-`7c06eaefbfd55186e6d6503c8f95f061f3ee2b94`; the four backend images and both completed
+All seven serving Deployments have one ready replica. User UI image uses source `2ca2b5e38403f952d31fed3695b8263352a0564d`; admin UI retains
+`7c06eaefbfd55186e6d6503c8f95f061f3ee2b94`. The four backend images and both completed
 migration Jobs retain `7c3733450107934f08130f0ac7d0db1a8f54c59a`.
 The independent admin UI is served under `/admin` without rewriting. Backend/Envoy Pod
 UIDs and migration Job UIDs are unchanged. HTTPS path and runtime checks passed;
 separate-UI browser E2E passed, user-client `tenant_roles` was removed, and explicit
 requests for it now return `invalid_scope`. One authorized QA pet was deleted after
 identity/photo/feed checks; the administrator profile and role are preserved.
-See [admin UI rollout](admin-ui-rollout.md).
+See [admin UI rollout](admin-ui-rollout.md) and [user logout rollout](logout-rollout.md).
 The actual new Account artifact passed the real dev USER/PET storage probe. Read-only
 DB checks found all six Account migrations, three expected constraints and eight
 photo-review columns. HTTPS/runtime/CSP and public negative checks passed. Browser
