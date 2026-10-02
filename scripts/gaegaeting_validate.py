@@ -56,6 +56,19 @@ def main():
             if args.release:
                 check(re.search(r'@sha256:[0-9a-f]{64}$', c['image']), 'Unpinned release image')
     check(app_image_count == 8, 'Expected six application deployments and two migration image references')
+    admin = next(r for r in resources if r['kind'] == 'Deployment' and r['metadata']['name'] == 'admin-ui')
+    container = admin['spec']['template']['spec']['containers'][0]
+    check(all(container[p]['httpGet']['path'] == '/admin/health'
+              for p in ['startupProbe', 'readinessProbe', 'livenessProbe']), 'Admin probe lost its base path')
+    ui = next(r for r in resources if r['kind'] == 'VirtualService' and r['metadata']['name'] == 'gaegaeting-dev-ui')
+    routes = ui['spec']['http']
+    check(routes[0]['match'] == [{'port': 443, 'uri': {'exact': '/admin'}},
+                                 {'port': 443, 'uri': {'prefix': '/admin/'}}], 'Admin path boundary changed')
+    check(routes[0]['route'][0]['destination'] == {'host': 'admin-ui', 'port': {'number': 8080}},
+          'Admin path points to wrong service')
+    check(len(routes) == 2 and routes[1]['route'][0]['destination']['host'] == 'integration-ui',
+          'User UI fallback changed')
+    check(all('rewrite' not in r for r in routes), 'UI base paths must not be rewritten')
     root_path = BASE.parent / 'root'
     apps = [yaml.safe_load(p.read_text()) for p in root_path.glob('gaegaeting-dev*.yaml')
             if p.name != 'gaegaeting-dev-project.yaml']

@@ -1,6 +1,5 @@
 {
-  "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
-  "workflowRun": 36948624468,
+  "revision": "7c06eaefbfd55186e6d6503c8f95f061f3ee2b94",
   "images": [
     {
       "service": "account",
@@ -89,8 +88,8 @@
     {
       "service": "integration-ui",
       "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
-      "digest": "sha256:5f197fea50de35b9e577f9eb2a7f096bb156053303fb491618b746523ae1ad0e",
-      "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
+      "digest": "sha256:3d228352bc796419966c2674df9a1c13894b0a7fd16111e08caf3825b81e43a7",
+      "revision": "7c06eaefbfd55186e6d6503c8f95f061f3ee2b94",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
@@ -104,8 +103,7 @@
       "anonymousTagPull": true,
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
-      "visibility": "public",
-      "workflowRun": 36948624468
+      "visibility": "public"
     },
     {
       "service": "admin-ui",

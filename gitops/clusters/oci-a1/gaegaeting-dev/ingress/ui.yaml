@@ -11,6 +11,19 @@ spec:
   gateways:
   - istio-system/gaegaeting-dev-public
   http:
+  - name: admin-ui
+    match:
+    - port: 443
+      uri:
+        exact: /admin
+    - port: 443
+      uri:
+        prefix: /admin/
+    route:
+    - destination:
+        host: admin-ui
+        port:
+          number: 8080
   - match:
     - port: 443
     route:
