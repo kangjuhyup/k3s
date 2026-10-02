@@ -1,25 +1,23 @@
 # 관리자 UI 경로 분리
 
-관리자 UI는 `https://test-ggt-ui.rvkang.app/admin`에서 별도 이미지·Deployment·Service로 제공한다. 현재는 이미지 발행을 기다리는 비활성 준비 상태다. 새 파일은 기존 Kustomization에서 참조하지 않으며 기존 앱 렌더링·라우팅은 바뀌지 않는다.
+관리자 UI는 `https://test-ggt-ui.rvkang.app/admin`에서 별도 이미지·Deployment·Service로 배포됐다. 관리자 Pod Ready 선행(`b655014`) 후 경로·사용자 UI 전환(`9b8860e`)을 Git→Argo로 완료했다. 7개 Deployment Ready, Argo Synced/Healthy, 기존 인증서 Ready를 확인했다. 브라우저 로그인·사진 검토 E2E와 사용자 client scope 정리는 대기 중이다.
 
-## 준비된 계약
+## 배포 계약
 
-- `gaegaeting-dev` namespace, `admin-ui` Deployment/Service, UID/GID 1000, 포트 8080. Probe는 `/admin/health`다.
-- Istio는 HTTPS의 exact `/admin` 또는 prefix `/admin/`만 `admin-ui:8080`으로 전달한다. rewrite는 없고 `/administrator` 등은 기존 사용자 UI로 간다. 관리자 서버·Vite·runtime config가 `/admin` 경로를 처리해야 한다.
-- 별도 DNS·TLS·Gateway·CORS·버킷 CORS 변경은 없다. 두 UI의 origin은 동일하다.
-- Auth public client `gaegaeting-admin-web` 생성·readback 완료. Redirect 및 logout URI는 `/admin/login`, external interaction은 `/admin/interaction`이다. `authorization_code`, PKCE, `prompt=login`, client authentication `none`, `skipConsent=true`, 기존 dev API audience를 사용한다.
-- Client scopes: `openid profile email tenant_roles account:read account:write`. 기존 사용자 client와 관리자 역할은 변경하지 않았다.
-- Doppler `gaegaeting/dev:ADMIN_UI_APP` → `UI_APP`, `ADMIN_UI_OIDC_CLIENT_ID` → `UI_OIDC_CLIENT_ID`. 두 키 저장·readback 완료. 나머지 `UI_OIDC_ISSUER`, `UI_API_AUDIENCE`, `UI_ACCOUNT_GRAPHQL_URL`, `UI_GATEWAY_GRAPHQL_URL`, `UI_IMAGE_STORAGE_ORIGIN`은 기존 키를 재사용한다. 별도 `gaegaeting-admin-ui-runtime` Secret에 필요한 키만 투영한다.
-- 기본 경로 `/admin`, `/admin/config.js`, asset base `/admin/`는 새 실제 이미지에서 검증해야 한다. `UI_APP=admin` 이외에 별도 base-path env가 필요한지는 앱 최종 계약에 맞춘다.
+- `gaegaeting-dev` namespace, `admin-ui` Deployment/Service, UID/GID 1000, 포트 8080, read-only root filesystem. Probe는 `/admin/health`다.
+- 기존 `ingress/ui.yaml` VirtualService가 HTTPS exact `/admin` 및 prefix `/admin/`만 `admin-ui:8080`으로 보낸다. rewrite는 없고 나머지 경로는 사용자 UI로 간다. 별도 DNS·TLS·Gateway·CORS·버킷 CORS 변경은 없다.
+- Auth public client `gaegaeting-admin-web`: redirect/logout `/admin/login`, external interaction `/admin/interaction`, `authorization_code`/PKCE, `prompt=login`, client authentication `none`, `skipConsent=true`, 기존 dev API audience.
+- 관리자 client scopes: `openid profile email tenant_roles account:read account:write`. 기존 client·사용자 역할은 유지했다.
+- Doppler `gaegaeting/dev:ADMIN_UI_APP` → `UI_APP`, `ADMIN_UI_OIDC_CLIENT_ID` → `UI_OIDC_CLIENT_ID`. 나머지 `UI_OIDC_ISSUER`, `UI_API_AUDIENCE`, `UI_ACCOUNT_GRAPHQL_URL`, `UI_GATEWAY_GRAPHQL_URL`, `UI_IMAGE_STORAGE_ORIGIN`은 기존 키를 재사용한다. 별도 `gaegaeting-admin-ui-runtime` Secret에 필요한 키만 투영한다.
+- `UI_APP=admin`이 basePath `/admin`을 결정한다. 추가 base-path 환경변수는 없다. `/admin/config.js`, `/admin/assets/`, `/admin/health`는 이미지가 직접 처리한다.
+- 두 UI는 main `7c06eaefbfd55186e6d6503c8f95f061f3ee2b94` exact digest다. Account/Match/Gateway/Edge는 기존 `7c3733450107934f08130f0ac7d0db1a8f54c59a`를 유지하며 migration Job도 재실행하지 않았다. 버전은 [release manifest](release-images.json)를 따른다.
 
-## 활성화 순서
+## 검증 및 남은 단계
 
-1. 새 integration-ui/admin-ui 두 main tag@digest, 익명 GHCR pull, amd64/arm64와 실제 ARM64 경로·config·CSP smoke 증거를 받는다. 기존 Account/Match/Gateway/Edge 이미지와 두 migration Job은 그대로 유지한다.
-2. `apps/base/gaegaeting/admin-ui.yaml.template`의 `${ADMIN_UI_IMAGE}`를 검증된 exact tag@digest로 치환하고 `admin-ui.yaml`로 전환한다. template은 Kubernetes 선언이 아니며 현 상태로 적용하지 않는다. base Kustomization에 Deployment/Service, `admin-ui-patch.yaml.template`도 `.yaml`로 전환해 dev Kustomization에 연결한다. release manifest/validator에 여섯 번째 서비스와 UI별 revision을 반영한다.
-3. cluster Kustomization에 `admin-ui-ingress-policy.yaml`, secrets Kustomization에 `admin-ui-runtime.yaml`을 연결한다. secret writer Role의 update resourceNames에 `gaegaeting-admin-ui-runtime`을 추가한다. Git→Argo로 Secret 동기화와 관리자 Pod `/admin/health` Ready를 확인한다.
-4. `apps/dev/gaegaeting/admin-ui-route-patch.yaml.template`을 `.yaml`로 전환한 뒤 cluster Kustomization의 patchesStrategicMerge에서 참조한다(기존 VirtualService가 cluster ingress에 있으므로 dev overlay에는 연결하지 않는다). 관리자 Ready 뒤 Git→Argo로 경로를 활성화한다. 새 integration-ui 이미지를 고정하고 사용자 UI의 `/image-review` HTTP404 및 관리자 버튼 제거를 확인한다.
-5. 담당 에이전트가 새 관리자 fresh PKCE 로그인, 사진 검토, 일반 사용자 거부, 사용자 UI 로그인 회귀를 검증한다. 관리자 UI와 사용자 UI 저장소 키·콜백이 서로 충돌하지 않는지도 검사한다.
-6. 사용자 UI 전환 확인 후에만 기존 `gaegaeting-web` client allowed scope에서 `tenant_roles`를 제거하고 다른 필드를 보존한다. 기존 세션/발급 토큰이 scope 설정만으로 무효화된다고 가정하지 않는다. 불필요한 사용자 전체 세션 취소나 역할 변경은 하지 않는다.
-7. Argo Synced/Healthy, 일곱 Deployment Ready, 두 migration Job 그대로 Complete, 기존 TLS Ready를 기록한다.
+익명 GHCR 조회·dualarch·실제 ARM64/UID1000/read-only smoke는 [이미지 증거](admin-ui-image-verification.json)에 기록했다. 배포 뒤 [클러스터 증거](admin-ui-cluster-readiness.json)는 backend 네 개와 Envoy Pod UID 및 두 migration Job UID/Complete 보존을 확인한다. [공개 경로 증거](admin-ui-public-readiness.json)는 HTTPS, 사용자·관리자 callback/interaction/health, 정확한 client/basePath와 사용자 `/image-review` 및 `/administrator` HTTP404를 확인한다.
 
-배포 중 실패하면 관리자 경로·새 UI 변경을 Git으로 되돌리는 범위를 검토한다. 이 작업은 DB migration을 추가하거나 되돌리지 않는다. 사용자 client scope 제거 후 이전 사용자 UI를 복구해야 한다면 관련 인증 호환성도 함께 검토한다. prod와 기존 Auth 사용자 권한은 유지한다.
+1. 앱 담당자가 기존 관리자 계정으로 fresh PKCE 로그인·사진 검토·일반 사용자 거부·사용자 UI 로그인 회귀를 검증한다. 두 UI의 저장소 키와 콜백 충돌도 확인한다.
+2. 로그인 전환 E2E PASS 후에만 `gaegaeting-web` allowed scopes에서 `tenant_roles`를 제거한다. 다른 필드는 보존한다. 설정 변경만으로 기존 발급 토큰이 무효화된다고 가정하지 않으며, 임의 전체 세션 취소나 역할 변경은 하지 않는다.
+3. 브라우저 집계 증거와 scope readback을 기록해 완료한다. autoSync/selfHeal=true, prune=false를 유지한다.
+
+장애 시 관리자 경로·UI 변경은 Git으로 복구하되, 사용자 client scope 제거 후 이전 UI 복구가 필요하다면 인증 호환성도 함께 검토한다. DB migration을 추가하거나 되돌리지 않는다. prod 및 기존 사용자 권한은 유지한다. 이전 `admin-ui-preparation.json`은 준비 시점의 역사적 기록이다.

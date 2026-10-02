@@ -1,0 +1,30 @@
+{
+  "httpsVerified": true,
+  "routes": {
+    "/": 200,
+    "/login": 200,
+    "/interaction": 200,
+    "/health": 200,
+    "/admin": 200,
+    "/admin/": 200,
+    "/admin/login": 200,
+    "/admin/interaction": 200,
+    "/admin/health": 200,
+    "/admin/image-review": 200,
+    "/image-review": 404,
+    "/administrator": 404,
+    "/admin-other": 404,
+    "/config.js": {
+      "status": 200,
+      "expectedClient": true,
+      "basePath": ""
+    },
+    "/admin/config.js": {
+      "status": 200,
+      "expectedClient": true,
+      "basePath": "/admin"
+    }
+  },
+  "rewriteNotRequired": true,
+  "browserLoginE2EPending": true
+}

@@ -1,0 +1,17 @@
+{
+  "readyDeployments": 7,
+  "allSixApplicationExactImagesVerified": true,
+  "backendAndProxyPodUidsUnchanged": true,
+  "migrationJobUidsAndCompletionUnchanged": true,
+  "certificateReady": true,
+  "argoSyncedHealthy": true,
+  "gitRevision": "9b8860e057767b0f94eddbb2fd3ae08bf6f3d371",
+  "automated": {
+    "prune": false,
+    "selfHeal": true,
+    "allowEmpty": false,
+    "enabled": true
+  },
+  "userClientScopeRemovalPendingE2E": true,
+  "browserE2EPending": true
+}
