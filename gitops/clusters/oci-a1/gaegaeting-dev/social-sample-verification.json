@@ -1,0 +1,16 @@
+{
+  "committed": true,
+  "activeOutgoingSampleLikes": 5,
+  "insertedThisRun": 5,
+  "reverseLikesCreated": 0,
+  "pairsCreated": 0,
+  "chatRecordsCreated": 0,
+  "existingMatchRowsPreserved": true,
+  "accountRowsPreserved": true,
+  "profilesPetsLocationsFeedsPreserved": true,
+  "authSessionsRolesNotMutated": true,
+  "notificationOrKafkaPublishInvoked": false,
+  "privateCleanupMode600": true,
+  "publicSamples": 5,
+  "publicSampleContainsIdsOrCredentials": false
+}

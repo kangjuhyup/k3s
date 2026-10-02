@@ -21,3 +21,12 @@ created like IDs and target mapping in a private cleanup manifest; cleanup is no
 executed without a separate request. Export only five synthetic public nicknames
 and pet name/breed/age/size/personalities for the UI preview. No subject, internal
 ID or credentials go into the public sample or aggregate proof.
+
+## Result — 2026-10-02
+
+Committed five active outgoing edges, source=0. Preexisting Match rows and all
+Account rows matched their fingerprints after commit. Reverse likes, pairs, chat
+records and events were not created. The five synthetic public nickname/pet
+records are in `/tmp/ggt-social-ui-sample.json`; identities and newly created like
+IDs are confined to a mode0600 local cleanup manifest. No deployment changes.
+See [aggregate verification](social-sample-verification.json).
