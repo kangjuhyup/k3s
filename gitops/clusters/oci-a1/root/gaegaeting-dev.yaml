@@ -16,7 +16,7 @@ spec:
     namespace: gaegaeting-dev
   syncPolicy:
     automated:
-      enabled: true
+      enabled: false
       selfHeal: true
       prune: false
       allowEmpty: false
