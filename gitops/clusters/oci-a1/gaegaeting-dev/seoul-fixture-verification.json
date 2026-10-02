@@ -1,0 +1,159 @@
+{
+  "manifestSha256": "7ae584c6558fd5926a12d3865da0bf1f6e19bcea7d5b8d0cc75a299f85811a2f",
+  "expectedUsers": 1000,
+  "fixtureOnly": true,
+  "account": {
+    "signups": 1000,
+    "issuerSubjectMappings": 1000,
+    "profiles": 1000,
+    "pets": 1000,
+    "activeSeoulProfiles": 1000,
+    "male": 500,
+    "female": 500,
+    "photos": 0,
+    "certificationBypass": false
+  },
+  "match": {
+    "locations": 1000,
+    "perDistrict": {
+      "종로구": 40,
+      "중구": 40,
+      "용산구": 40,
+      "성동구": 40,
+      "광진구": 40,
+      "동대문구": 40,
+      "중랑구": 40,
+      "성북구": 40,
+      "강북구": 40,
+      "도봉구": 40,
+      "노원구": 40,
+      "은평구": 40,
+      "서대문구": 40,
+      "마포구": 40,
+      "양천구": 40,
+      "강서구": 40,
+      "구로구": 40,
+      "금천구": 40,
+      "영등포구": 40,
+      "동작구": 40,
+      "관악구": 40,
+      "서초구": 40,
+      "강남구": 40,
+      "송파구": 40,
+      "강동구": 40
+    },
+    "mainAreaInserted": 0,
+    "representativesChecked": 25,
+    "allRepresentativesHaveAtLeastTwoCandidates": true,
+    "minimumEligibleFixtureCandidates": 279
+  },
+  "auth": {
+    "counts": {
+      "users": 1000,
+      "active": 1000,
+      "contacts": 0
+    },
+    "directRoles": 0,
+    "groups": 0,
+    "exactSubjectsMatched": true,
+    "existingUsersUnchanged": 6
+  },
+  "preservation": {
+    "account": {
+      "existingRowsUnchanged": 28,
+      "allExistingTablesPreserved": true,
+      "newRows": {
+        "account_signup": 1000,
+        "external_user_subject": 1000,
+        "pet": 1000,
+        "user_profile": 1000
+      }
+    },
+    "match": {
+      "existingRowsUnchanged": 12,
+      "allExistingTablesPreserved": true,
+      "newRows": {
+        "feed": 1,
+        "feed_item": 2,
+        "location": 1000
+      }
+    },
+    "cluster": {
+      "deploymentsAndImagesUnchanged": true,
+      "podUidsUnchanged": true,
+      "migrationJobUidsUnchanged": true,
+      "readyDeployments": 7
+    }
+  },
+  "browser": {
+    "environment": "dev",
+    "verification": {
+      "feedCount": 1,
+      "feedCreated": true,
+      "fixturePetCount": 1,
+      "fixtureProfileActive": true,
+      "oidcTemporaryStateCleared": true,
+      "recommendations": 2,
+      "scopeClient": "gaegaeting-web",
+      "selfExcluded": true,
+      "uniqueTargets": 2,
+      "validTargetProfilesAndPets": 2
+    },
+    "browser": {
+      "alerts": [],
+      "cards": 2,
+      "loggedIn": true,
+      "route": "/recommendations"
+    },
+    "normalPermission": {
+      "canReview": false,
+      "hasErrors": false
+    },
+    "duringBulk": {
+      "allPassed": true,
+      "requests": 3
+    }
+  },
+  "privateManifestPermissionsVerified": true,
+  "qaSessionCleanupPending": true,
+  "feedOwnership": {
+    "newFeedsOnlyFixtureOwners": true,
+    "newFeedItemsOnlyFixtureTargets": true,
+    "feeds": 1,
+    "items": 2
+  },
+  "authHpa": {
+    "existingAuthPodPreserved": true,
+    "existingAuthPodCreationPredatesSeed": true,
+    "additionalAuthPodsByExistingHpa": 1,
+    "hpaCurrentReplicas": 2,
+    "hpaDesiredReplicas": 2,
+    "hpaMin": 1,
+    "hpaMax": 3,
+    "manualScalingOrRollout": false
+  },
+  "argo": {
+    "oci-a1-root": {
+      "synced": true,
+      "healthy": true,
+      "revision": "8573a42356cf510de7f481932835f348412e0510"
+    },
+    "gaegaeting-dev": {
+      "synced": true,
+      "healthy": true,
+      "revision": "8573a42356cf510de7f481932835f348412e0510"
+    }
+  },
+  "deploymentObjects": {
+    "gaegaeting-dev": {
+      "allDeploymentObjectsPredateSeed": true,
+      "ready": true,
+      "count": 7
+    },
+    "auth": {
+      "allDeploymentObjectsPredateSeed": true,
+      "ready": true,
+      "count": 3
+    }
+  }
+}

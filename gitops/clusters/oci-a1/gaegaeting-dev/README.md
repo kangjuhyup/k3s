@@ -193,3 +193,11 @@ read back as zero, and the former admin bearer received HTTP 401 with no data. T
 separately user-authorized permanent dev ADMIN remains assigned and passed fresh
 PKCE login, review UI and admin-list API checks. No production tenant or other user
 roles were changed. Passwords/tokens are excluded from all evidence.
+
+## Seoul synthetic fixtures
+
+The authorized dev-only data seed has 1,000 new users, profiles, pets and locations,
+40 per Seoul district and 500 per gender. Existing account data and serving Pod/Job
+identities were preserved. See [seed runbook](seoul-fixture-runbook.md) and
+[aggregate verification](seoul-fixture-verification.json). No application image or
+migration changed. Individual mappings and credentials are private local files.
