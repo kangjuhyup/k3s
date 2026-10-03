@@ -1,0 +1,57 @@
+{
+  "verifiedAt": "2026-10-03T10:56:27Z",
+  "release": {
+    "tag": "core/v1.0.8",
+    "sourceRevision": "77a7ec6c3746d86f96a02fa7b37b9bcddad97d54",
+    "pullRequest": "https://github.com/kangjuhyup/gaegaeting/pull/158",
+    "workflowRun": 37117220305
+  },
+  "artifact": {
+    "service": "account",
+    "image": "ghcr.io/kangjuhyup/gaegaeting/account",
+    "digest": "sha256:444b21d4177d5c0c1e37ec3dca71578f34a272fab0fa347b1a98292c1ae9f1e8",
+    "platforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "registryVerified": true,
+    "ciArtifactVerified": true,
+    "arm64RevisionVerified": true
+  },
+  "deployment": {
+    "pullRequest": "https://github.com/kangjuhyup/k3s/pull/7",
+    "gitopsRevision": "21f4a19b230b078136497e62dad8cc3036dbf691",
+    "namespace": "gaegaeting-dev",
+    "dopplerProject": "gaegaeting",
+    "dopplerConfig": "stg",
+    "secretKey": "SLACK_WEBHOOK_URL",
+    "argoSynced": true,
+    "argoHealthy": true,
+    "readyReplicas": 1,
+    "desiredReplicas": 1,
+    "secretMatchesDoppler": true,
+    "runtimeSecretMatchesDoppler": true,
+    "node": "v24.13.1",
+    "arch": "arm64",
+    "healthStatus": 200
+  },
+  "photoVerification": {
+    "photoE2E": true,
+    "submittedKinds": [
+      "USER",
+      "PET"
+    ],
+    "repeatedCompletionChecked": true,
+    "createdPhotosRemoved": 2,
+    "priorPhotoRowsPreserved": true,
+    "slackSuccessCount": 2,
+    "slackFailureCount": 0,
+    "photoNotificationFailureCount": 0
+  },
+  "dataScope": {
+    "syntheticFixtureOnly": true,
+    "emptySlotsOnly": true,
+    "existingPhotoRowsPreserved": true,
+    "migrationRequired": false
+  }
+}
