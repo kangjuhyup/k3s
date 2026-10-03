@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: account-migration-7c3733450107
+  name: account-migration-dd302efac42a
   namespace: gaegaeting-dev
   annotations:
     argocd.argoproj.io/sync-wave: '0'
@@ -25,7 +25,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: account
-        image: ghcr.io/kangjuhyup/gaegaeting/account:sha-7c3733450107934f08130f0ac7d0db1a8f54c59a@sha256:75ab111b68181a2f06f4d866b2ee25bf02c4f0c9162eefc7e227d9fa793e72f4
+        image: ghcr.io/kangjuhyup/gaegaeting/account:sha-dd302efac42a37d49ca2e782330a88b9d2d7d46c@sha256:2156c16510f081e30aa7f7cd7efdfda0467ddfaf69902fe79a25a792bc012306
         resources:
           requests:
             cpu: 100m

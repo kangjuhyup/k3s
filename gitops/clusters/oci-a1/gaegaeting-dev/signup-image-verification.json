@@ -1,0 +1,69 @@
+{
+  "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+  "workflowRun": 37120923836,
+  "images": [
+    {
+      "service": "account",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/account",
+      "digest": "sha256:2156c16510f081e30aa7f7cd7efdfda0467ddfaf69902fe79a25a792bc012306",
+      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "workflowRun": 37120923836,
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public"
+    },
+    {
+      "service": "match",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/match",
+      "digest": "sha256:c625c86a92cabc35b5fbfdd3b45d3ecd483a14e93519c2abe88076d2f45f90dc",
+      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "workflowRun": 37120923836,
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public"
+    },
+    {
+      "service": "integration-ui",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
+      "digest": "sha256:0a47b2a0018a8e13590f9f0747b2ede2c93fbf8899345fc2bc86b97be0adcd5e",
+      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "workflowRun": 37120923836,
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public"
+    }
+  ]
+}

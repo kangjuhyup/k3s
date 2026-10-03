@@ -18,3 +18,4 @@ spec:
     metadata:
       annotations:
         infra.oci-a1.example/doppler-config: stg
+        gaegaeting.app/account-schema-revision: dd302efac42a37d49ca2e782330a88b9d2d7d46c
