@@ -37,6 +37,15 @@ def main():
                 for i in release['images']}
     check(set(expected) == {'account', 'match', 'gateway', 'edge-authz', 'integration-ui', 'admin-ui'},
           'Incomplete release image manifest')
+    # Code-only releases preserve completed schema Jobs and their immutable artifacts.
+    migrations = release.get('migrationImages', [i for i in release['images'] if i['service'] in {'account', 'match'}])
+    check({i['service'] for i in migrations} == {'account', 'match'} and len(migrations) == 2,
+          'Incomplete migration image manifest')
+    migration_revisions = {i['service']: i['revision'] for i in migrations}
+    check(all(re.fullmatch(r'[0-9a-f]{40}', r) for r in migration_revisions.values()),
+          'Invalid migration revision')
+    migration_images = {i['service']: i['image'] + ':sha-' + i['revision'] + '@' + i['digest']
+                        for i in migrations}
     app_image_count = 0
     for r in workloads:
         spec = r['spec']
@@ -47,10 +56,11 @@ def main():
             check(spec.get('suspend') is True if r['kind'] == 'Job' else spec.get('replicas') == 0, 'Preparation may not start workloads')
         for c in pod['containers']:
             if c['name'] in expected:
-                check(c['image'] == expected[c['name']], 'Application/migration image differs from release')
+                check(c['image'] == (migration_images if r['kind'] == 'Job' else expected)[c['name']],
+                      'Application/migration image differs from release')
                 app_image_count += 1
                 if r['kind'] == 'Job':
-                    check(r['metadata']['name'] == c['name'] + '-migration-' + revisions[c['name']][:12],
+                    check(r['metadata']['name'] == c['name'] + '-migration-' + migration_revisions[c['name']][:12],
                           'Migration Job identity differs from release')
             check(c['securityContext']['allowPrivilegeEscalation'] is False, 'Privilege escalation allowed')
             if args.release:

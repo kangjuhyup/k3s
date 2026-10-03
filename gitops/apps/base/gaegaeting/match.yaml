@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: match
-        image: ghcr.io/kangjuhyup/gaegaeting/match:sha-7c3733450107934f08130f0ac7d0db1a8f54c59a@sha256:63a719b545d6a4ca1378f2df1f6b9a07f4f3793ff5320c1d822790c96d0e1f98
+        image: ghcr.io/kangjuhyup/gaegaeting/match:sha-5d6d7c0c218033d3bd70f074d4116d110af4c6e4@sha256:ad353f7416a9a53aafe817f2a01fc0a40d51a020c96999f2666bcd3cb2d7f174
         ports:
         - name: http
           containerPort: 2801

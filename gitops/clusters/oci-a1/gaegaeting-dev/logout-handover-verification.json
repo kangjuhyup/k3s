@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-10-02T06:17:32.453073+00:00",
+  "liveUiExactImageMatchesHandover": true,
+  "readyDeployments": 7,
+  "migrationJobsComplete": true,
+  "argo": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "revision": "3e7fdec584bbe23c07bc841f7a3969a1a52c3e43",
+    "automated": {
+      "allowEmpty": false,
+      "enabled": true,
+      "prune": false,
+      "selfHeal": true
+    }
+  },
+  "auth": {
+    "podCount": 1,
+    "images": [
+      "ghcr.io/kangjuhyup/auth/auth-service:v0.2.1@sha256:d3a9a7aa642bc150a34dd98545affd68460e12a6283fc955a27cdf9619d33889"
+    ],
+    "oidcProviderVersions": [
+      "9.6.0"
+    ],
+    "cookieKeysPresentOnAllPods": true,
+    "cookieKeysEqualAcrossPods": true,
+    "adapterDrivers": [
+      "hybrid"
+    ],
+    "trustProxy": [
+      "true"
+    ],
+    "csrfChecksSessionStateOnAllPods": true,
+    "logoutRenderReplacesStateOnAllPods": true,
+    "logCounts": [
+      {
+        "xsrfErrorMentions": 0,
+        "logoutDetailsMissingMentions": 0
+      }
+    ]
+  },
+  "browserReproduction": {
+    "completed": false,
+    "blocker": "Chrome accessibility window unavailable: AX reads blocked despite permissions reporting granted; CUA tool surface unconfigured. Existing-session form/cookie/request comparison cannot be observed."
+  },
+  "runtimeMutationPerformed": false,
+  "otherSixGaegaetingDeploymentsAndPodUidsPreserved": true,
+  "migrationJobUidsPreserved": true,
+  "rootCauseConfirmed": false,
+  "csrfFinding": "Deployed oidc-provider 9.6.0 rejects when submitted xsrf differs from session.state.secret. Rendering a logout form replaces that state; competing logout requests/stale forms or persistence consistency require browser-correlated evidence.",
+  "singlePodKeyComparisonLimitation": "Only one live Auth pod; equality does not establish historical multi-pod key consistency.",
+  "logCoverageLimitation": "No matching text in bounded recent logs does not disprove the browser error."
+}

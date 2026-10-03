@@ -1,0 +1,67 @@
+{
+  "images": [
+    {
+      "service": "integration-ui",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
+      "digest": "sha256:c593a2fb5a97329761274aa51aed3b636076cefa6004387ebd5cfe67fdafbce3",
+      "revision": "3ef28ab1d95288542885e5f6591dc6b92e4eb654",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public",
+      "workflowRun": 36976664381
+    },
+    {
+      "service": "admin-ui",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/admin-ui",
+      "digest": "sha256:c23dcc189626de016abbd84d66c4dfc4d3cb8f822d0e37f9ccc09ad9a9ccb7f1",
+      "revision": "b7fe0e0525697e6e57ae11157b4b826696f4c50c",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public",
+      "workflowRun": 36974696203
+    },
+    {
+      "service": "match",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/match",
+      "digest": "sha256:97166be02e46cefa85feded70eaaf9c6cd1344b010e0fd6b25bb7af2b81857e1",
+      "revision": "12f9377882ae4ff7c80c8b9616cb6ae95c3fa1c7",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public",
+      "workflowRun": 36975083595
+    }
+  ]
+}

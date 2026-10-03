@@ -5,15 +5,17 @@ The `gitops/apps/dev/gaegaeting` overlay supplies development replicas and resou
 budgets. This cluster overlay owns Secret delivery, database preparation and ingress.
 Kafka is separate shared infrastructure under the `kafka` Application and
 `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained.
-All seven serving Deployments have one ready replica. User/admin UI images use source
-`7c06eaefbfd55186e6d6503c8f95f061f3ee2b94`; the four backend images and both completed
-migration Jobs retain `7c3733450107934f08130f0ac7d0db1a8f54c59a`.
-The independent admin UI is served under `/admin` without rewriting. Backend/Envoy Pod
-UIDs and migration Job UIDs are unchanged. HTTPS path and runtime checks passed;
+The mobile rollout targets user UI source `3ef28ab1d95288542885e5f6591dc6b92e4eb654` and admin UI source `b7fe0e0525697e6e57ae11157b4b826696f4c50c` and Match source `12f9377882ae4ff7c80c8b9616cb6ae95c3fa1c7`. Account, gateway and edge-authz retain
+`7c3733450107934f08130f0ac7d0db1a8f54c59a`; edge-proxy is unchanged.
+Existing completed migration Jobs retain their verified schema source and digest
+in `migrationImages`; this release changes no migrations.
+See [mobile rollout](mobile-ui-rollout.md) for scope and verification.
+The independent admin UI is served under `/admin` without rewriting. Earlier admin/logout rollouts preserved backend/Envoy Pod
+UIDs and migration Job UIDs; the mobile rollout separately updates Match. HTTPS path and runtime checks passed;
 separate-UI browser E2E passed, user-client `tenant_roles` was removed, and explicit
 requests for it now return `invalid_scope`. One authorized QA pet was deleted after
 identity/photo/feed checks; the administrator profile and role are preserved.
-See [admin UI rollout](admin-ui-rollout.md).
+See [admin UI rollout](admin-ui-rollout.md) and [user logout rollout](logout-rollout.md).
 The actual new Account artifact passed the real dev USER/PET storage probe. Read-only
 DB checks found all six Account migrations, three expected constraints and eight
 photo-review columns. HTTPS/runtime/CSP and public negative checks passed. Browser
@@ -72,9 +74,10 @@ exposed. Verify resolver authorization with the final application images.
    24-hour retention, 1 GiB memory request / 2 GiB limit. No external consumer is
    implied: notification and chat services are not in this release.
 6. The five image digests and registry pull access are verified. Migration Jobs use
-   the same service digest, `/app`
+   their verified schema artifact digest recorded in `migrationImages`, `/app`
    working directory and `node dist/src/migrations/migrate.js`. Jobs have
-   release-specific names; unsuspend only after DB/TLS/Kafka/storage/Auth gates pass.
+   schema-release-specific names; preserve completed Jobs when migration files are unchanged.
+   Unsuspend new Jobs only after DB/TLS/Kafka/storage/Auth gates pass.
    Migration Jobs run before account/match, then gateway/edge/UI/proxy. Shallow HTTP
    probes do not replace dependency or signup/login verification.
 7. Supply `infrastructure/prd:CLOUDFLARE_GAEGAETING_DNS_API_TOKEN`, scoped to
@@ -208,3 +211,19 @@ QA session cleanup is complete: only the first fixture sessions were revoked,
 the same browser bearer changed from HTTP 200 to HTTP 401, and the QA tab was
 closed. All 1,000 fixture accounts remain ACTIVE with their profiles, pets and
 locations; existing accounts and other sessions were not mutated.
+
+## User UI logout handover
+
+The core 1.0.3 logout UI is deployed and HTTP revocation/end-session checks passed.
+Existing Chrome SSO confirmation still reports `xsrf token invalid`; browser E2E
+is **not complete**. Live deployment was rechecked without another rollout. See
+[logout rollout and unresolved investigation](logout-rollout.md).
+
+## HTTP request trace release
+
+The core 1.0.7 deployment updates Account, Match and Gateway to source
+`5d6d7c0c218033d3bd70f074d4116d110af4c6e4`. See the
+[rollout contract](request-trace-rollout.md),
+[registry verification](trace-image-verification.json) and exact per-service
+[release image references](release-images.json). Existing completed migration
+Jobs retain their original artifacts.
