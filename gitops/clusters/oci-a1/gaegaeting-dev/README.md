@@ -227,3 +227,30 @@ The core 1.0.7 deployment updates Account, Match and Gateway to source
 [registry verification](trace-image-verification.json) and exact per-service
 [release image references](release-images.json). Existing completed migration
 Jobs retain their original artifacts.
+
+## Doppler stg transition (2026-10-03)
+
+On the user's request, the existing deployed environment now reads
+`gaegaeting/stg`. The 111 variables copied from `dev_personal` were retained;
+14 consumed connection/authentication settings were aligned with the existing
+cluster so local-only endpoints and different tenant/bucket settings do not
+replace working service connections. Actual values remain exclusively in Doppler.
+The previous `dev` and `dev_personal` configs and dev authentication token remain
+available; no shared database, broker, tenant, bucket or data was recreated.
+
+All 12 Gaegaeting DopplerSecret sources use config `stg` with the dedicated
+read-only `doppler-auth-gaegaeting-stg` credential. Cloudflare still reads the
+existing infrastructure config. Projected values were compared with `stg` after
+SecretSyncReady became true. Workload reload was a separate GitOps step after
+successful delivery. All seven Pod templates record their Doppler config and
+all seven serving Deployments completed rollout with Ready 1/1. Namespace,
+public routes and the latest upstream images remain unchanged.
+
+Verification passed: Argo Synced/Healthy; user/admin UI health and login HTTPS
+200; unauthenticated public `/gateway/graphql` 401 and private `/account/health`
+404; Account/Match verified TLS database queries; both configured storage bucket
+HeadBucket requests; existing Auth provisioning token and introspection client
+credentials HTTP 200; Match's configured Kafka endpoint ApiVersions handshake
+with error code 0. Shared PostgreSQL/Redis/Kafka/Istio running Pod identities and
+Ready states were preserved. This verifies the config transition and connections,
+not a new complete signup/match business-flow E2E run.
