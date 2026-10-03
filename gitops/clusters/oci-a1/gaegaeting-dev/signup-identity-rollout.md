@@ -51,3 +51,27 @@ unknown newer history and must not be rerun against it. Do not fabricate metadat
 legacy rows or reverse migrations as part of image recovery. Prefer a forward fix
 for new signup retry issues. Auth provisioning uses the same DI-derived idempotency
 key as signup retries; real provider/key-scope transitions require a separate plan.
+
+## Verified deployment — 2026-10-03
+
+[GitOps PR #10](https://github.com/kangjuhyup/k3s/pull/10) deployed revision
+`0fcde673f2fc56837901bb61c2232cc07d48a7bf`. Argo CD reported Synced/Healthy and a
+successful operation; all seven serving Deployments were completely ready. Exact
+Account/UI digests matched the verified source artifacts. Gateway reloaded the
+signup schema. Other serving images and Pods and the completed Match migration Job
+matched the predeploy baseline. The new Account migration completed and the obsolete
+completed Account Job was retired through resource-scoped Argo pruning.
+
+[Aggregate live evidence](signup-rollout-verification.json) confirms ARM64 Node
+24.13.1, stable mock identity/fresh transaction IDs, production and disabled mock
+rejection, seven Account migrations, nullable verification metadata and validated
+CHECK/DI uniqueness. Raw CI/DI columns are absent. The public UI served the updated
+bundle and the API rejected minor signup without creating a signup row. Both Account
+and Gateway expose the new required identity input without CI/DI input. Anonymous
+Gateway access was denied. Existing scoped QA login and Account/Match reads succeeded;
+the test bearer was revoked. No new user or role assignment was created.
+
+Source [main sync PR #167](https://github.com/kangjuhyup/gaegaeting/pull/167) merged
+normally into dev/core. Feature, release and sync PR SonarCloud checks and all required
+service-image checks passed. The optional main-wide SonarCloud gate remains at its
+previous security/reliability C and 10 hotspots; duplication moved from 4.4% to 4.3%.

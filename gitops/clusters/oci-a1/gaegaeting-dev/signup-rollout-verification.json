@@ -1,0 +1,58 @@
+{
+  "verifiedAt": "2026-10-03T11:59:48.408938+00:00",
+  "sourceRevision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+  "gitopsRevision": "0fcde673f2fc56837901bb61c2232cc07d48a7bf",
+  "sourceReleasePr": 165,
+  "sourceSyncPr": 167,
+  "gitopsReleasePr": 10,
+  "imageWorkflowRun": 37120923836,
+  "argo": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "operation": "Succeeded",
+    "automaticSync": true,
+    "selfHeal": true,
+    "automaticPrune": false
+  },
+  "readyDeployments": 7,
+  "changedServices": [
+    "account",
+    "gateway",
+    "integration-ui"
+  ],
+  "exactServingDigestsVerified": true,
+  "unaffectedImagesAndPodsPreserved": true,
+  "accountMigrationComplete": true,
+  "previousCompletedAccountJobRetired": true,
+  "matchMigrationJobPreserved": true,
+  "runtime": {
+    "nodeVersion": "v24.13.1",
+    "architecture": "arm64",
+    "mockIdentityStable": true,
+    "transactionIdsFresh": true,
+    "productionMockDenied": true,
+    "disabledMockDenied": true,
+    "migrationCount": 7,
+    "verificationColumnsNullable": true,
+    "rawIdentityColumnsAbsent": true,
+    "verificationConstraintValidated": true,
+    "diUniqueValidated": true,
+    "databaseReadOnly": true,
+    "minorSignupNotPersisted": true
+  },
+  "publicChecks": {
+    "uiHttpStatus": 200,
+    "uiLegacyVerificationInputRemoved": true,
+    "accountSignupInputVerified": true,
+    "minorSignupDenied": true,
+    "unauthenticatedGatewayDenied": true,
+    "gatewaySignupSchemaRefreshed": true,
+    "existingQaLoginAndTwoServiceRead": true,
+    "qaBearerRevoked": true
+  },
+  "sourceChecks": {
+    "featureReleaseAndSyncPrSonarPassed": true,
+    "mainRequiredServiceImageChecksPassed": true,
+    "optionalMainSonarGate": "existing failure: security/reliability C and 10 hotspots, duplication 4.4% before vs 4.3% now"
+  }
+}
