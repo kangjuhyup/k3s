@@ -1,16 +1,16 @@
 {
-  "revision": "6743d8e6b77642be3e6d96353251445f68061e60",
+  "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
   "images": [
     {
       "service": "account",
       "image": "ghcr.io/kangjuhyup/gaegaeting/account",
-      "digest": "sha256:444b21d4177d5c0c1e37ec3dca71578f34a272fab0fa347b1a98292c1ae9f1e8",
-      "revision": "77a7ec6c3746d86f96a02fa7b37b9bcddad97d54",
+      "digest": "sha256:2156c16510f081e30aa7f7cd7efdfda0467ddfaf69902fe79a25a792bc012306",
+      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
-      "workflowRun": 37117220305,
+      "workflowRun": 37120923836,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
@@ -20,8 +20,7 @@
       "anonymousTagPull": true,
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
-      "visibility": "public",
-      "arm64RevisionVerified": true
+      "visibility": "public"
     },
     {
       "service": "match",
@@ -89,12 +88,13 @@
     {
       "service": "integration-ui",
       "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
-      "digest": "sha256:c593a2fb5a97329761274aa51aed3b636076cefa6004387ebd5cfe67fdafbce3",
-      "revision": "3ef28ab1d95288542885e5f6591dc6b92e4eb654",
+      "digest": "sha256:0a47b2a0018a8e13590f9f0747b2ede2c93fbf8899345fc2bc86b97be0adcd5e",
+      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
+      "workflowRun": 37120923836,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
@@ -104,8 +104,7 @@
       "anonymousTagPull": true,
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
-      "visibility": "public",
-      "workflowRun": 36976664381
+      "visibility": "public"
     },
     {
       "service": "admin-ui",
@@ -133,12 +132,13 @@
     {
       "service": "account",
       "image": "ghcr.io/kangjuhyup/gaegaeting/account",
-      "digest": "sha256:75ab111b68181a2f06f4d866b2ee25bf02c4f0c9162eefc7e227d9fa793e72f4",
-      "revision": "7c3733450107934f08130f0ac7d0db1a8f54c59a",
+      "digest": "sha256:2156c16510f081e30aa7f7cd7efdfda0467ddfaf69902fe79a25a792bc012306",
+      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
+      "workflowRun": 37120923836,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
@@ -148,8 +148,7 @@
       "anonymousTagPull": true,
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
-      "visibility": "public",
-      "workflowRun": 36948624468
+      "visibility": "public"
     },
     {
       "service": "match",
