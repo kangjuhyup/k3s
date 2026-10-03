@@ -90,7 +90,7 @@ def main():
         check(all(a['metadata']['name'] + '.yaml' in registered for a in apps), 'Application missing from root')
     for r in resources:
         if r['kind'] == 'DopplerSecret':
-            check((r['spec']['project'], r['spec']['config']) == (('infrastructure', 'prd') if r['metadata']['name'] == 'gaegaeting-dev-cloudflare' else ('gaegaeting', 'dev')), 'Cross-environment secret source')
+            check((r['spec']['project'], r['spec']['config']) == (('infrastructure', 'prd') if r['metadata']['name'] == 'gaegaeting-dev-cloudflare' else ('gaegaeting', 'stg')), 'Cross-environment secret source')
     policies = {r['metadata']['name']: r for r in resources if r['kind'] == 'NetworkPolicy'}
     gateway = policies['gateway-ingress']['spec']['ingress'][0]['from']
     check(len(gateway) == 1 and gateway[0]['podSelector']['matchLabels']['app.kubernetes.io/name'] == 'edge-proxy', 'Gateway permits edge bypass')

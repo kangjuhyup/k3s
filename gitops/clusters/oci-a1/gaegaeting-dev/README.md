@@ -46,7 +46,7 @@ exposed. Verify resolver authorization with the final application images.
 
 ## Ownership and activation sequence
 
-1. Complete Doppler `gaegaeting/dev` keys and namespace-scoped read token bootstrap.
+1. Complete Doppler `gaegaeting/stg` keys and namespace-scoped read token bootstrap.
    Actual DB names, usernames, endpoints, keys and private certificates are never stored
    here. `secrets/` projects only the keys needed by each workload. UI receives only
    public configuration. Existing Auth and other service credentials are preserved.
@@ -147,7 +147,7 @@ Use repository Python 3.12.9 / PyYAML 6.0.3 and kubectl 1.36.4 (Kustomize 5.8.1)
 .local/os-cleanup-venv/bin/python scripts/gaegaeting_validate.py --release
 ```
 
-This renders the single application tree, checks ownership, activation gates, dev-only secret
+This renders the single application tree, checks ownership, activation gates, stg-config secret
 mapping, nonroot security and edge bypass controls. `--release` additionally rejects
 non-digest image references; it is not an external readiness attestation. The dedicated
 Envoy configuration is also checked with its pinned ARM64 image in validation mode.
@@ -165,15 +165,17 @@ This test used disposable synthetic data. Live Job completion is recorded separa
 
 After Argo creates target namespaces and RBAC, run
 `ansible/playbooks/bootstrap-gaegaeting-doppler-auth.yml` with the repository-pinned
-Python, explicit protected run-config and DOPPLER_GAEGAETING_DEV_TOKEN in the controller
+Python, explicit protected run-config and DOPPLER_GAEGAETING_STG_TOKEN in the controller
 environment. The helper verifies the committed revision and creates only the missing
 operator-authentication Secret through the existing bootstrap ownership checks. It
-does not apply workloads or overwrite existing credentials. Normal Secret projections
+does not apply workloads or overwrite existing credentials. A dev-to-stg transition
+may add the stg credential while the existing Application is active after verifying
+the existing Gaegaeting source and projection ownership. Normal Secret projections
 remain owned by Argo plus Doppler Operator.
 
-The scoped `gaegaeting/dev` read token is stored at
-`bootstrap/prd:DOPPLER_GAEGAETING_DEV_TOKEN` and expires on 2026-12-30. Renew it
-before expiry through the protected credential lifecycle.
+The scoped `gaegaeting/stg` read token is stored at
+`bootstrap/prd:DOPPLER_GAEGAETING_STG_TOKEN` with a bounded read-only lifetime. Renew it before expiry through the protected
+credential lifecycle. The previous dev credential remains available for recovery.
 
 The six dev serving containers request 25m CPU each (150m total), without CPU
 limits. This reserves room for migrations and rolling updates on the shared
@@ -216,3 +218,12 @@ The core 1.0.3 logout UI is deployed and HTTP revocation/end-session checks pass
 Existing Chrome SSO confirmation still reports `xsrf token invalid`; browser E2E
 is **not complete**. Live deployment was rechecked without another rollout. See
 [logout rollout and unresolved investigation](logout-rollout.md).
+
+## HTTP request trace release
+
+The core 1.0.7 deployment updates Account, Match and Gateway to source
+`5d6d7c0c218033d3bd70f074d4116d110af4c6e4`. See the
+[rollout contract](request-trace-rollout.md),
+[registry verification](trace-image-verification.json) and exact per-service
+[release image references](release-images.json). Existing completed migration
+Jobs retain their original artifacts.

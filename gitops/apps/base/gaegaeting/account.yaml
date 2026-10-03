@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: account
-        image: ghcr.io/kangjuhyup/gaegaeting/account:sha-7c3733450107934f08130f0ac7d0db1a8f54c59a@sha256:75ab111b68181a2f06f4d866b2ee25bf02c4f0c9162eefc7e227d9fa793e72f4
+        image: ghcr.io/kangjuhyup/gaegaeting/account:sha-5d6d7c0c218033d3bd70f074d4116d110af4c6e4@sha256:5ff54f55069f67e2a8f4c8f4e604ecdfeb181b5cf0a127a9a74fcb9c6a2b4ba9
         ports:
         - name: http
           containerPort: 2800

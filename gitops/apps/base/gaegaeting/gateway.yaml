@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: gateway
-        image: ghcr.io/kangjuhyup/gaegaeting/gateway:sha-7c3733450107934f08130f0ac7d0db1a8f54c59a@sha256:545b3a431c51ef65cdd63f99eed5a25dcd60a8be39880c68f62469236c40d303
+        image: ghcr.io/kangjuhyup/gaegaeting/gateway:sha-5d6d7c0c218033d3bd70f074d4116d110af4c6e4@sha256:9f29dfd82a2d54487beaa1b4eec0720e6992b3bc82e189619cef9228bf22e37c
         ports:
         - name: http
           containerPort: 4000

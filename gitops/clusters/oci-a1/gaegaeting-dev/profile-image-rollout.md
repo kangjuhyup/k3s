@@ -7,7 +7,7 @@ public multi-platform image digests.
 
 ## Runtime and identity
 
-Doppler `gaegaeting/dev:UI_IMAGE_STORAGE_ORIGIN` must equal the exact HTTPS origin of
+Doppler `gaegaeting/stg:UI_IMAGE_STORAGE_ORIGIN` must equal the exact HTTPS origin of
 `STORAGE_HOST`. Only that public origin is projected to the UI; storage credentials
 remain Account-only. The new image must expose it through its runtime allowlist and
 use it for upload/display CSP. Old UI code does not consume this newly projected key.
@@ -45,7 +45,7 @@ and real browser upload/approval remain release E2E gates.
    Account stop or migration, execute the reviewed application-supplied
    `/tmp/ggt-photo-new-artifact-probe.mjs` with Node at `/app` in the exact new
    Account image. Inject only the seven Account STORAGE_* settings from Doppler
-   gaegaeting/dev after checking both dev bucket markers; require ARM64, nonroot
+   gaegaeting/stg after checking both dev bucket markers; require ARM64, nonroot
    and matching OCI revision. Keep anonymous-access checks enabled. Require both
    bucket checks to pass, including compiled StorageService/ProfileImageService,
    snapshot isolation, PENDING/APPROVED visibility and malformed/oversized input
