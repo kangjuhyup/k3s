@@ -1,0 +1,21 @@
+{
+  "service": "match",
+  "image": "ghcr.io/kangjuhyup/gaegaeting/match",
+  "digest": "sha256:326822b4563607e333db168a24f5b09d29783b73c34674e89294f08b44946cbc",
+  "revision": "6743d8e6b77642be3e6d96353251445f68061e60",
+  "platforms": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "registryPlatforms": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "registryVerified": true,
+  "anonymousPull": true,
+  "anonymousTagPull": true,
+  "indexBodyDigestVerified": true,
+  "ciArtifactVerified": true,
+  "visibility": "public",
+  "workflowRun": 37117615520
+}
