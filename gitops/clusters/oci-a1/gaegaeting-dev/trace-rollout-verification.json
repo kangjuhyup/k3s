@@ -1,0 +1,55 @@
+{
+  "verifiedAt": "2026-10-03T10:41:47.763721+00:00",
+  "sourceRevision": "5d6d7c0c218033d3bd70f074d4116d110af4c6e4",
+  "gitopsRevision": "c960b599bd006ddcb3a2c325dd0c7b64f4ba70e0",
+  "releaseGitopsRevision": "3853694f0fba0647d9da54ef5e5c509751cef4ee",
+  "argo": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "operation": "Succeeded"
+  },
+  "readyDeployments": 7,
+  "changedServices": [
+    "account",
+    "gateway",
+    "match"
+  ],
+  "migrationJobsPreserved": true,
+  "unaffectedPodsPreserved": true,
+  "unaffectedImagesPreserved": true,
+  "requests": [
+    {
+      "supplied": true,
+      "traceId": "release-core-1-0-7-live",
+      "httpStatus": 200,
+      "accountData": true,
+      "matchData": true
+    },
+    {
+      "supplied": false,
+      "traceId": "13437137-5b46-4bdf-9c56-a93ed89bdab8",
+      "httpStatus": 200,
+      "accountData": true,
+      "matchData": true
+    }
+  ],
+  "matchingTraceLogCounts": {
+    "match": {
+      "release-core-1-0-7-live": 2,
+      "13437137-5b46-4bdf-9c56-a93ed89bdab8": 1
+    },
+    "account": {
+      "release-core-1-0-7-live": 4,
+      "13437137-5b46-4bdf-9c56-a93ed89bdab8": 2
+    },
+    "gateway": {
+      "release-core-1-0-7-live": 2,
+      "13437137-5b46-4bdf-9c56-a93ed89bdab8": 1
+    }
+  },
+  "graphqlFields": [
+    "myProfile",
+    "getDailyFeed"
+  ],
+  "qaBearerRevoked": true
+}

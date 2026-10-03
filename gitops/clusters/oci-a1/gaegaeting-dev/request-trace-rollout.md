@@ -28,7 +28,7 @@ Completion requires Argo CD to report the deployed Git revision as Synced/Health
 all seven serving Deployments to be ready, the completed migration Job identities
 to match the baseline, and existing unaffected Pods to remain in place. A fresh
 PKCE login with the existing dev QA fixture then reads Account `myProfile` and
-Match `mainArea` together through the public Gateway. For both client-supplied and
+Match `getDailyFeed` together through the public Gateway. For both client-supplied and
 Gateway-generated IDs, the response and all three service logs must agree. Test
 output must contain aggregate checks only; bearer tokens and account data are
 excluded. The QA bearer is revoked after verification.
@@ -36,3 +36,23 @@ excluded. The QA bearer is revoked after verification.
 Rollback restores the three previous serving image references and per-service
 manifest entries through Git, then verifies Argo health and the public API.
 No DB rollback or migration rerun is required.
+
+## Verified deployment
+
+`trace-rollout-verification.json` records the aggregate live result at the
+verification timestamp. Both requests returned HTTP 200 without GraphQL errors.
+Supplied and generated IDs appeared in Gateway, Account and Match logs and in the
+public response header. All seven Deployments were completely ready; the two
+completed migration Jobs and unaffected Pods/images matched the predeploy
+baseline. The QA bearer was revoked.
+
+The QA fixture has no main-area row, so `mainArea` returned its existing 404
+contract. The successful two-service check used `myProfile` and `getDailyFeed`
+instead, without changing fixture data. Match application sources were unchanged
+from the previously deployed Match revision.
+
+A concurrent infrastructure change advanced main to `c960b599bd006ddcb3a2c325dd0c7b64f4ba70e0`
+during verification. This revision contains the release GitOps commit
+`3853694f0fba0647d9da54ef5e5c509751cef4ee` and preserves its three Deployment
+manifests and image-release entries. Argo reported that descendant revision as
+Synced/Healthy with a successful operation.
