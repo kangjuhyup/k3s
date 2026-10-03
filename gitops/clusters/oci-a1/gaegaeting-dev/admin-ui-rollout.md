@@ -8,7 +8,7 @@
 - 기존 `ingress/ui.yaml` VirtualService가 HTTPS exact `/admin` 및 prefix `/admin/`만 `admin-ui:8080`으로 보낸다. rewrite는 없고 나머지 경로는 사용자 UI로 간다. 별도 DNS·TLS·Gateway·CORS·버킷 CORS 변경은 없다.
 - Auth public client `gaegaeting-admin-web`: redirect/logout `/admin/login`, external interaction `/admin/interaction`, `authorization_code`/PKCE, `prompt=login`, client authentication `none`, `skipConsent=true`, 기존 dev API audience.
 - 관리자 client scopes: `openid profile email tenant_roles account:read account:write`. 기존 client·사용자 역할은 유지했다.
-- Doppler `gaegaeting/dev:ADMIN_UI_APP` → `UI_APP`, `ADMIN_UI_OIDC_CLIENT_ID` → `UI_OIDC_CLIENT_ID`. 나머지 `UI_OIDC_ISSUER`, `UI_API_AUDIENCE`, `UI_ACCOUNT_GRAPHQL_URL`, `UI_GATEWAY_GRAPHQL_URL`, `UI_IMAGE_STORAGE_ORIGIN`은 기존 키를 재사용한다. 별도 `gaegaeting-admin-ui-runtime` Secret에 필요한 키만 투영한다.
+- Doppler `gaegaeting/stg:ADMIN_UI_APP` → `UI_APP`, `ADMIN_UI_OIDC_CLIENT_ID` → `UI_OIDC_CLIENT_ID`. 나머지 `UI_OIDC_ISSUER`, `UI_API_AUDIENCE`, `UI_ACCOUNT_GRAPHQL_URL`, `UI_GATEWAY_GRAPHQL_URL`, `UI_IMAGE_STORAGE_ORIGIN`은 기존 키를 재사용한다. 별도 `gaegaeting-admin-ui-runtime` Secret에 필요한 키만 투영한다.
 - `UI_APP=admin`이 basePath `/admin`을 결정한다. 추가 base-path 환경변수는 없다. `/admin/config.js`, `/admin/assets/`, `/admin/health`는 이미지가 직접 처리한다.
 - 두 UI는 main `7c06eaefbfd55186e6d6503c8f95f061f3ee2b94` exact digest다. Account/Match/Gateway/Edge는 기존 `7c3733450107934f08130f0ac7d0db1a8f54c59a`를 유지하며 migration Job도 재실행하지 않았다. 버전은 [release manifest](release-images.json)를 따른다.
 

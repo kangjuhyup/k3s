@@ -1,5 +1,5 @@
 ---
-- name: Bootstrap Gaegaeting dev Doppler authentication only
+- name: Bootstrap declared Gaegaeting Doppler authentication only
   hosts: localhost
   connection: local
   gather_facts: false
