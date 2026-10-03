@@ -216,3 +216,12 @@ The core 1.0.3 logout UI is deployed and HTTP revocation/end-session checks pass
 Existing Chrome SSO confirmation still reports `xsrf token invalid`; browser E2E
 is **not complete**. Live deployment was rechecked without another rollout. See
 [logout rollout and unresolved investigation](logout-rollout.md).
+
+## HTTP request trace release
+
+The core 1.0.7 deployment updates Account, Match and Gateway to source
+`5d6d7c0c218033d3bd70f074d4116d110af4c6e4`. See the
+[rollout contract](request-trace-rollout.md),
+[registry verification](trace-image-verification.json) and exact per-service
+[release image references](release-images.json). Existing completed migration
+Jobs retain their original artifacts.
