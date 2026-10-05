@@ -66,9 +66,9 @@ TLS는 Istio에서 종료하고 내부 HTTP로 전달한다. Namespace의 sideca
 
 ## 배포 및 갱신 확인
 
-1. 현재 배포 선언은 ARM64가 확인된 **v0.2.1** 이미지와 OCI index digest를 고정한다.
-   소스는 `a557a42bf2733638a50e634dd0280e6b301a6319`이며
-   [Auth 릴리스](https://github.com/kangjuhyup/auth/releases/tag/auth-v0.2.1)와 일치한다.
+1. 현재 배포 선언은 ARM64가 확인된 **v0.3.0** 이미지와 OCI index digest를 고정한다.
+   소스는 `91efadc6462928c29ca262ca95df6a001ae1f145`이며
+   [Auth 릴리스](https://github.com/kangjuhyup/auth/releases/tag/auth-v0.3.0)와 일치한다.
    API·워커·마이그레이션 Job은 동일 service digest이며 Job 이름도 갱신했다.
    UI도 같은 소스 revision의 게시된 digest로 고정했다.
 2. auth 수정 결과와 위 Secret/환경변수/명령/라우팅 계약을 대조하고 필요한 선언을 수정한다.
@@ -130,3 +130,28 @@ Application sync 상태는 `OutOfSync`다. 새 선언 리소스는 동기화됐�
 index digest가 같다. 이미지의 source revision과 기존 `auth-v0.2.1` 태그는
 `a557a42bf2733638a50e634dd0280e6b301a6319`를 유지한다.
 최종 digest의 새 Pod 3개 모두 Ready·재시작 0회이며 관리자·Tenant 검증도 재실행했다.
+
+## 2026-10-05 Kakao 가입 지원 v0.3.0
+
+[Auth PR #36](https://github.com/kangjuhyup/auth/pull/36)의 Kakao 외부 identity 가입,
+고정 OAuth callback, 브라우저 바인딩, 서비스 인증 provisioning, IdP secret 암호화와
+두 schema migration을 소스 `91efadc6462928c29ca262ca95df6a001ae1f145`로 릴리스했다.
+[게시 실행](https://github.com/kangjuhyup/auth/actions/runs/37311209257)은 전체 검증 후
+linux/amd64·linux/arm64 이미지를 게시했고 두 이미지 모두 `latest`, `0.3.0`, `v0.3.0`
+태그의 OCI index가 일치한다.
+
+| 이미지 | OCI index digest | linux/arm64 manifest digest |
+| --- | --- | --- |
+| auth-service | `sha256:fc84b42597983c0b50df21879d64c3c0088300f2e09c954bc32439610aae4278` | `sha256:5b8bf3d105402a599df0c089ffb34d91ef5914d6650b46253d20380bc5462761` |
+| auth-ui | `sha256:bbcec5780fc43f6bc3565bdc36756c61324d9005c41efe12c1a1383c5d104c16` | `sha256:e31f0c8f9a18f4b5c6f2a8e67472ca08793ec1e119380bbfb39661e0b9c4ae94` |
+
+API·worker·migration은 같은 service index를 사용하며 새 Job 이름은
+`auth-migrate-fc84b4259798`이다. Job에는 기존 `JWKS_ENCRYPTION_KEY`를 주입해 schema
+migration 뒤 legacy IdP secret을 같은 키로 보호한다. API에는 Doppler `auth/prd`의
+`HTTP_CORS_ORIGINS`를 `auth-runtime` Secret으로 전달한다. 값 자체는 Git에 저장하지 않는다.
+
+배포 직전 DB 확인은 provider 2개, 활성 provider 0개, 활성 plaintext secret 0개이며
+`gaegaeting-dev` Kakao provider 2는 비활성 상태다. 따라서 migration과 RollingUpdate가
+끝날 때까지 기존 활성 외부 로그인을 혼합 버전이 처리하는 경로는 없다. GitOps 반영 후에는
+migration 성공, 모든 ready workload의 새 digest, health/readiness, exact-origin credentialed
+CORS와 provider 비활성을 확인한다. Kakao provider 활성화는 이 배포와 분리된 후속 작업이다.

@@ -3,7 +3,7 @@ kind: Job
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '-10'
-  name: auth-migrate-d3a9a7aa642b
+  name: auth-migrate-fc84b4259798
   namespace: auth
 spec:
   activeDeadlineSeconds: 600
@@ -46,6 +46,11 @@ spec:
             secretKeyRef:
               key: DB_SSLMODE
               name: auth-runtime
+        - name: JWKS_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              key: JWKS_ENCRYPTION_KEY
+              name: auth-runtime
         - name: NODE_EXTRA_CA_CERTS
           value: /var/run/auth-db-ca/ca.crt
         - name: NODE_ENV
@@ -64,7 +69,7 @@ spec:
             secretKeyRef:
               key: ADMIN_PASSWORD
               name: auth-bootstrap
-        image: ghcr.io/kangjuhyup/auth/auth-service:v0.2.1@sha256:d3a9a7aa642bc150a34dd98545affd68460e12a6283fc955a27cdf9619d33889
+        image: ghcr.io/kangjuhyup/auth/auth-service:v0.3.0@sha256:fc84b42597983c0b50df21879d64c3c0088300f2e09c954bc32439610aae4278
         name: migrate
         securityContext:
           allowPrivilegeEscalation: false

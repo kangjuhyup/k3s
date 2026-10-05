@@ -57,10 +57,62 @@ class AuthTests(unittest.TestCase):
         self.assertFalse(any(o.get("kind") == "Secret" for o in self.files.values()))
         sync = self.resource("auth-runtime-sync")["spec"]
         self.assertTrue(sync["verifyTLS"])
+        self.assertIn("HTTP_CORS_ORIGINS", sync["secrets"])
+        self.assertEqual(
+            sync["processors"]["HTTP_CORS_ORIGINS"]["asName"],
+            "HTTP_CORS_ORIGINS",
+        )
         self.assertIn("REDIS_TLS_KEY", sync["secrets"])
         self.assertIn("REDIS_KEY_PREFIX", sync["secrets"])
         self.assertNotIn("REDIS_ADMIN_PASSWORD", sync["secrets"])
         self.assertEqual(sync["tokenSecret"]["name"], "doppler-auth-auth-prd")
+
+    def test_service_and_migration_receive_required_encryption_and_cors_settings(self):
+        service_env = {
+            item["name"]: item
+            for item in self.resource("auth-service")["spec"]["template"]["spec"][
+                "containers"
+            ][0]["env"]
+        }
+        self.assertEqual(
+            service_env["HTTP_CORS_ORIGINS"]["valueFrom"]["secretKeyRef"],
+            {"key": "HTTP_CORS_ORIGINS", "name": "auth-runtime"},
+        )
+
+        migration_env = {
+            item["name"]: item
+            for item in self.resource("migration")["spec"]["template"]["spec"][
+                "containers"
+            ][0]["env"]
+        }
+        self.assertEqual(
+            migration_env["JWKS_ENCRYPTION_KEY"]["valueFrom"]["secretKeyRef"],
+            {"key": "JWKS_ENCRYPTION_KEY", "name": "auth-runtime"},
+        )
+
+    def test_release_images_and_migration_job_are_pinned_together(self):
+        service_image = (
+            "ghcr.io/kangjuhyup/auth/auth-service:v0.3.0@sha256:"
+            "fc84b42597983c0b50df21879d64c3c0088300f2e09c954bc32439610aae4278"
+        )
+        service_images = {
+            self.resource(name)["spec"]["template"]["spec"]["containers"][0][
+                "image"
+            ]
+            for name in ("auth-service", "auth-worker", "migration")
+        }
+        self.assertEqual(service_images, {service_image})
+        self.assertEqual(
+            self.resource("migration")["metadata"]["name"],
+            "auth-migrate-fc84b4259798",
+        )
+        self.assertEqual(
+            self.resource("auth-ui")["spec"]["template"]["spec"]["containers"][
+                0
+            ]["image"],
+            "ghcr.io/kangjuhyup/auth/auth-ui:v0.3.0@sha256:"
+            "bbcec5780fc43f6bc3565bdc36756c61324d9005c41efe12c1a1383c5d104c16",
+        )
 
     def test_database_clients_require_tls_with_a_private_ca_mount(self):
         for name in ("auth-service", "auth-worker", "migration"):
