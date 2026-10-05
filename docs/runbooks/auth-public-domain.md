@@ -66,9 +66,9 @@ TLS는 Istio에서 종료하고 내부 HTTP로 전달한다. Namespace의 sideca
 
 ## 배포 및 갱신 확인
 
-1. 현재 배포 선언은 ARM64가 확인된 **v0.3.0** 이미지와 OCI index digest를 고정한다.
-   소스는 `91efadc6462928c29ca262ca95df6a001ae1f145`이며
-   [Auth 릴리스](https://github.com/kangjuhyup/auth/releases/tag/auth-v0.3.0)와 일치한다.
+1. 현재 배포 선언은 ARM64가 확인된 **v0.3.1** 이미지와 OCI index digest를 고정한다.
+   소스는 `c1484a190d67d57fc155719a5b7f605215569a95`이며
+   [Auth 릴리스](https://github.com/kangjuhyup/auth/releases/tag/auth-v0.3.1)와 일치한다.
    API·워커·마이그레이션 Job은 동일 service digest이며 Job 이름도 갱신했다.
    UI도 같은 소스 revision의 게시된 digest로 고정했다.
 2. auth 수정 결과와 위 Secret/환경변수/명령/라우팅 계약을 대조하고 필요한 선언을 수정한다.
@@ -155,3 +155,35 @@ migration 뒤 legacy IdP secret을 같은 키로 보호한다. API에는 Doppler
 끝날 때까지 기존 활성 외부 로그인을 혼합 버전이 처리하는 경로는 없다. GitOps 반영 후에는
 migration 성공, 모든 ready workload의 새 digest, health/readiness, exact-origin credentialed
 CORS와 provider 비활성을 확인한다. Kakao provider 활성화는 이 배포와 분리된 후속 작업이다.
+
+## 2026-10-05 migration runner 복구 v0.3.1
+
+v0.3.0의 `auth-migrate-fc84b4259798` Job은 schema migration을 적용한 뒤 legacy IdP
+secret 보호 단계에서 실패했다. MikroORM의 `allowGlobalContext: false` 기본 정책에서
+global `orm.em.find()`를 호출한 것이 원인이며, Argo CD는 sync wave `-10`에서 멈춰
+기존 v0.2.1 API·UI·worker를 Ready 상태로 보존했다. Kakao provider 2도 비활성 상태를
+유지했으며 Job 우회나 global context 허용은 적용하지 않았다.
+
+[Auth PR #37](https://github.com/kangjuhyup/auth/pull/37)은 소스
+`c1484a190d67d57fc155719a5b7f605215569a95`에서 migration-time secret 보호에
+`orm.em.fork()`를 사용하도록 수정한다. 기본 `runMigrations()` 경로를 PostgreSQL 16에서
+실행해 schema 적용, plaintext secret backfill·복호화, 이미 적용된 schema 재시도와
+ciphertext 멱등성을 검증했다. 같은 build의 `dist/cli/migrate.js`도 이미 schema가 적용된
+별도 DB에서 두 번 연속 exit 0을 확인했다. [릴리스 실행](https://github.com/kangjuhyup/auth/actions/runs/37314856255)의
+verify rerun은 service 전체 테스트, UI 전체 테스트, architecture 검사와 service·interaction UI·
+admin UI build를 통과했다.
+
+해당 실행은 최종 성공했고,
+두 index의 `latest`, `0.3.1`, `v0.3.1` 태그와 양쪽 architecture의 source revision이
+`c1484a190d67d57fc155719a5b7f605215569a95`로 일치한다.
+
+| 이미지 | OCI index digest | linux/arm64 manifest digest |
+| --- | --- | --- |
+| auth-service | `sha256:609d4ca6a06fc142000b6d1bae3119e14d17db452438d6ddc24202c088903f76` | `sha256:6034ff76c9d03896d4d9fd0daff120f81e0b7b7e7b63345f07bf3852b87c08f6` |
+| auth-ui | `sha256:820a6a884d1b49ad2b75f9770a51def9c85cb5ed2cc545b74d8dfc3abf026241` | `sha256:78ff3be07f732137ed4571757fa422c521e46eca6e5600300b799381cd08fdbe` |
+
+API·worker·migration은 같은 service index를 사용하며 새 digest 기반 Job 이름은
+`auth-migrate-609d4ca6a06f`이다. 실제 Argo rollout, readiness, CORS와 provider 비활성
+확인 전에는 배포 완료로 간주하지 않는다.
+배포 직전 DB 재확인 결과 provider는 2개, 활성 provider는 0개이며 Kakao provider 2는
+비활성 상태다.
