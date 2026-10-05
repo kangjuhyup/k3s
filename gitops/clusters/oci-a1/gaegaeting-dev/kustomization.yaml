@@ -15,3 +15,4 @@ resources:
 - ingress
 - retired-kafka-namespace.yaml
 - admin-ui-ingress-policy.yaml
+- payment-ingress-policy.yaml

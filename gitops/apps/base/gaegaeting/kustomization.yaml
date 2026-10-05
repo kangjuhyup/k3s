@@ -17,3 +17,6 @@ resources:
 - match-migration.yaml
 - admin-ui.yaml
 - admin-ui-service.yaml
+- payment.yaml
+- payment-service.yaml
+- payment-migration.yaml

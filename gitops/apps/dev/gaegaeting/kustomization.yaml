@@ -10,3 +10,4 @@ patchesStrategicMerge:
 - integration-ui-patch.yaml
 - edge-proxy-patch.yaml
 - admin-ui-patch.yaml
+- payment-patch.yaml

@@ -42,6 +42,24 @@ data:
                         '@type': type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
                         disabled: true
                   - match:
+                      path: /payment/notifications/google
+                    route:
+                      cluster: payment
+                      timeout: 30s
+                    typed_per_filter_config:
+                      envoy.filters.http.ext_authz:
+                        '@type': type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                        disabled: true
+                  - match:
+                      path: /payment/notifications/apple
+                    route:
+                      cluster: payment
+                      timeout: 30s
+                    typed_per_filter_config:
+                      envoy.filters.http.ext_authz:
+                        '@type': type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                        disabled: true
+                  - match:
                       path: /health
                     direct_response:
                       status: 200
@@ -126,5 +144,17 @@ data:
                   socket_address:
                     address: ${EDGE_AUTHZ_HOST}
                     port_value: 4010
+      - name: payment
+        type: STRICT_DNS
+        connect_timeout: 2s
+        load_assignment:
+          cluster_name: payment
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: ${PAYMENT_HOST}
+                    port_value: 2802
     EOF
     )"
