@@ -25,3 +25,13 @@
 ## 복구
 
 장애 시 Gateway 이미지와 Challenge subgraph 설정을 Git으로 이전 선언으로 되돌려 Argo CD가 반영하게 한다. 앱 롤백만으로 DB migration, Doppler 값, 버킷을 되돌리거나 삭제하지 않는다. 신규 데이터와 사진은 보존한다. 직접 kubectl patch/restart/rollout undo는 사용하지 않는다.
+
+## 2026-10-05 배포 결과
+
+앱 core 1.0.11 main `dfd6fca8b5297870fa9024622efd55b53c2a4488`, image workflow `37311557434`의 이미지로 배포했다. 인프라 PR #18의 `9e367874cfa5c8669b783f0c2beb41cfff5d9edc`에서 Argo CD Synced/Healthy와 migration 성공을 확인했다. Challenge와 Gateway가 Ready이며 기존 7개 서비스의 이미지·Pod UID는 그대로다. 배포 런타임은 ARM64 / Node 24.13.1이고, 주석을 제외한 live Federation SDL이 Flutter 연동 스키마와 일치한다.
+
+실제 서버에서 두 합성 보호자의 본인 반려견 확인, 산책 GPS 저장, 코스 생성·검수·공개 조회, 다른 보호자의 코스 완주, 두 챌린지의 진행률 증가를 확인했다. 실제 private 버킷의 서명 PNG 업로드·정제·다운로드가 동작하고, 일기 본문 저장과 비공개/공개 조회 구분도 통과했다. 일반 사용자의 검수, 다른 보호자의 원본 산책/일기 조회, 무인증·scope 누락은 거절됐다.
+
+Gateway의 실제 subject 매핑과 Account·Challenge·Payment 통합 조회도 통과했다. 외부 Gateway 무인증 접근은 401, 직접 Challenge GraphQL/health 및 내부 API는 404다. 검증용 산책은 API로 삭제해 좌표·이름·관련 코스·일기·사진 레코드를 정리했고, 검증 참여는 취소했다. 상세 집계는 [배포 검증](challenge-deployment-verification.json)에 있다.
+
+임시 업로드 원본과 확정 PNG 모두 worker의 실제 삭제를 확인했다(객체 2개 없음, 대상 cleanup job 0개, 재시도 없음). 서명 업로드 URL 만료 후에 원본을 삭제하는 예약도 정상 동작했다. 배포 검증은 모두 완료되었다.

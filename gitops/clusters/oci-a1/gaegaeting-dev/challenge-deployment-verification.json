@@ -1,0 +1,83 @@
+{
+  "release": "core/1.0.11",
+  "sourceRevision": "dfd6fca8b5297870fa9024622efd55b53c2a4488",
+  "sourceWorkflowRun": 37311557434,
+  "deploymentPr": "https://github.com/kangjuhyup/k3s/pull/18",
+  "cluster": {
+    "argoRevision": "9e367874cfa5c8669b783f0c2beb41cfff5d9edc",
+    "argoSyncedHealthy": true,
+    "challengeReady": true,
+    "gatewayReady": true,
+    "migrationJobSucceeded": true,
+    "existingServicePodsAndImagesPreserved": [
+      "account",
+      "admin-ui",
+      "edge-authz",
+      "edge-proxy",
+      "integration-ui",
+      "match",
+      "payment"
+    ],
+    "provisioningGateClosed": true
+  },
+  "challenge": {
+    "databaseTlsAndRestrictedRole": true,
+    "migrations": 2,
+    "authenticationAndScopes": true,
+    "accountOwnershipAndWalkRecording": true,
+    "publicRouteAndPrivateTrackBoundary": true,
+    "otherUserRouteCompletion": true,
+    "realSignedPngUploadAndRead": true,
+    "diaryPersistenceAndVisibility": true,
+    "challengeProgress": true,
+    "ownedRecordsDeletedAndMediaCleanupQueued": true
+  },
+  "gateway": {
+    "gatewayHealth": true,
+    "accountSubjectResolution": true,
+    "challengeFederation": true,
+    "paymentRegression": true,
+    "challengeReachableFromGateway": true
+  },
+  "publicRoutes": [
+    {
+      "path": "/gateway/graphql",
+      "status": 401
+    },
+    {
+      "path": "/challenge/graphql",
+      "status": 404
+    },
+    {
+      "path": "/challenge/health",
+      "status": 404
+    },
+    {
+      "path": "/challenge/internal/v1/activities",
+      "status": 404
+    },
+    {
+      "path": "/challenge/internal/v1/users/deploy-probe",
+      "status": 404
+    },
+    {
+      "path": "/payment/graphql",
+      "status": 404
+    }
+  ],
+  "schema": {
+    "arch": "arm64",
+    "node": "v24.13.1",
+    "schemaSha256": "01b5d7a3493c063e110541f1535e886f0592bc8251d27206adc9b70aaafd8718",
+    "deployedSchemaMatchesFlutterContract": true,
+    "normalization": "removed artifact generation comment and boundary whitespace"
+  },
+  "mediaCleanup": {
+    "ownedObjects": 2,
+    "absentObjects": 2,
+    "pendingCleanupJobs": 0,
+    "retryAttempts": [],
+    "secondsUntilEligible": [],
+    "workerCleanupVerified": true
+  }
+}
