@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gaegaeting-challenge-db-provision-v1
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: '-5'
+spec:
+  suspend: true
+  backoffLimit: 0
+  activeDeadlineSeconds: 180
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gaegaeting-db-provision
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 26
+        runAsGroup: 26
+        fsGroup: 26
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: provision
+        image: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie@sha256:42708a75345b7a48fdd9257b071830783a97fd228529196b6313187a7198e185
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -eu
+          export PGHOST="$DATABASE_HOST" PGPORT="$DATABASE_PORT" PGUSER=postgres PGDATABASE=postgres PGSSLMODE=verify-full PGSSLROOTCERT=/tls/ca.crt PGSSLCERT=/tls/tls.crt PGSSLKEY=/tls/tls.key
+          export TARGET_DATABASE="$CHALLENGE_DATABASE_NAME" TARGET_USERNAME="$CHALLENGE_DATABASE_USERNAME" TARGET_PASSWORD="$CHALLENGE_DATABASE_PASSWORD"
+          if ! psql -X -q -f /sql/provision.sql >/dev/null 2>&1; then
+            echo 'Challenge database provisioning failed; SQL and credentials suppressed.'
+            exit 1
+          fi
+          echo 'Challenge database and restricted role prepared.'
+        envFrom:
+        - secretRef:
+            name: gaegaeting-challenge-db-provision-runtime
+        volumeMounts:
+        - name: tls
+          mountPath: /tls
+          readOnly: true
+        - name: sql
+          mountPath: /sql
+          readOnly: true
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            memory: 128Mi
+      volumes:
+      - name: tls
+        secret:
+          secretName: gaegaeting-challenge-db-provision-tls
+          defaultMode: 288
+      - name: sql
+        configMap:
+          name: gaegaeting-dev-db-provision

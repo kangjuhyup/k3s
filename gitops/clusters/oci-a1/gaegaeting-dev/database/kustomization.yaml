@@ -4,3 +4,4 @@ resources:
 - provision-config.yaml
 - provision-job.yaml
 - payment-provision-job.yaml
+- challenge-provision-job.yaml
