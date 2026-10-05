@@ -310,3 +310,25 @@ now declared suspended and the temporary PostgreSQL certificate gate is removed.
 Argo synchronization and PostgreSQL access-rule retirement must also be checked
 against the final Git revision. No real store transaction or browser purchase E2E
 was performed; providers remain disabled at the user's request.
+
+
+## Challenge rollout verification (2026-10-05)
+
+Core 1.0.11 (`dfd6fca8b5297870fa9024622efd55b53c2a4488`) adds the independent
+Challenge backend for walking tracks, shared routes, diaries, private PNG photos
+and challenge participation. Challenge and Gateway run the CI-verified ARM64
+images recorded in `release-images.json`. Existing Account, Match, Payment and UI
+images and Pod identities were preserved.
+
+The dedicated restricted database, verified TLS, private walking bucket, Doppler
+stg mappings and Auth read/write scopes are configured. Both migrations and
+Argo CD rollout succeeded. Live synthetic-user verification covered course
+publication and completion by another user, actual signed PNG storage, private
+and public diaries, progress updates and authorization denials. Gateway subject
+mapping and existing Account/Payment reads passed.
+
+See [Challenge rollout and recovery](challenge-rollout.md),
+[preparation evidence](challenge-preparation-verification.json) and
+[deployment evidence](challenge-deployment-verification.json). Flutter UI wiring
+is a separate follow-up using the application repository's Challenge integration
+contract; the deployed Federation schema matches that contract.
