@@ -280,3 +280,33 @@ credentials HTTP 200; Match's configured Kafka endpoint ApiVersions handshake
 with error code 0. Shared PostgreSQL/Redis/Kafka/Istio running Pod identities and
 Ready states were preserved. This verifies the config transition and connections,
 not a new complete signup/match business-flow E2E run.
+
+
+## Payment rollout verification (2026-10-05)
+
+Core 1.0.10 source `75c5a2564ff3d87f8585672cd86c4da7422eb5d0` passed
+workspace checks and all seven image jobs. Payment and Gateway deployment digests
+were checked against CI artifacts, anonymous registry tags and index-body SHA256,
+including AMD64/ARM64 platforms. The 59-resource render and all namespace-scoped
+server dry-runs passed; the pinned Envoy image accepted the callback configuration.
+
+The dedicated provisioning Job and Payment migration completed successfully.
+Payment and Gateway HTTP health returned 200 and federation schema retrieval
+included the new wallet and purchase fields. Read-only database checks confirmed
+verified TLS, restricted role flags, one migration, three products, six offers and
+no purchases, jobs or wallets created by the smoke. Product quantities and KRW
+prices matched 10/2,000, 50/6,000 and 100/10,000.
+
+The internally signed read returned a zero wallet and empty purchase history;
+missing assertions and missing scopes were rejected. Both disabled stores rejected
+catalog and purchase preparation. Public Gateway rejected anonymous access with
+401; direct Payment GraphQL/health and non-exact callback paths returned 404;
+exact disabled-provider callbacks returned 503 without acceptance.
+
+Seven existing Account/Match/edge-authz/user-UI/admin-UI Pod identities, including
+completed migration Pods, were preserved. The provisioning certificate was retired
+in Doppler after verifying no active consumers. The completed provisioning Job is
+now declared suspended and the temporary PostgreSQL certificate gate is removed.
+Argo synchronization and PostgreSQL access-rule retirement must also be checked
+against the final Git revision. No real store transaction or browser purchase E2E
+was performed; providers remain disabled at the user's request.
