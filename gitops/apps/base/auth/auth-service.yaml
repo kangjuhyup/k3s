@@ -115,6 +115,11 @@ spec:
             secretKeyRef:
               key: JWKS_ENCRYPTION_KEY
               name: auth-runtime
+        - name: HTTP_CORS_ORIGINS
+          valueFrom:
+            secretKeyRef:
+              key: HTTP_CORS_ORIGINS
+              name: auth-runtime
         - name: OTP_TOKEN_SECRET
           valueFrom:
             secretKeyRef:
@@ -150,7 +155,7 @@ spec:
           value: 'true'
         - name: HTTP_THROTTLE_ENABLED
           value: 'true'
-        image: ghcr.io/kangjuhyup/auth/auth-service:v0.2.1@sha256:d3a9a7aa642bc150a34dd98545affd68460e12a6283fc955a27cdf9619d33889
+        image: ghcr.io/kangjuhyup/auth/auth-service:v0.3.0@sha256:fc84b42597983c0b50df21879d64c3c0088300f2e09c954bc32439610aae4278
         livenessProbe:
           httpGet:
             path: /health

@@ -34,6 +34,9 @@ spec:
     DB_USER:
       asName: DB_USER
       type: plain
+    HTTP_CORS_ORIGINS:
+      asName: HTTP_CORS_ORIGINS
+      type: plain
     JWKS_ENCRYPTION_KEY:
       asName: JWKS_ENCRYPTION_KEY
       type: plain
@@ -83,6 +86,7 @@ spec:
   - DB_PORT
   - DB_SSLMODE
   - DB_USER
+  - HTTP_CORS_ORIGINS
   - JWKS_ENCRYPTION_KEY
   - OIDC_COOKIE_KEYS
   - OTP_TOKEN_SECRET
