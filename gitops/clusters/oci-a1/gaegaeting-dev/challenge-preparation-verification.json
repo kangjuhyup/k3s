@@ -1,0 +1,54 @@
+{
+  "environment": "gaegaeting-dev",
+  "doppler": "gaegaeting/stg",
+  "storage": {
+    "privateAcl": true,
+    "noPublicBucketPolicy": true,
+    "exactCors": true,
+    "stagingLifecycleOnly": true,
+    "putHeadDelete": true,
+    "anonymousReadDenied": true,
+    "canaryDeleted": true,
+    "dopplerConfig": "gaegaeting/stg",
+    "secretValuesDisplayed": false
+  },
+  "roundtrip": [
+    {
+      "signedPngPut": true,
+      "boundedSnapshotRead": true,
+      "pngSanitized": true,
+      "immutableReadyWrite": true,
+      "signedGet": true,
+      "anonymousGetDenied": true
+    },
+    {
+      "probeObjectsDeleted": true
+    }
+  ],
+  "auth": {
+    "tenant": "gaegaeting-dev",
+    "scopesAdded": [
+      "challenge:read",
+      "challenge:write"
+    ],
+    "clientsUpdated": [
+      "gaegaeting-admin-web",
+      "gaegaeting-web"
+    ],
+    "existingScopesAndClientFieldsPreserved": true,
+    "rolesUnchanged": true
+  },
+  "oidc": {
+    "discoveryIssuerVerified": true,
+    "challengeScopesAcceptedWithPkce": true,
+    "loginInteractionRedirect": true,
+    "status": 303
+  },
+  "database": {
+    "provisioningJobSucceeded": true,
+    "temporaryCertificateGateRemoved": true,
+    "postProvisionArgoRevision": "69f9ea913f49ace4014f9bde15a965e7e9fbff0f",
+    "argoSyncedHealthy": true,
+    "existingServicesReady": 8
+  }
+}

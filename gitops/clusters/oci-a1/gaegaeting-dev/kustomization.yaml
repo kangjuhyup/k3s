@@ -16,3 +16,4 @@ resources:
 - retired-kafka-namespace.yaml
 - admin-ui-ingress-policy.yaml
 - payment-ingress-policy.yaml
+- challenge-ingress-policy.yaml

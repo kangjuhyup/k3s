@@ -20,3 +20,6 @@ resources:
 - payment.yaml
 - payment-service.yaml
 - payment-migration.yaml
+- challenge.yaml
+- challenge-service.yaml
+- challenge-migration.yaml
