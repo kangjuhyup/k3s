@@ -1,5 +1,5 @@
 {
-  "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+  "revision": "75c5a2564ff3d87f8585672cd86c4da7422eb5d0",
   "images": [
     {
       "service": "account",
@@ -46,13 +46,13 @@
     {
       "service": "gateway",
       "image": "ghcr.io/kangjuhyup/gaegaeting/gateway",
-      "digest": "sha256:9f29dfd82a2d54487beaa1b4eec0720e6992b3bc82e189619cef9228bf22e37c",
-      "revision": "5d6d7c0c218033d3bd70f074d4116d110af4c6e4",
+      "digest": "sha256:8756cc755a768147e618896d5530e96f726cea1f86d289517ec3547146202b6c",
+      "revision": "75c5a2564ff3d87f8585672cd86c4da7422eb5d0",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
-      "workflowRun": 37116677123,
+      "workflowRun": 37285784549,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
@@ -126,6 +126,27 @@
       "ciArtifactVerified": true,
       "visibility": "public",
       "workflowRun": 36974696203
+    },
+    {
+      "service": "payment",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/payment",
+      "digest": "sha256:1371157b93112cecb6e882a23b9528db91e567c2bc1a84db9d2b59cc57fb4d1e",
+      "revision": "75c5a2564ff3d87f8585672cd86c4da7422eb5d0",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "workflowRun": 37285784549,
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public"
     }
   ],
   "migrationImages": [
@@ -170,6 +191,27 @@
       "ciArtifactVerified": true,
       "visibility": "public",
       "workflowRun": 36948624468
+    },
+    {
+      "service": "payment",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/payment",
+      "digest": "sha256:1371157b93112cecb6e882a23b9528db91e567c2bc1a84db9d2b59cc57fb4d1e",
+      "revision": "75c5a2564ff3d87f8585672cd86c4da7422eb5d0",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "workflowRun": 37285784549,
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public"
     }
   ]
 }

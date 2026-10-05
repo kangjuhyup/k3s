@@ -1,20 +1,39 @@
 # Gaegaeting dev deployment
 
-The signup verification rollout updates Account and user UI, adds an additive Account
-migration and refreshes Gateway federation schema. See [signup identity rollout](signup-identity-rollout.md)
-for core 1.0.9 deployment gates and aggregate verification. Per-service release entries
-remain the current image source of truth.
+The Payment rollout adds an independent snack wallet and consumable in-app payment
+service and updates Gateway federation. Apple and Google remain disabled in Doppler
+until store credentials are configured. Product seeds are 10/50/100 snacks at
+KRW 2,000/6,000/10,000. No actual store transaction is part of this rollout.
+
+Payment identity, database password, proof encryption key and store switches come
+from `gaegaeting/stg`. A bounded certificate-authenticated Job provisions only its
+fresh database and restricted role, followed by its schema-specific migration Job,
+Payment readiness and Gateway rollout. Database name and role are identical in
+Doppler to reuse the existing `sameuser` password rule. The temporary PostgreSQL
+provisioning certificate gate is removed after Job completion; the old Account and
+Match provisioning/migration artifacts are retained.
+
+Only exact `/payment/notifications/apple` and `/payment/notifications/google`
+callbacks bypass end-user edge authentication; Payment performs provider validation.
+Disabled providers return HTTP 503 without acknowledging or storing a notification.
+Payment GraphQL and health are private; user wallet operations flow through Gateway
+and require `payment:read` or `payment:write`. Those scopes are registered for the
+existing user web client; callers must request them in a fresh authorization grant.
+The Payment NetworkPolicy accepts only Gateway and the provider callback proxy.
+
+See [signup identity rollout](signup-identity-rollout.md) for the earlier core 1.0.9
+record; per-service entries in `release-images.json` are the current artifact source.
 
 The `gaegaeting-dev` Application references reusable workloads in `gitops/apps/base/gaegaeting`.
 The `gitops/apps/dev/gaegaeting` overlay supplies development replicas and resource
 budgets. This cluster overlay owns Secret delivery, database preparation and ingress.
 Kafka is separate shared infrastructure under the `kafka` Application and
 `gitops/clusters/oci-a1/kafka`; the old dedicated broker is retired with its namespace/PVC retained.
-Account and user UI advance to core 1.0.9 source
-`dd302efac42a37d49ca2e782330a88b9d2d7d46c`. Gateway retains its existing image and
-reloads Account's schema through a tracked Pod annotation. Match, edge-authz, admin UI
-and edge-proxy retain their previous images. The new Account migration adds nullable
-verification metadata; the completed Match migration keeps its original artifact.
+In the earlier signup rollout, Account and user UI advanced to core 1.0.9 source
+`dd302efac42a37d49ca2e782330a88b9d2d7d46c`. Gateway retained its existing image and
+reloaded Account's schema through a tracked Pod annotation. Match, edge-authz, admin UI
+and edge-proxy retained their previous images. The Account migration added nullable
+verification metadata; the completed Match migration kept its original artifact.
 The earlier [mobile rollout](mobile-ui-rollout.md) and photo sections below are
 historical verification records; current references are in `release-images.json`.
 The independent admin UI is served under `/admin` without rewriting. Earlier admin/logout rollouts preserved backend/Envoy Pod
@@ -48,7 +67,7 @@ shared Auth at `https://auth.rvkang.app/t/gaegaeting-dev/oidc`. Public UI client
 edge-authz, with a distinct API audience matching the dev API URL. External assertion
 headers are stripped before ext_authz; authentication fails closed. NetworkPolicy
 permits ingress to the gateway only from this proxy. Account GraphQL is public for
-signup; internal subject resolution, callbacks, health and other HTTP paths are not
+signup; internal Account subject resolution, callbacks, health and other HTTP paths are not
 exposed. Verify resolver authorization with the final application images.
 
 ## Ownership and activation sequence
@@ -80,7 +99,7 @@ exposed. Verify resolver authorization with the final application images.
    not a production Kafka security or HA design. Five GiB local-path storage,
    24-hour retention, 1 GiB memory request / 2 GiB limit. No external consumer is
    implied: notification and chat services are not in this release.
-6. The five image digests and registry pull access are verified. Migration Jobs use
+6. The seven service image digests and registry pull access must be verified. Migration Jobs use
    their verified schema artifact digest recorded in `migrationImages`, `/app`
    working directory and `node dist/src/migrations/migrate.js`. Jobs have
    schema-release-specific names; preserve completed Jobs when migration files are unchanged.
