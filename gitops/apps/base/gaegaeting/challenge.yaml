@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gateway
+  name: challenge
   namespace: gaegaeting-dev
   annotations:
-    argocd.argoproj.io/sync-wave: '20'
+    argocd.argoproj.io/sync-wave: '10'
 spec:
   selector:
     matchLabels: &id001
-      app.kubernetes.io/name: gateway
+      app.kubernetes.io/name: challenge
       app.kubernetes.io/part-of: gaegaeting
   template:
     metadata:
@@ -25,14 +25,14 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-      - name: gateway
-        image: ghcr.io/kangjuhyup/gaegaeting/gateway:sha-dfd6fca8b5297870fa9024622efd55b53c2a4488@sha256:184bf4cd4e74acaa9792b55bed86a6cea8e50c6d4c126b38027dc9ddf453bfe8
+      - name: challenge
+        image: ghcr.io/kangjuhyup/gaegaeting/challenge:sha-dfd6fca8b5297870fa9024622efd55b53c2a4488@sha256:3fabb671c8e72b9431d5d1716b09f818c377d4da94a8a0152b3bd38a35959bd6
         ports:
         - name: http
-          containerPort: 4000
+          containerPort: 2803
         envFrom:
         - secretRef:
-            name: gaegaeting-gateway-runtime
+            name: gaegaeting-challenge-runtime
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -40,18 +40,29 @@ spec:
             - ALL
         startupProbe:
           httpGet:
-            path: /gateway/health
+            path: /challenge/health
             port: http
           failureThreshold: 60
           periodSeconds: 5
         readinessProbe:
           httpGet:
-            path: /gateway/health
+            path: /challenge/health
             port: http
           periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /gateway/health
+            path: /challenge/health
             port: http
           periodSeconds: 20
           failureThreshold: 3
+        env:
+        - name: NODE_EXTRA_CA_CERTS
+          value: /etc/database/ca.crt
+        volumeMounts:
+        - name: db-ca
+          mountPath: /etc/database
+          readOnly: true
+      volumes:
+      - name: db-ca
+        secret:
+          secretName: gaegaeting-db-ca

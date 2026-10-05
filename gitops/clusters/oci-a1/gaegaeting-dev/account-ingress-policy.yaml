@@ -29,6 +29,12 @@ spec:
       podSelector:
         matchLabels:
           app.kubernetes.io/name: match
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: gaegaeting-dev
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: challenge
     ports:
     - protocol: TCP
       port: 2800

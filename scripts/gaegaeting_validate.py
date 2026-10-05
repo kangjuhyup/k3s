@@ -35,11 +35,11 @@ def main():
     check(all(re.fullmatch(r'[0-9a-f]{40}', r) for r in revisions.values()), 'Invalid service revision')
     expected = {i['service']: i['image'] + ':sha-' + i['revision'] + '@' + i['digest']
                 for i in release['images']}
-    check(set(expected) == {'account', 'match', 'payment', 'gateway', 'edge-authz', 'integration-ui', 'admin-ui'},
+    check(set(expected) == {'account', 'match', 'payment', 'challenge', 'gateway', 'edge-authz', 'integration-ui', 'admin-ui'},
           'Incomplete release image manifest')
     # Code-only releases preserve completed schema Jobs and their immutable artifacts.
-    migrations = release.get('migrationImages', [i for i in release['images'] if i['service'] in {'account', 'match', 'payment'}])
-    check({i['service'] for i in migrations} == {'account', 'match', 'payment'} and len(migrations) == 3,
+    migrations = release.get('migrationImages', [i for i in release['images'] if i['service'] in {'account', 'match', 'payment', 'challenge'}])
+    check({i['service'] for i in migrations} == {'account', 'match', 'payment', 'challenge'} and len(migrations) == 4,
           'Incomplete migration image manifest')
     migration_revisions = {i['service']: i['revision'] for i in migrations}
     check(all(re.fullmatch(r'[0-9a-f]{40}', r) for r in migration_revisions.values()),
@@ -65,7 +65,7 @@ def main():
             check(c['securityContext']['allowPrivilegeEscalation'] is False, 'Privilege escalation allowed')
             if args.release:
                 check(re.search(r'@sha256:[0-9a-f]{64}$', c['image']), 'Unpinned release image')
-    check(app_image_count == 10, 'Expected seven application deployments and three migration image references')
+    check(app_image_count == 12, 'Expected eight application deployments and four migration image references')
     admin = next(r for r in resources if r['kind'] == 'Deployment' and r['metadata']['name'] == 'admin-ui')
     container = admin['spec']['template']['spec']['containers'][0]
     check(all(container[p]['httpGet']['path'] == '/admin/health'
@@ -117,6 +117,13 @@ def main():
           == {'gateway', 'edge-proxy'} and all(s['namespaceSelector']['matchLabels']
           == {'kubernetes.io/metadata.name': 'gaegaeting-dev'} for s in sources),
           'Payment ingress must be restricted to the Gateway and provider callback proxy')
+    challenge_ingress = policies['challenge-ingress']['spec']['ingress']
+    check(len(challenge_ingress) == 1 and challenge_ingress[0]['ports'] == [{'protocol': 'TCP', 'port': 2803}],
+          'Challenge ingress port changed')
+    sources = challenge_ingress[0]['from']
+    check(len(sources) == 1 and sources[0]['podSelector']['matchLabels']['app.kubernetes.io/name'] == 'gateway'
+          and sources[0]['namespaceSelector']['matchLabels'] == {'kubernetes.io/metadata.name': 'gaegaeting-dev'},
+          'Challenge must only accept Gateway traffic')
     print(json.dumps({'resources':len(resources),'workloads':len(workloads),'mode':'release' if args.release else 'inactive-preparation','valid':True}))
 
 

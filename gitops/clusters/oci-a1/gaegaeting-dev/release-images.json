@@ -1,5 +1,5 @@
 {
-  "revision": "75c5a2564ff3d87f8585672cd86c4da7422eb5d0",
+  "revision": "dfd6fca8b5297870fa9024622efd55b53c2a4488",
   "images": [
     {
       "service": "account",
@@ -46,13 +46,13 @@
     {
       "service": "gateway",
       "image": "ghcr.io/kangjuhyup/gaegaeting/gateway",
-      "digest": "sha256:8756cc755a768147e618896d5530e96f726cea1f86d289517ec3547146202b6c",
-      "revision": "75c5a2564ff3d87f8585672cd86c4da7422eb5d0",
+      "digest": "sha256:184bf4cd4e74acaa9792b55bed86a6cea8e50c6d4c126b38027dc9ddf453bfe8",
+      "revision": "dfd6fca8b5297870fa9024622efd55b53c2a4488",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
-      "workflowRun": 37285784549,
+      "workflowRun": 37311557434,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
@@ -147,6 +147,27 @@
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
       "visibility": "public"
+    },
+    {
+      "service": "challenge",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/challenge",
+      "digest": "sha256:3fabb671c8e72b9431d5d1716b09f818c377d4da94a8a0152b3bd38a35959bd6",
+      "revision": "dfd6fca8b5297870fa9024622efd55b53c2a4488",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "workflowRun": 37311557434,
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public"
     }
   ],
   "migrationImages": [
@@ -202,6 +223,27 @@
         "linux/arm64"
       ],
       "workflowRun": 37285784549,
+      "registryPlatforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registryVerified": true,
+      "anonymousPull": true,
+      "anonymousTagPull": true,
+      "indexBodyDigestVerified": true,
+      "ciArtifactVerified": true,
+      "visibility": "public"
+    },
+    {
+      "service": "challenge",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/challenge",
+      "digest": "sha256:3fabb671c8e72b9431d5d1716b09f818c377d4da94a8a0152b3bd38a35959bd6",
+      "revision": "dfd6fca8b5297870fa9024622efd55b53c2a4488",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "workflowRun": 37311557434,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
