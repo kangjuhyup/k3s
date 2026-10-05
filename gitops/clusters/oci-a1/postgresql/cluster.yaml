@@ -27,8 +27,6 @@ spec:
       max_connections: '100'
       shared_buffers: 256MB
     pg_hba:
-    # Temporary Challenge provisioning gate; removed after the bounded Job completes.
-    - hostssl postgres postgres all cert
     - hostssl @/projected/identity/database @/projected/identity/username all scram-sha-256
     - hostssl @/projected/gaegaeting-dev/account/database @/projected/gaegaeting-dev/account/username
       all scram-sha-256
