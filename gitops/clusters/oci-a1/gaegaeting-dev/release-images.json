@@ -1,16 +1,16 @@
 {
-  "revision": "6aee44544e7db298be6ac756b7083a6214344e50",
+  "revision": "ea4d9c5c210b543ba8e6893ca4a0b337cc0c1f4f",
   "images": [
     {
       "service": "account",
       "image": "ghcr.io/kangjuhyup/gaegaeting/account",
-      "digest": "sha256:2156c16510f081e30aa7f7cd7efdfda0467ddfaf69902fe79a25a792bc012306",
-      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+      "digest": "sha256:77f8843f7e05bb5957fe00d2fbcdcff72950f515acd871130531225f9cf5fdf1",
+      "revision": "ea4d9c5c210b543ba8e6893ca4a0b337cc0c1f4f",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
-      "workflowRun": 37120923836,
+      "workflowRun": 37421566146,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
@@ -20,7 +20,10 @@
       "anonymousTagPull": true,
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
-      "visibility": "public"
+      "visibility": "public",
+      "arm64ManifestDigest": "sha256:cd662ceacea854dacdd27faefa24f33ca9de6067bc66c923fc35d4ffec4be77a",
+      "arm64ConfigDigest": "sha256:ad64cbf4cf9641fe711fd9065ff32ff2a734fa4851947793b10ee6308a344b82",
+      "arm64SourceLabelVerified": true
     },
     {
       "service": "match",
@@ -88,13 +91,13 @@
     {
       "service": "integration-ui",
       "image": "ghcr.io/kangjuhyup/gaegaeting/integration-ui",
-      "digest": "sha256:0a47b2a0018a8e13590f9f0747b2ede2c93fbf8899345fc2bc86b97be0adcd5e",
-      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+      "digest": "sha256:bd0be17a34a615a3d3b5d37ae33b7428450fc758a8baa145d1675d016833802a",
+      "revision": "ea4d9c5c210b543ba8e6893ca4a0b337cc0c1f4f",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
-      "workflowRun": 37120923836,
+      "workflowRun": 37421566146,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
@@ -104,7 +107,10 @@
       "anonymousTagPull": true,
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
-      "visibility": "public"
+      "visibility": "public",
+      "arm64ManifestDigest": "sha256:da00e8b8cb21b82f01280f327ddca2e1a233e0ac7035768fe28d5560da5f8e3b",
+      "arm64ConfigDigest": "sha256:de8e763464eed29a589b84931916195873b4664d79603b3b7e25b55123f8819b",
+      "arm64SourceLabelVerified": true
     },
     {
       "service": "admin-ui",
@@ -174,13 +180,13 @@
     {
       "service": "account",
       "image": "ghcr.io/kangjuhyup/gaegaeting/account",
-      "digest": "sha256:2156c16510f081e30aa7f7cd7efdfda0467ddfaf69902fe79a25a792bc012306",
-      "revision": "dd302efac42a37d49ca2e782330a88b9d2d7d46c",
+      "digest": "sha256:77f8843f7e05bb5957fe00d2fbcdcff72950f515acd871130531225f9cf5fdf1",
+      "revision": "ea4d9c5c210b543ba8e6893ca4a0b337cc0c1f4f",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
-      "workflowRun": 37120923836,
+      "workflowRun": 37421566146,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
@@ -190,7 +196,10 @@
       "anonymousTagPull": true,
       "indexBodyDigestVerified": true,
       "ciArtifactVerified": true,
-      "visibility": "public"
+      "visibility": "public",
+      "arm64ManifestDigest": "sha256:cd662ceacea854dacdd27faefa24f33ca9de6067bc66c923fc35d4ffec4be77a",
+      "arm64ConfigDigest": "sha256:ad64cbf4cf9641fe711fd9065ff32ff2a734fa4851947793b10ee6308a344b82",
+      "arm64SourceLabelVerified": true
     },
     {
       "service": "match",

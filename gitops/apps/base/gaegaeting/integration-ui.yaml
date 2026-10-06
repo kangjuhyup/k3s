@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: integration-ui
-        image: ghcr.io/kangjuhyup/gaegaeting/integration-ui:sha-dd302efac42a37d49ca2e782330a88b9d2d7d46c@sha256:0a47b2a0018a8e13590f9f0747b2ede2c93fbf8899345fc2bc86b97be0adcd5e
+        image: ghcr.io/kangjuhyup/gaegaeting/integration-ui:sha-ea4d9c5c210b543ba8e6893ca4a0b337cc0c1f4f@sha256:bd0be17a34a615a3d3b5d37ae33b7428450fc758a8baa145d1675d016833802a
         ports:
         - name: http
           containerPort: 8080
