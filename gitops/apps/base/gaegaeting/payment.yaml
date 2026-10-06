@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: payment
-        image: ghcr.io/kangjuhyup/gaegaeting/payment:sha-75c5a2564ff3d87f8585672cd86c4da7422eb5d0@sha256:1371157b93112cecb6e882a23b9528db91e567c2bc1a84db9d2b59cc57fb4d1e
+        image: ghcr.io/kangjuhyup/gaegaeting/payment:sha-a3c16411cea8f65a1479dfdc065d974d530f7bbf@sha256:53822d4f371fa03e23755dbad60f7ba1c7da922ad48814913ace24a7ff9df48a
         ports:
         - name: http
           containerPort: 2802
