@@ -1,0 +1,21 @@
+{
+  "service": "payment",
+  "image": "ghcr.io/kangjuhyup/gaegaeting/payment",
+  "digest": "sha256:53822d4f371fa03e23755dbad60f7ba1c7da922ad48814913ace24a7ff9df48a",
+  "revision": "a3c16411cea8f65a1479dfdc065d974d530f7bbf",
+  "platforms": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "workflowRun": 37418365262,
+  "registryPlatforms": [
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "registryVerified": true,
+  "anonymousPull": true,
+  "anonymousTagPull": true,
+  "indexBodyDigestVerified": true,
+  "ciArtifactVerified": true,
+  "visibility": "public"
+}
