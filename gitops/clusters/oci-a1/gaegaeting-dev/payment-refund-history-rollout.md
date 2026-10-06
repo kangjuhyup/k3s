@@ -1,6 +1,6 @@
 # Payment 1.0.0 개발 API 배포
 
-2026-10-06 사용자의 개발 API 실제 배포 승인에 따라 기존 `gaegaeting-dev`의 Payment serving image만 변경한다. production Gaegaeting, Flutter, Gateway/config, 스토어 활성화·Sandbox/실제 유료 결제·키 발급/회전/삭제는 범위 밖이다. 이전 `docs/payment-mobile-release-readiness.md`의 배포 금지는 준비 dispatch 당시 기록이며 이번 개발 배포에 한해 승인 범위가 갱신됐다.
+2026-10-06 사용자의 개발 API 실제 배포 승인에 따라 기존 `gaegaeting-dev`의 Payment serving image를 실제 교체하고 검증을 완료했다. production Gaegaeting, Flutter, Gateway/config, 스토어 활성화·Sandbox/실제 유료 결제·키 발급/회전/삭제는 수행하지 않았다. 이전 `docs/payment-mobile-release-readiness.md`의 배포 금지는 준비 dispatch 당시 기록이며 이번 개발 배포에 한해 승인 범위가 갱신됐다.
 
 ## 소스와 이미지
 
@@ -42,7 +42,18 @@ Serving image만 갱신하며 `payment-migration-75c5a2564ff3`의 이름·UID·�
 
 비밀 원본은 `gaegaeting/stg`, workload Secret은 `gaegaeting-dev/gaegaeting-payment-runtime`이다. 기존 `INTERNAL_AUTH_ASSERTION_SECRET`과 `PAYMENT_PROOF_ENCRYPTION_KEY`를 발급/회전/삭제하지 않았다. 값 출력 없이 배포 전후 동일성과 Doppler projection을 비교한다. 앱 `packages/integration-ui/.dart-define.stg.example.json` 및 gitignored stg 설정의 `STORE_PURCHASES_ENABLED=false`를 읽기 확인했으며 앱 파일은 수정하지 않았다.
 
-GitOps 반영 후 exact image, Ready, Argo revision/Synced/Healthy, compiled adapter/worker의 31일 경계, 완료 migration Job/원본 키 보존과 공개 API를 재확인한다. **이 단계의 완료 결과는 후속 live 증거에 기록하며 source merge나 manifest 작성만으로 배포 완료라고 하지 않는다.**
+GitOps [PR22](https://github.com/kangjuhyup/k3s/pull/22)가 main squash `03aeb7689c8b11966b2fff2481f0f9dd8a192278`로 반영됐다. Argo 자동 동기화로 exact new Payment image / Ready 1을 확인했고 동일 revision에서 `Synced/Healthy`다. 직접 kubectl 배포·override·수동 sync는 수행하지 않았다.
+
+배포 후 live 검증:
+
+- Payment/Gateway health 200, Gateway→Payment의 5 SDL문서 유효, 합성 내부 wallet/transactions 조회 성공.
+- 스토어 false / worker true, 양 catalog `STORE_UNAVAILABLE`. 미인증/잘못된 audience `UNAUTHENTICATED`, scope 없음 및 read-only principal의 prepare mutation `FORBIDDEN`.
+- **실제 새 image의 compiled adapter/worker**를 읽기 검증 child process에서 mock port로 실행해 31일 Sandbox gap을 거절·cursor 보존하고 Production에서는 처리함을 확인했다. 실제 스토어/DB write를 수행한 테스트가 아니다.
+- 동일 Payment migration Job UID `16518911-dd26-4e7d-8203-72d5e6552832`, 기존 이미지/Complete/history 한 건 보존. 테이블 14 / 상품3 / offer6 / purchase·wallet·job 0, verified TLS.
+- Doppler/runtime 일치 및 기존 내부 assertion/proof 암호화 키 배포 전후 동일성을 값 출력 없이 확인했다. 스토어 API 호출·유료 결제·DDL 0.
+- 공개 Gateway 미인증/위조 owner 헤더 401과 비공개 Payment 경로 404를 새 배포 후 재확인했다. 실제 native 사용자 Bearer 및 인증된 Gateway resolver는 아직 미검증.
+
+집계 증거: [배포 검증 JSON](payment-refund-history-deployment-verification.json). 보호된 실행용 경로는 기존 k3s checkout `.local/payment-dev-api-verify.py`와 `.local/payment-dev-{before,after}-public.json`이며 키 비교용 원본 baseline은 보호된 `.local/payment-dev-before.json`에만 둔다. JSON/보고서에는 key 값이나 fingerprint를 넣지 않았다.
 
 ## 남은 외부 검증과 롤백
 

@@ -1,0 +1,69 @@
+{
+  "payment": {
+    "health": 200,
+    "storesDisabled": true,
+    "workerEnabled": true,
+    "compiledRefundWindowPolicy": true,
+    "syntheticInternalWalletRead": true,
+    "transactionsRead": true,
+    "unauthenticatedRejected": true,
+    "missingScopeRejected": true,
+    "wrongAudienceRejected": true,
+    "readOnlyMutationRejected": true,
+    "disabledCatalogRejected": true,
+    "migrations": [
+      {
+        "timestamp": "1791158400000",
+        "name": "Payment1791158400000"
+      }
+    ],
+    "tables": 14,
+    "counts": {
+      "products": 3,
+      "offers": 6,
+      "purchases": 0,
+      "jobs": 0,
+      "wallets": 0,
+      "ssl": true
+    },
+    "realUserBearer": false
+  },
+  "gateway": {
+    "health": 200,
+    "paymentReachable": true,
+    "paymentSDLDocumentsValid": 5,
+    "authenticatedGatewayResolver": false
+  },
+  "dopplerRuntimeMatched": true,
+  "paymentImage": "ghcr.io/kangjuhyup/gaegaeting/payment:sha-a3c16411cea8f65a1479dfdc065d974d530f7bbf@sha256:53822d4f371fa03e23755dbad60f7ba1c7da922ad48814913ace24a7ff9df48a",
+  "paymentReady": 1,
+  "migrationJobs": [
+    {
+      "name": "payment-migration-75c5a2564ff3",
+      "uid": "16518911-dd26-4e7d-8203-72d5e6552832",
+      "image": "ghcr.io/kangjuhyup/gaegaeting/payment:sha-75c5a2564ff3d87f8585672cd86c4da7422eb5d0@sha256:1371157b93112cecb6e882a23b9528db91e567c2bc1a84db9d2b59cc57fb4d1e",
+      "complete": true
+    }
+  ],
+  "argo": {
+    "revision": "03aeb7689c8b11966b2fff2481f0f9dd8a192278",
+    "sync": "Synced",
+    "health": "Healthy"
+  },
+  "originalSecretsPreserved": true,
+  "migrationJobPreserved": true,
+  "checkedAt": "2026-10-06",
+  "sourceRevision": "a3c16411cea8f65a1479dfdc065d974d530f7bbf",
+  "gitopsDeploymentRevision": "03aeb7689c8b11966b2fff2481f0f9dd8a192278",
+  "gitopsPullRequest": 22,
+  "publicGateway": {
+    "unauthenticatedRejected": true,
+    "forgedOwnerHeadersRejected": true,
+    "privatePaymentPathsBlocked": true,
+    "actualUserBearerVerified": false
+  },
+  "storeAPICalls": 0,
+  "paidPurchases": 0,
+  "ddlStatements": 0,
+  "compiledPolicyUsesMocks": true
+}
