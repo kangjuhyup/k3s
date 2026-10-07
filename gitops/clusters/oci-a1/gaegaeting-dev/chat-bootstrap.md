@@ -1,4 +1,4 @@
-# Chat dev bootstrap — prepared, not applied
+# Chat dev bootstrap and runtime verification
 
 Scope: existing shared PostgreSQL, namespace `gaegaeting-dev`, Doppler
 `gaegaeting/stg`. Exact Chat image source `6aee44544e7db298be6ac756b7083a6214344e50`
@@ -204,3 +204,31 @@ default read-only guard first. Only after root's fixture SQL and live read-only
 checks pass, use the existing reviewed `--write`/idempotency/`--verify-access`
 sequence. Preserve root's existing failed-collision tests as a regression gate;
 the new HBA fixtures do not replace real bootstrap/collision/TLS tests.
+
+
+## 2026-10-07 applied verification and Match connection correction
+
+The reviewed bootstrap completed with exact Chat image, two migrations, own
+verify-full TLS and denial on all eight other connectable databases. Chat and
+the nine existing dev deployments reached Ready1. The actual native-user
+public `syncChatRooms` probe then found a retained local-development
+`MATCH_SERVICE_HOST`: health against that configured origin failed with
+ECONNREFUSED, while the expected Match Kubernetes Service was healthy200 and
+Chat/Match signing keys matched. Readiness alone does not verify this dependency.
+
+Correct only existing `MATCH_SERVICE_HOST` in Doppler `gaegaeting/stg` to the
+existing Match Kubernetes Service origin on2801, without changing secrets,
+Match workloads, DB data, Kafka or other tenants. Confirm the parsed hostname
+is the expected Service rather than localhost/loopback, and probe health and
+signed `chatPairs` from Chat without printing any endpoint, principal or secret.
+The only current Doppler projection consumer of this key is dev Chat. Confirm
+that from Git and live projection resources before assignment. Wait for
+Doppler projection, then let the reviewed
+`gaegaeting.app/chat-match-config` Pod annotation reconcile through Git/Argo.
+Do not patch/restart the live Deployment or use mutable image tags.
+
+Finally rerun actual user-Bearer `syncChatRooms` and positive public WS
+authentication. Record HTTP/GraphQL status and counts only. An empty match
+list verifies successful synchronization, not message send or a positive pair.
+Keep retained old Jobs with prune=false and report aggregate OutOfSync
+separately from new runtime readiness.

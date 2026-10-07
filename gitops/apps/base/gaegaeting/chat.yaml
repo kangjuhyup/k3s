@@ -15,6 +15,7 @@ spec:
       labels: *id001
       annotations:
         sidecar.istio.io/inject: 'false'
+        gaegaeting.app/chat-match-config: '20261007-service-origin-v1'
     spec:
       automountServiceAccountToken: false
       securityContext:
