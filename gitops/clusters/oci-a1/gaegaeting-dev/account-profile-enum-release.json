@@ -1,0 +1,36 @@
+{
+  "environment": "gaegaeting-dev",
+  "release": "core/1.0.14",
+  "sourceRevision": "aa6eaa0979b8ea3fbb7dbbfe128cc8e20fd0fef9",
+  "workflowRun": 37577382594,
+  "account": {
+    "service": "account",
+    "image": "ghcr.io/kangjuhyup/gaegaeting/account",
+    "digest": "sha256:63341163c1145bef70460e350e58c208e9c064557bb09364b2859c7bf6b1a03f",
+    "revision": "aa6eaa0979b8ea3fbb7dbbfe128cc8e20fd0fef9",
+    "platforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "workflowRun": 37577382594,
+    "registryPlatforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "registryVerified": true,
+    "anonymousPull": true,
+    "anonymousTagPull": true,
+    "indexBodyDigestVerified": true,
+    "ciArtifactVerified": true,
+    "visibility": "public",
+    "arm64ManifestDigest": "sha256:8898a4f4d2ae2a52a945ba5346fe0b707e6a234d534a04b3c9c9787b407bcac9",
+    "arm64ConfigDigest": "sha256:6f4f82b2cdbe1c128b210e113a4db28b6551c8d914ecdfd5c997b219e8c015b5",
+    "arm64SourceLabelVerified": true
+  },
+  "migrationRequired": false,
+  "existingMigrationArtifactsPreserved": true,
+  "otherDomainImagesPreserved": true,
+  "productionDeployment": false,
+  "readyAndAuthenticatedProfileUpdateVerified": false,
+  "change": "ValueEnumType JS runtime object declaration; numeric DB representation unchanged"
+}
