@@ -4,6 +4,7 @@ resources:
 - ../../../platform/kafka
 - namespace.yaml
 - network-policy.yaml
+- gaegaeting-chat-client.yaml
 - secret-writer-role.yaml
 - secret-writer-binding.yaml
 - runtime-sync.yaml
