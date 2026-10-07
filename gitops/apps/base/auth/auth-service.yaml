@@ -155,7 +155,7 @@ spec:
           value: 'true'
         - name: HTTP_THROTTLE_ENABLED
           value: 'true'
-        image: ghcr.io/kangjuhyup/auth/auth-service:v0.3.1@sha256:609d4ca6a06fc142000b6d1bae3119e14d17db452438d6ddc24202c088903f76
+        image: ghcr.io/kangjuhyup/auth/auth-service:v0.3.2@sha256:78a445d86e46d5c61771eb21a3e042e29568d3a6a08c4d684f6c045545c089d1
         livenessProbe:
           httpGet:
             path: /health

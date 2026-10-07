@@ -66,9 +66,9 @@ TLS는 Istio에서 종료하고 내부 HTTP로 전달한다. Namespace의 sideca
 
 ## 배포 및 갱신 확인
 
-1. 현재 배포 선언은 ARM64가 확인된 **v0.3.1** 이미지와 OCI index digest를 고정한다.
-   소스는 `c1484a190d67d57fc155719a5b7f605215569a95`이며
-   [Auth 릴리스](https://github.com/kangjuhyup/auth/releases/tag/auth-v0.3.1)와 일치한다.
+1. 현재 배포 선언은 ARM64가 확인된 **v0.3.2** 이미지와 OCI index digest를 고정한다.
+   소스는 `26c510c0914a05800525099e0014fcb0aa9624dd`이며
+   [Auth 릴리스](https://github.com/kangjuhyup/auth/releases/tag/auth-v0.3.2)와 일치한다.
    API·워커·마이그레이션 Job은 동일 service digest이며 Job 이름도 갱신했다.
    UI도 같은 소스 revision의 게시된 digest로 고정했다.
 2. auth 수정 결과와 위 Secret/환경변수/명령/라우팅 계약을 대조하고 필요한 선언을 수정한다.
@@ -187,3 +187,23 @@ API·worker·migration은 같은 service index를 사용하며 새 digest 기반
 확인 전에는 배포 완료로 간주하지 않는다.
 배포 직전 DB 재확인 결과 provider는 2개, 활성 provider는 0개이며 Kakao provider 2는
 비활성 상태다.
+
+## 2026-10-07 GitHub hosted runner / native URI v0.3.2
+
+사용자가 self-hosted 대신 GitHub 기본 runner를 승인했다. Auth PR39의 main
+`26c510c0914a05800525099e0014fcb0aa9624dd`에서 공식 Release run37573245396이
+ubuntu-24.04에서 성공했다. 서버 1781개 테스트와 architecture/UI/build 검증을
+통과했고 QEMU/buildx로 amd64/arm64 이미지를 발행했다. Native custom URI
+validator 수정은 PR38로 통합되어 있다.
+
+| image | official OCI index digest |
+| --- | --- |
+| auth-service / worker / migration | `sha256:78a445d86e46d5c61771eb21a3e042e29568d3a6a08c4d684f6c045545c089d1` |
+| auth-ui | `sha256:b034d47f96853f40ba621f89b93d2e5493053967c4544692c612809e94a270fa` |
+
+Anonymous pull로 index/manifest/config SHA와 양쪽 platform의 source revision을
+다시 검증했다. 새 immutable migration은 `auth-migrate-78a445d86e46`이다.
+기존 완료/실패 Job과 prune=false, HPA, TLS/CA, secrets 및 bootstrap 경계를
+보존한다. 이 문단은 배포 선언/발행 증거이며 실제 rollout과 gaegaeting-dev의
+public native client `gaegaeting-mobile` 등록/PKCE 검증은 별도 실행 결과로 기록한다.
+기존 다른 tenant/client/key/credential은 변경하지 않는다.
