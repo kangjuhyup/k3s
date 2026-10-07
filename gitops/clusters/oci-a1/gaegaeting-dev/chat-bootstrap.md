@@ -29,12 +29,33 @@ existing app/migration UID baseline, and connection capacity (Chat pool up to10
 plus one LISTEN connection). Existing PostgreSQL/HBA/PVC/roles are not changed.
 
 The script additionally checks effective `pg_hba_file_rules` for parsing errors
-and any network allow matching the new role besides sameuser. It rejects
+and reachable network allows matching the new role besides sameuser. The first
+`host/all/all/all/reject` (all addresses, no netmask/options) is the boundary;
+`hostssl/sameuser/all/all/scram-sha-256` must precede it. Known rules after this
+unconditional reject cannot match a remote connection and are ignored for allow
+checks, including CNPG's generated tail. Parse errors anywhere, invalid/duplicate
+rule numbers, unknown reachable syntax and unresolved membership/regex/file
+matches remain fail-closed. A limited-address or SSL-only reject is not a safe
+boundary. The custom CNPG spec rule order remains strict. It rejects
 collisions in expanded scoped identity rules, broad trust/password fallback,
 role memberships, elevated attributes, unmarked role/database ownership and
 explicit grants on other databases. PUBLIC ACL metadata is not used as proof of
 network reachability: existing other-DB PUBLIC grants are left unchanged. The
 TLS positive/negative probe below is mandatory before rollout.
+
+Both bootstrap and the database-listing probe explicitly use the existing CNPG
+Unix socket `/controller/run` on port5432 inside the validated shared primary's
+`postgres` container. Ambient libpq host/address/service/options are removed;
+bootstrap also requires the socket file to exist. No TCP or alternate socket
+fallback is attempted and no authentication rule is changed.
+
+PostgreSQL uses the first matching HBA rule without fall-through
+([HBA documentation](https://www.postgresql.org/docs/18/auth-pg-hba-conf.html)).
+`pg_hba_file_rules.rule_number` supplies consideration order; the view describes
+current files, not necessarily the last loaded configuration
+([view documentation](https://www.postgresql.org/docs/18/view-pg-hba-file-rules.html)).
+Therefore file guards alone do not establish live isolation: the fresh TLS
+positive/negative probes remain mandatory. No reload is issued by this helper.
 
 ## Root execution order
 
@@ -151,3 +172,35 @@ cross-DB access. On failures preserve evidence, keys and data; no blind retries.
 After serving writes, rollback must preserve Chat data and consumer group. Restore
 Gateway/Envoy configuration through Git only if needed; never drop DB/users or
 rerun/delete old migration Jobs as a deployment shortcut.
+
+
+## Socket / ordered-HBA regression checks (2026-10-07)
+
+The root's read-only diagnostic confirmed the CNPG socket and found an
+unreachable generated allow after the unconditional reject. This repair changes
+only the helper, focused tests and this runbook. No Chat workload activation,
+Auth file, HBA/ACL modification or credential rotation is included. Existing
+role/DB collision, membership and write SQL are unchanged from bootstrap PR27.
+
+```sh
+/Users/kangjuhyup/Documents/k3s/.local/os-cleanup-venv/bin/python -m unittest discover -s scripts/tests -p test_gaegaeting_chat_db_guards.py
+/Users/kangjuhyup/Documents/k3s/.local/os-cleanup-venv/bin/python scripts/tests/test_gaegaeting_chat_db_guards.py --sql-output /tmp/k3s-chat-hba-guard-fixtures-20261007.sql
+```
+
+Six local tests verify preserved collision/ACL/write guards, strict spec order,
+identifier rejection, socket selection/ambient-env removal, shell quoting and
+fixture generation. The emitted SQL runs the **production HBA query** against
+28 synthetic rule sets in a read-only transaction. It does not test live HBA or
+create roles/databases. Root must feed it on STDIN to `psql -X -qAt` in the already
+verified disposable pinned PostgreSQL18.4 environment (no credentials in argv).
+ON_ERROR_STOP plus division-by-zero makes any unexpected result exit nonzero;
+expected final aggregate is `hba_fixture_cases_passed=28`. Coverage includes
+broad/trust/group/regex/scoped candidate allows before reject (deny), equivalent
+generated tail (allow), sameuser order, incomplete reject, unknown syntax,
+parse errors and duplicate order. SQL execution is not part of local unittest.
+
+After merge, update the private run-config to the actual merged revision and run
+default read-only guard first. Only after root's fixture SQL and live read-only
+checks pass, use the existing reviewed `--write`/idempotency/`--verify-access`
+sequence. Preserve root's existing failed-collision tests as a regression gate;
+the new HBA fixtures do not replace real bootstrap/collision/TLS tests.

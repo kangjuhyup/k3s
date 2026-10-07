@@ -40,6 +40,50 @@ def validate_hba(rules):
     require(len(rules[:-2]) == len(set(rules[:-2])) and set(rules[:-2]) <= allowed)
 
 
+HBA_GUARD = r'''
+-- Stop at the first unconditional network reject, in server rule order.
+-- Address=all (not a single-family CIDR) and no options are required.
+WITH rules AS (SELECT * FROM pg_hba_file_rules), boundary AS (
+ SELECT min(rule_number) AS stop FROM rules
+ WHERE type='host' AND database=ARRAY['all'] AND user_name=ARRAY['all']
+ AND address='all' AND netmask IS NULL AND auth_method='reject'
+ AND COALESCE(cardinality(options),0)=0
+), reachable AS (
+ SELECT r.* FROM rules r, boundary b WHERE r.rule_number < b.stop
+)
+SELECT NOT EXISTS (SELECT 1 FROM rules WHERE error IS NOT NULL OR rule_number IS NULL OR rule_number<1)
+ AND (SELECT count(*)=count(DISTINCT rule_number) FROM rules)
+ AND (SELECT stop IS NOT NULL FROM boundary)
+ AND EXISTS (
+ SELECT 1 FROM reachable WHERE type='hostssl' AND database=ARRAY['sameuser']
+ AND user_name=ARRAY['all'] AND address='all' AND netmask IS NULL
+ AND auth_method='scram-sha-256' AND COALESCE(cardinality(options),0)=0
+ )
+ AND NOT EXISTS (
+ SELECT 1 FROM reachable WHERE type IS NULL
+ OR type NOT IN ('local','host','hostssl','hostnossl','hostgssenc','hostnogssenc')
+ OR (type<>'local' AND (
+ auth_method IS NULL OR database IS NULL OR cardinality(database)=0
+ OR user_name IS NULL OR cardinality(user_name)=0 OR address IS NULL
+ OR EXISTS (SELECT 1 FROM unnest(database) n WHERE n IS NULL)
+ OR EXISTS (SELECT 1 FROM unnest(user_name) n WHERE n IS NULL)
+ ))
+ )
+ AND NOT EXISTS (
+ SELECT 1 FROM reachable WHERE type<>'local' AND auth_method<>'reject'
+ -- Physical replication cannot select an ordinary database, and the role is
+ -- separately required to be NOREPLICATION/NOSUPERUSER with no memberships.
+ AND database IS DISTINCT FROM ARRAY['replication']
+ AND NOT (type='hostssl' AND database=ARRAY['sameuser'] AND user_name=ARRAY['all']
+          AND address='all' AND netmask IS NULL AND auth_method='scram-sha-256'
+          AND COALESCE(cardinality(options),0)=0)
+ AND (user_name && ARRAY['all',:'username'] OR EXISTS (
+ SELECT 1 FROM unnest(user_name) n WHERE n !~ '^[A-Za-z0-9_][A-Za-z0-9_.-]*$'
+ ))
+ ) AS hba_safe
+'''
+
+
 GUARDS = r'''
 \set ON_ERROR_STOP on
 \getenv dbname TARGET_DATABASE
@@ -76,18 +120,7 @@ SELECT NOT EXISTS (
 \else
 SELECT 1/0;
 \endif
--- Effective server rules (includes CNPG-generated replication/local rules).
--- No preceding network allow may match the new login except sameuser. Scoped
--- @files are expanded by pg_hba_file_rules; reject candidate collisions there.
-SELECT NOT EXISTS (SELECT 1 FROM pg_hba_file_rules WHERE error IS NOT NULL)
- AND EXISTS (SELECT 1 FROM pg_hba_file_rules WHERE type='hostssl' AND database=ARRAY['sameuser'] AND user_name=ARRAY['all'] AND auth_method='scram-sha-256')
- AND EXISTS (SELECT 1 FROM pg_hba_file_rules WHERE type='host' AND database=ARRAY['all'] AND user_name=ARRAY['all'] AND auth_method='reject')
- AND NOT EXISTS (
- SELECT 1 FROM pg_hba_file_rules WHERE type IN ('host','hostssl','hostnossl') AND auth_method<>'reject'
- AND database IS DISTINCT FROM ARRAY['replication']
- AND NOT (type='hostssl' AND database=ARRAY['sameuser'] AND user_name=ARRAY['all'] AND auth_method='scram-sha-256')
- AND (user_name && ARRAY['all',:'username'] OR EXISTS (SELECT 1 FROM unnest(user_name) n WHERE n LIKE '+%' OR n LIKE '/%' OR n LIKE '@%'))
- ) AS hba_safe \gset
+''' + HBA_GUARD + r''' \gset
 \if :hba_safe
 \else
 SELECT 1/0;
@@ -134,18 +167,19 @@ COMMIT;
 
 def shell_input(values, write=False):
     validate_identity(values)
-    lines = ['set -eu', 'unset PGPASSWORD PGHOST PGPORT PGUSER PGDATABASE PGSERVICE PGSERVICEFILE PGOPTIONS']
+    lines = ['set -eu', 'unset PGPASSWORD PGHOST PGHOSTADDR PGPORT PGUSER PGDATABASE PGSERVICE PGSERVICEFILE PGOPTIONS',
+             'test -S /controller/run/.s.PGSQL.5432']
     for target, source in zip(('TARGET_DATABASE', 'TARGET_USERNAME', 'TARGET_PASSWORD'), KEYS):
         lines.append('export ' + target + '=' + shlex.quote(values[source]))
     sql = GUARDS + (WRITE if write else '')
-    lines.append("psql -X -q -U postgres -d postgres <<'CHAT_SQL' >/dev/null 2>&1\n" + sql + '\nCHAT_SQL')
+    lines.append("psql -X -q -h /controller/run -p 5432 -U postgres -d postgres <<'CHAT_SQL' >/dev/null 2>&1\n" + sql + '\nCHAT_SQL')
     return '\n'.join(lines) + '\n'
 
 
 def verify_access(cluster, primary, values):
     # Read database names only into operator memory; never output them.
     sql = "SET log_statement='none'; SET log_duration=off; SET log_min_duration_statement=-1; SET log_min_error_statement='panic'; SELECT json_agg(datname) FROM pg_database WHERE datallowconn;"
-    r = subprocess.run(cluster.prefix+['-n','databases','exec','-i',primary,'-c','postgres','--','psql','-X','-qAt','-U','postgres','-d','postgres'],input=sql,capture_output=True,text=True,timeout=40)
+    r = subprocess.run(cluster.prefix+['-n','databases','exec','-i',primary,'-c','postgres','--','env','-u','PGPASSWORD','-u','PGHOST','-u','PGHOSTADDR','-u','PGPORT','-u','PGUSER','-u','PGDATABASE','-u','PGSERVICE','-u','PGSERVICEFILE','-u','PGOPTIONS','psql','-X','-qAt','-h','/controller/run','-p','5432','-U','postgres','-d','postgres'],input=sql,capture_output=True,text=True,timeout=40)
     require(r.returncode == 0)
     databases = json.loads(r.stdout.strip())
     others = [d for d in databases if d != values['CHAT_DATABASE_NAME']]
