@@ -23,3 +23,6 @@ resources:
 - challenge.yaml
 - challenge-service.yaml
 - challenge-migration.yaml
+- chat.yaml
+- chat-service.yaml
+- chat-migration.yaml

@@ -12,3 +12,4 @@ patchesStrategicMerge:
 - admin-ui-patch.yaml
 - payment-patch.yaml
 - challenge-patch.yaml
+- chat-patch.yaml

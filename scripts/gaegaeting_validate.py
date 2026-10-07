@@ -46,6 +46,14 @@ def main():
           'Invalid migration revision')
     migration_images = {i['service']: i['image'] + ':sha-' + i['revision'] + '@' + i['digest']
                         for i in migrations}
+    # Chat owns a new schema artifact; preserve the existing four migrationImages.
+    if 'devChat' in release:
+        chat = release['devChat']
+        check(chat['service'] == 'chat' and re.fullmatch(r'[0-9a-f]{40}', chat['revision']), 'Invalid Chat revision')
+        expected['chat'] = chat['image'] + ':sha-' + chat['revision'] + '@' + chat['digest']
+        migration_images['chat'] = expected['chat']
+        migration_revisions['chat'] = chat['revision']
+        check(chat['migrationImage'] == expected['chat'] and chat['migrationJob'] == 'chat-migration-' + chat['revision'][:12], 'Chat migration metadata mismatch')
     app_image_count = 0
     for r in workloads:
         spec = r['spec']
@@ -65,7 +73,7 @@ def main():
             check(c['securityContext']['allowPrivilegeEscalation'] is False, 'Privilege escalation allowed')
             if args.release:
                 check(re.search(r'@sha256:[0-9a-f]{64}$', c['image']), 'Unpinned release image')
-    check(app_image_count == 12, 'Expected eight application deployments and four migration image references')
+    check(app_image_count == (14 if 'devChat' in release else 12), 'Application/migration image count differs from release')
     admin = next(r for r in resources if r['kind'] == 'Deployment' and r['metadata']['name'] == 'admin-ui')
     container = admin['spec']['template']['spec']['containers'][0]
     check(all(container[p]['httpGet']['path'] == '/admin/health'

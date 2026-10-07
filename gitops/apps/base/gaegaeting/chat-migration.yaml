@@ -1,0 +1,85 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chat-migration-6aee44544e7d
+  namespace: gaegaeting-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  suspend: false
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: chat
+        app.kubernetes.io/part-of: gaegaeting
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: chat
+        image: ghcr.io/kangjuhyup/gaegaeting/chat:sha-6aee44544e7db298be6ac756b7083a6214344e50@sha256:db5e36ac0707088c6da37e015ed796c82dea6a18b6d1f7a0597304a84cc9fac2
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        env:
+        - name: NODE_EXTRA_CA_CERTS
+          value: /etc/database/ca.crt
+        - name: DATABASE_HOST
+          valueFrom:
+            secretKeyRef:
+              name: gaegaeting-chat-runtime
+              key: DATABASE_HOST
+        - name: DATABASE_PORT
+          valueFrom:
+            secretKeyRef:
+              name: gaegaeting-chat-runtime
+              key: DATABASE_PORT
+        - name: DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: gaegaeting-chat-runtime
+              key: DATABASE_USERNAME
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gaegaeting-chat-runtime
+              key: DATABASE_PASSWORD
+        - name: DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: gaegaeting-chat-runtime
+              key: DATABASE_NAME
+        - name: DATABASE_SSL_MODE
+          valueFrom:
+            secretKeyRef:
+              name: gaegaeting-chat-runtime
+              key: DATABASE_SSL_MODE
+        volumeMounts:
+        - name: db-ca
+          mountPath: /etc/database
+          readOnly: true
+        workingDir: /app
+        command:
+        - node
+        - dist/src/migrations/migrate.js
+      volumes:
+      - name: db-ca
+        secret:
+          secretName: gaegaeting-db-ca
+      restartPolicy: Never

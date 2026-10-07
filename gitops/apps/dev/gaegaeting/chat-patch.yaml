@@ -1,22 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: edge-proxy
+  name: chat
   namespace: gaegaeting-dev
 spec:
   replicas: 1
   template:
     spec:
       containers:
-      - name: envoy
+      - name: chat
         resources:
           requests:
             cpu: 25m
-            memory: 64Mi
+            memory: 128Mi
           limits:
-            memory: 256Mi
+            memory: 512Mi
     metadata:
       annotations:
         infra.oci-a1.example/doppler-config: stg
-        gaegaeting.app/payment-routes: v1
-        gaegaeting.app/chat-contract: 6aee44544e7db298be6ac756b7083a6214344e50

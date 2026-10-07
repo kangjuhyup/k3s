@@ -17,3 +17,4 @@ resources:
 - admin-ui-ingress-policy.yaml
 - payment-ingress-policy.yaml
 - challenge-ingress-policy.yaml
+- chat-ingress-policy.yaml
