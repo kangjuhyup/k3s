@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat
+  namespace: gaegaeting-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+spec:
+  selector:
+    matchLabels: &id001
+      app.kubernetes.io/name: chat
+      app.kubernetes.io/part-of: gaegaeting
+  template:
+    metadata:
+      labels: *id001
+      annotations:
+        sidecar.istio.io/inject: 'false'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: chat
+        image: ghcr.io/kangjuhyup/gaegaeting/chat:sha-6aee44544e7db298be6ac756b7083a6214344e50@sha256:db5e36ac0707088c6da37e015ed796c82dea6a18b6d1f7a0597304a84cc9fac2
+        ports:
+        - name: http
+          containerPort: 2804
+        envFrom:
+        - secretRef:
+            name: gaegaeting-chat-runtime
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        startupProbe:
+          httpGet:
+            path: /chat/health
+            port: http
+          failureThreshold: 60
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /chat/health/ready
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /chat/health
+            port: http
+          periodSeconds: 20
+          failureThreshold: 3
+        env:
+        - name: NODE_EXTRA_CA_CERTS
+          value: /etc/database/ca.crt
+        volumeMounts:
+        - name: db-ca
+          mountPath: /etc/database
+          readOnly: true
+      volumes:
+      - name: db-ca
+        secret:
+          secretName: gaegaeting-db-ca

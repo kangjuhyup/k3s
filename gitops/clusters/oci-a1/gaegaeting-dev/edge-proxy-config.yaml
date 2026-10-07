@@ -20,6 +20,9 @@ data:
             typed_config:
               '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
               stat_prefix: gaegaeting_api
+              upgrade_configs:
+              - upgrade_type: websocket
+                enabled: false
               route_config:
                 name: api
                 virtual_hosts:
@@ -27,6 +30,29 @@ data:
                   domains:
                   - '*'
                   routes:
+                  # Gateway authenticates connection_init before opening Chat upstream.
+                  # All ordinary HTTP remains behind ext_authz; no direct Chat route.
+                  - match:
+                      path: /gateway/graphql
+                      headers:
+                      - name: ':method'
+                        string_match:
+                          exact: GET
+                      - name: upgrade
+                        string_match:
+                          exact: websocket
+                          ignore_case: true
+                    route:
+                      cluster: gateway
+                      timeout: 0s
+                      idle_timeout: 0s
+                      upgrade_configs:
+                      - upgrade_type: websocket
+                        enabled: true
+                    typed_per_filter_config:
+                      envoy.filters.http.ext_authz:
+                        '@type': type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                        disabled: true
                   - match:
                       path: /gateway/graphql
                     route:

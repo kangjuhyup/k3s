@@ -1,12 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: match-ingress
+  name: chat-ingress
   namespace: gaegaeting-dev
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: match
+      app.kubernetes.io/name: chat
   policyTypes:
   - Ingress
   ingress:
@@ -17,12 +17,6 @@ spec:
       podSelector:
         matchLabels:
           app.kubernetes.io/name: gateway
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: gaegaeting-dev
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: chat
     ports:
     - protocol: TCP
-      port: 2801
+      port: 2804

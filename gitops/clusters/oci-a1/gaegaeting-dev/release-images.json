@@ -264,5 +264,26 @@
       "ciArtifactVerified": true,
       "visibility": "public"
     }
-  ]
+  ],
+  "devChat": {
+    "service": "chat",
+    "image": "ghcr.io/kangjuhyup/gaegaeting/chat",
+    "revision": "6aee44544e7db298be6ac756b7083a6214344e50",
+    "digest": "sha256:db5e36ac0707088c6da37e015ed796c82dea6a18b6d1f7a0597304a84cc9fac2",
+    "platforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "migrationJob": "chat-migration-6aee44544e7d",
+    "migrationImage": "ghcr.io/kangjuhyup/gaegaeting/chat:sha-6aee44544e7db298be6ac756b7083a6214344e50@sha256:db5e36ac0707088c6da37e015ed796c82dea6a18b6d1f7a0597304a84cc9fac2",
+    "deploymentStatus": "prepared-not-applied",
+    "credentialSource": {
+      "project": "gaegaeting",
+      "config": "stg"
+    },
+    "migrationCommand": [
+      "node",
+      "dist/src/migrations/migrate.js"
+    ]
+  }
 }
