@@ -1,5 +1,5 @@
 {
-  "revision": "aa6eaa0979b8ea3fbb7dbbfe128cc8e20fd0fef9",
+  "revision": "905cccfafe734e4a3271721b14d512e97904a162",
   "images": [
     {
       "service": "account",
@@ -49,13 +49,18 @@
     {
       "service": "gateway",
       "image": "ghcr.io/kangjuhyup/gaegaeting/gateway",
-      "digest": "sha256:212f126afabf44dc609afa9eeefd620c6a09092c369b492fde4fd84efcdd4715",
-      "revision": "6aee44544e7db298be6ac756b7083a6214344e50",
+      "digest": "sha256:2d8921ff94d026bb519e5edf193ae69740f57d39a09f3470d4c6d273798716d2",
+      "revision": "905cccfafe734e4a3271721b14d512e97904a162",
       "platforms": [
         "linux/amd64",
         "linux/arm64"
       ],
-      "workflowRun": 37420034461,
+      "workflowRun": 37578633192,
+      "registryPlatformDigests": {
+        "linux/amd64": "sha256:18313548e2f54169a08fb950c4ce6f2aa6d02195c1c87175484ee7d03d0335ea",
+        "linux/arm64": "sha256:0e8ea6c0f03648bb99a4ffd56a33166600b2ac2434729167cd904bb6ef02c14a"
+      },
+      "ociRevisionVerified": true,
       "registryPlatforms": [
         "linux/amd64",
         "linux/arm64"
