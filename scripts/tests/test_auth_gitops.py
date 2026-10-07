@@ -92,8 +92,8 @@ class AuthTests(unittest.TestCase):
 
     def test_release_images_and_migration_job_are_pinned_together(self):
         service_image = (
-            "ghcr.io/kangjuhyup/auth/auth-service:v0.3.1@sha256:"
-            "609d4ca6a06fc142000b6d1bae3119e14d17db452438d6ddc24202c088903f76"
+            "ghcr.io/kangjuhyup/auth/auth-service:v0.3.2@sha256:"
+            "78a445d86e46d5c61771eb21a3e042e29568d3a6a08c4d684f6c045545c089d1"
         )
         service_images = {
             self.resource(name)["spec"]["template"]["spec"]["containers"][0][
@@ -104,14 +104,14 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(service_images, {service_image})
         self.assertEqual(
             self.resource("migration")["metadata"]["name"],
-            "auth-migrate-609d4ca6a06f",
+            "auth-migrate-78a445d86e46",
         )
         self.assertEqual(
             self.resource("auth-ui")["spec"]["template"]["spec"]["containers"][
                 0
             ]["image"],
-            "ghcr.io/kangjuhyup/auth/auth-ui:v0.3.1@sha256:"
-            "820a6a884d1b49ad2b75f9770a51def9c85cb5ed2cc545b74d8dfc3abf026241",
+            "ghcr.io/kangjuhyup/auth/auth-ui:v0.3.2@sha256:"
+            "b034d47f96853f40ba621f89b93d2e5493053967c4544692c612809e94a270fa",
         )
 
     def test_database_clients_require_tls_with_a_private_ca_mount(self):
